@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,7 +42,27 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
+    'django.contrib.postgres',
+    'apps.accounts',
+    'apps.interests',
+    'apps.organizations',
+    'apps.venues',
+    'apps.events',
+    'apps.flyers',
+    'apps.rsvps',
+    'apps.attendance',
+    'apps.engagement',
+    'apps.discovery',
+    'apps.search',
+    'apps.analytics',
+    'apps.notifications',
+    'apps.ai',
 ]
+
+AUTH_USER_MODEL = 'accounts.User'
+
+AUTHENTICATION_BACKENDS = ['apps.accounts.backends.EmailOrUsernameBackend']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -76,12 +97,20 @@ WSGI_APPLICATION = 'radar.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+# PostgreSQL (Supabase) with PostGIS and pgvector. The connection string lives in .env.
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        env='DATABASE_URL',
+        engine='django.contrib.gis.db.backends.postgis',
+        conn_max_age=600,
+        ssl_require=True,
+    )
 }
+
+# GeoDjango needs the GDAL and GEOS libraries. Homebrew on Apple Silicon installs them in
+# /opt/homebrew/lib, which isn't on the default search path; override in .env if yours differ.
+GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH', '/opt/homebrew/lib/libgdal.dylib')
+GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH', '/opt/homebrew/lib/libgeos_c.dylib')
 
 
 # Password validation
@@ -100,6 +129,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
 ]
 
 
