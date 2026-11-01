@@ -33,13 +33,15 @@ The tables already exist in Supabase, so you don't need to run `migrate` after c
 
 ## Demo data
 
-To add a small, repeatable demo dataset (users, an organization, events, RSVPs, and sample activity), activate your Python environment first. Make sure `.env` points to a development database and migrations are current, then run:
+The shared development Supabase database already contains the demo dataset. If your `.env` points to that same database, the demo records are shared and you do not need to seed them again.
+
+To add the demo dataset to a different or empty development database, activate your Python environment, make sure migrations are current, then run:
 
 ```sh
 python manage.py seed_mock_data --confirm
 ```
 
-The command requires `--confirm` because it writes demo records to the configured development database. Without the flag, it exits with an error and writes nothing.
+The command requires `--confirm` because it writes demo users, an organization, events, RSVPs, and sample activity to the configured database. Without the flag, it exits with an error and writes nothing. Do not run it against a production database.
 
 ## Updating the Django secret key
 
