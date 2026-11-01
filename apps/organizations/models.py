@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db import transaction
 
 
 class Organization(models.Model):
@@ -30,6 +31,18 @@ class Organization(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        creating = self._state.adding
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if creating:
+                OrganizationMembership.objects.create(
+                    organization=self,
+                    user=self.created_by,
+                    role=OrganizationMembership.Role.OWNER,
+                    invited_by=self.created_by,
+                )
+
     def __str__(self):
         return self.name
 
@@ -38,7 +51,6 @@ class OrganizationMembership(models.Model):
     class Role(models.TextChoices):
         OWNER = 'owner'
         ADMIN = 'admin'
-        EDITOR = 'editor'
         CHECKIN_STAFF = 'checkin_staff', 'Check-in staff'
 
     id = models.BigAutoField(primary_key=True)
@@ -53,7 +65,18 @@ class OrganizationMembership(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['organization', 'user'], name='unique_org_membership')]
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'user'], name='unique_org_membership'),
+            models.UniqueConstraint(
+                fields=['organization'],
+                condition=models.Q(role='owner'),
+                name='unique_organization_owner',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(role__in=['owner', 'admin', 'checkin_staff']),
+                name='organization_membership_valid_role',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.user} ({self.role}) @ {self.organization}'

@@ -5,7 +5,10 @@ from django.db import models
 class Notification(models.Model):
     class Type(models.TextChoices):
         RSVP_CONFIRMED = 'rsvp_confirmed', 'RSVP confirmed'
+        WAITLIST_JOINED = 'waitlist_joined'
         WAITLIST_PROMOTED = 'waitlist_promoted'
+        WAITLIST_HEADS_UP = 'waitlist_heads_up'
+        WAITLIST_CLOSED = 'waitlist_closed'
         EVENT_UPDATED = 'event_updated'
         EVENT_CANCELLED = 'event_cancelled'
         REMINDER = 'reminder'

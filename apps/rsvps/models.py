@@ -19,6 +19,7 @@ class RSVP(models.Model):
     class Status(models.TextChoices):
         GOING = 'going'
         WAITLISTED = 'waitlisted'
+        INTERESTED = 'interested'
         CANCELLED = 'cancelled'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -26,6 +27,7 @@ class RSVP(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rsvps')
     status = models.CharField(max_length=20, choices=Status.choices)
     waitlist_position = models.PositiveIntegerField(null=True, blank=True)
+    waitlisted_at = models.DateTimeField(null=True, blank=True)
     source = models.CharField(max_length=20, choices=TrafficSource.choices, default=TrafficSource.DIRECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

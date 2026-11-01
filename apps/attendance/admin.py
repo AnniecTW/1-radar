@@ -1,9 +1,1 @@
-from django.contrib import admin
-
-from .models import CheckIn
-
-
-@admin.register(CheckIn)
-class CheckInAdmin(admin.ModelAdmin):
-    list_display = ('user', 'event', 'method', 'checked_in_at')
-    list_filter = ('method',)
+"""Check-in records are not exposed in Django Admin to protect attendee data."""

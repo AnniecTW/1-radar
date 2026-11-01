@@ -18,4 +18,45 @@ document.addEventListener('DOMContentLoaded', () => {
       button.classList.toggle('confirmed')
     })
   })
+
+  document.querySelectorAll('.carousel').forEach((carousel) => {
+    const slides = [...carousel.querySelectorAll('.carousel-slide')]
+    const dots = [...carousel.querySelectorAll('.carousel-dot')]
+    if (slides.length < 2) return
+
+    let current = 0
+    let timer
+    const show = (index) => {
+      current = (index + slides.length) % slides.length
+      slides.forEach((slide, i) => {
+        const active = i === current
+        slide.classList.toggle('is-active', active)
+        slide.setAttribute('aria-hidden', String(!active))
+      })
+      dots.forEach((dot, i) => {
+        const active = i === current
+        dot.classList.toggle('is-active', active)
+        dot.setAttribute('aria-current', String(active))
+      })
+    }
+    const stop = () => window.clearInterval(timer)
+    const start = () => {
+      stop()
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        timer = window.setInterval(() => show(current + 1), 6000)
+      }
+    }
+
+    carousel.querySelector('.previous').addEventListener('click', () => { show(current - 1); start() })
+    carousel.querySelector('.next').addEventListener('click', () => { show(current + 1); start() })
+    dots.forEach((dot, i) => dot.addEventListener('click', () => { show(i); start() }))
+    carousel.addEventListener('mouseenter', stop)
+    carousel.addEventListener('mouseleave', start)
+    carousel.addEventListener('focusin', stop)
+    carousel.addEventListener('focusout', (event) => {
+      if (!carousel.contains(event.relatedTarget)) start()
+    })
+    document.addEventListener('visibilitychange', () => document.hidden ? stop() : start())
+    start()
+  })
 })

@@ -37,4 +37,23 @@ def dashboard(request):
         {'title': 'UIUC Focal Point Concert', 'meta': 'Sat, Oct 27 · Foellinger Auditorium', 'image': 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=85'},
         {'title': 'Boneyard Creek Cleanup', 'meta': 'Sun, Oct 27 · Boneyard Creek Trail', 'image': 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=900&q=85'},
     ]
-    return render(request, 'dashboard.html', {'events': events, 'trending': trending})
+    featured_events = [
+        {
+            'title': 'Champaign Night Market', 'date': 'Thursday · 6:00 PM',
+            'venue': 'Union Square', 'category': 'Community',
+            'image': 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=88',
+        },
+        {
+            'title': 'Focal Point: Live in C-U', 'date': 'Saturday · 7:30 PM',
+            'venue': 'Foellinger Auditorium', 'category': 'Live music',
+            'image': 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=88',
+        },
+        {
+            'title': 'Boneyard Creek Cleanup', 'date': 'Sunday · 9:00 AM',
+            'venue': 'Boneyard Creek Trail', 'category': 'Volunteer',
+            'image': 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1200&q=88',
+        },
+    ]
+    return render(request, 'dashboard.html', {
+        'events': events, 'trending': trending, 'featured_events': featured_events,
+    })

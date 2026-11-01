@@ -1,12 +1,6 @@
 from django.contrib import admin
 
-from .models import Organization, OrganizationFollow, OrganizationMembership
-
-
-class MembershipInline(admin.TabularInline):
-    model = OrganizationMembership
-    fk_name = 'organization'
-    extra = 0
+from .models import Organization
 
 
 @admin.register(Organization)
@@ -14,11 +8,13 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_display = ('name', 'org_type', 'is_verified', 'follower_count', 'created_at')
     list_filter = ('org_type', 'is_verified')
     search_fields = ('name', 'slug')
-    prepopulated_fields = {'slug': ('name',)}
-    inlines = [MembershipInline]
+    readonly_fields = (
+        'name', 'slug', 'org_type', 'description', 'logo', 'contact_email', 'website_url',
+        'instagram_url', 'follower_count', 'created_by', 'created_at', 'updated_at',
+    )
 
+    def has_add_permission(self, request):
+        return False
 
-@admin.register(OrganizationFollow)
-class OrganizationFollowAdmin(admin.ModelAdmin):
-    list_display = ('user', 'organization', 'notify', 'source', 'created_at')
-    list_filter = ('notify', 'source')
+    def has_delete_permission(self, request, obj=None):
+        return False

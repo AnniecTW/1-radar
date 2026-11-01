@@ -31,6 +31,16 @@ The database is a shared PostgreSQL database on Supabase (with PostGIS and pgvec
 
 The tables already exist in Supabase, so you don't need to run `migrate` after cloning. When you change a model, run `makemigrations`, commit the migration file, and run `migrate` once. Pull first so two people don't create conflicting migrations.
 
+## Demo data
+
+To add a small, repeatable demo dataset (users, an organization, events, RSVPs, and sample activity), activate your Python environment first. Make sure `.env` points to a development database and migrations are current, then run:
+
+```sh
+python manage.py seed_mock_data --confirm
+```
+
+The command requires `--confirm` because it writes demo records to the configured development database. Without the flag, it exits with an error and writes nothing.
+
 ## Updating the Django secret key
 
 1. Copy `.env.example` to `.env` in the project folder (the same folder as `manage.py`).

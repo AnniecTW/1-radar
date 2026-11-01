@@ -41,3 +41,19 @@ class EventView(models.Model):
 
     def __str__(self):
         return f'View of {self.event}'
+
+
+class EventOutboundClick(models.Model):
+    class Kind(models.TextChoices):
+        TICKETS_LINK = 'tickets_link'
+        CONTACT = 'contact'
+
+    id = models.BigAutoField(primary_key=True)
+    event = models.ForeignKey('events.Event', on_delete=models.CASCADE, related_name='outbound_clicks')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    session_key = models.CharField(max_length=40, blank=True)
+    kind = models.CharField(max_length=20, choices=Kind.choices)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return f'{self.kind} click for {self.event}'
