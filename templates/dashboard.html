@@ -1,0 +1,68 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RADAR · Discover what’s happening</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'radar/dashboard.css' %}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-FY6qTouoMQ1oTW9HZ6vDKDSZr9OKqR.png" alt="RADAR logo">
+        <span><b>RADAR</b><small>Hyper-local ai event<br>radar</small></span>
+      </div>
+      <nav class="nav" aria-label="Main navigation">
+        <a class="active" href="#discover"><span>◎</span>Discover</a>
+        <a href="#map"><span>⌖</span>Explore Map</a>
+        <a href="#recommendations"><span>✧</span>Recommendations</a>
+        <a href="#create"><span>▷</span>Create Event</a>
+        <a href="#dashboard"><span>▦</span>My Dashboard</a>
+        <a href="#profile"><span>♙</span>Profile</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <section class="promo">
+        <div class="mini-mark">◉<i></i></div>
+        <strong>Events.<br>People.<br>A stronger<br>campus.</strong>
+        <em></em>
+      </section>
+      <div class="sidebar-footer"><span class="footer-icon">♧</span><span>Good events,<br><b>brighter people.</b></span><span>›</span></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="mobile-menu" aria-label="Open menu">☰</button>
+        <label class="search"><span>⌕</span><input type="search" placeholder="Search events, places, people, or keywords..."></label>
+        <button class="icon-button" aria-label="Notifications">♧<i></i></button>
+        <button class="profile"><span class="avatar">AC</span><span><b>Alex Chen</b><small>UIUC Student</small></span><span class="chevron">⌄</span></button>
+      </header>
+
+      <section class="hero" id="discover">
+        <div class="hero-copy"><div class="eyebrow">RADAR</div><h1>Find what’s<br>happening around<br><i>you.</i></h1><p>AI-curated picks for this weekend in Champaign-Urbana.</p><a class="primary-button" href="#recommendations">Explore Events <span>→</span></a></div>
+        <div class="hero-art"><div class="handwritten">Same campus.<br><b>More to discover.</b></div><div class="campus-drawing"><span class="tree left"></span><span class="tree right"></span><div class="building"><i></i><i></i><i></i><i></i><b>✦</b></div></div><div class="join-pill"><span class="bubble navy">A</span><span class="bubble terracotta">NK</span><span class="bubble gray">BK</span><b>3,200+ students<small>joined this month</small></b></div></div>
+      </section>
+
+      <div class="category-row"><button class="chip selected">▦ &nbsp;All Events</button><button class="chip">◉ &nbsp;AI / Tech</button><button class="chip">▤ &nbsp;Study</button><button class="chip">◌ &nbsp;Sports</button><button class="chip">◎ &nbsp;Arts</button><button class="chip">♧ &nbsp;Social</button><button class="chip">♡ &nbsp;Volunteer</button><button class="chip">More &nbsp;⌄</button></div>
+
+      <div class="content-grid">
+        <div class="feed">
+          <section id="recommendations"><div class="section-heading"><div><div class="eyebrow">PICKED BY AI</div><h2>Recommended for you</h2><p>Based on your interests, classes, and campus activity</p></div><a class="see-all" href="#recommendations">See all&nbsp; →</a></div>
+            <div class="event-grid">
+              {% for event in events %}<article class="event-card"><div class="event-image"><img src="{{ event.image }}" alt="{{ event.title }} event"><span class="date-badge">{{ event.date }}</span><button class="save" aria-label="Save {{ event.title }}">♡</button></div><div class="event-body"><h3>{{ event.title }}</h3><p class="event-meta">▣ &nbsp;{{ event.time }}<br>⌖ &nbsp;{{ event.venue }}</p><div class="tags"><span>{{ event.category }}</span><span>{{ event.secondary }}</span></div><p class="description">{{ event.description }}</p><div class="insight">✧ &nbsp;{{ event.insight }}</div><div class="card-footer"><span>♧ &nbsp;{{ event.going }} going</span><button class="rsvp">RSVP</button></div></div></article>{% endfor %}
+            </div></section>
+
+          <section class="trending"><div class="section-heading"><div><h2>Trending nearby <span class="trend-arrow">↗</span></h2><p>Events going frontier around UIUC this week</p></div><a class="see-all" href="#trending">See all&nbsp; →</a></div><div class="trending-grid" id="trending">{% for item in trending %}<article class="trend-card"><img src="{{ item.image }}" alt=""><h3>{{ item.title }}</h3><p>{{ item.meta }}</p></article>{% endfor %}</div></section>
+        </div>
+
+        <aside class="right-rail"><section class="map-card" id="map"><h3>⌖ &nbsp;Events near you</h3><div class="map"><div class="map-label champaign">Champaign</div><div class="map-label urbana">Urbana</div><div class="map-label uiuc">UIUC</div>{% for dot in '123456789' %}<i class="map-dot dot-{{ forloop.counter }}"></i>{% endfor %}<div class="map-controls"><button>+</button><button>−</button></div><button class="locate">➤</button></div><a class="map-link" href="#map">View full map&nbsp; →</a></section><section class="weekend-card"><div class="weekend-title"><span>▣</span><div><h3>This weekend in C-U</h3><p>Oct 25 – 27, 2024</p></div></div><ul><li><span>▱</span><b>12+</b> Tech & AI events</li><li><span>▤</span><b>8</b> Study sessions</li><li><span>♧</span><b>10</b> Social hangouts</li><li><span>◉</span><b>6</b> Sports & recreation</li><li><span>◌</span><b>5</b> Arts & culture events</li><li><span>♡</span><b>4</b> Volunteer opportunities</li></ul></section></aside>
+      </div>
+    </main>
+  </div>
+  <script src="{% static 'radar/dashboard.js' %}"></script>
+</body>
+</html>
