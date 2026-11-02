@@ -59,6 +59,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><i></i>
         </button>
         <button class="profile"><span class="avatar">AC</span><span><b>Alex Chen</b><small>UIUC Student</small></span><span class="chevron">⌄</span></button>
+        <form method="post" action="{% url 'logout' %}" class="signout-form">{% csrf_token %}<button class="signout" type="submit">Sign out</button></form>
       </header>
 
       <section class="hero" id="discover">

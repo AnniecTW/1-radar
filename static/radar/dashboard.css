@@ -31,3 +31,5 @@
   .trending{margin-top:22px}.trending-grid{gap:7px}.trend-card{padding:4px 4px 8px;border-radius:11px}.trend-card img{height:48px;border-radius:8px}.trend-card h3{font-size:8px;margin:5px 4px 2px}.trend-card p{font-size:6px;margin:0 4px}
 }
 @media(max-width:620px){.hero-art.carousel{width:100%;height:220px;min-height:220px;margin-top:24px}.carousel-slide{padding:22px}.slide-content h2{font-size:25px}.carousel-controls{right:12px;top:12px}}
+
+.signout-form{margin:0}.signout{height:51px;padding:0 20px;border:0;border-radius:28px;background:var(--navy);color:#fff;font:600 13px 'DM Sans',sans-serif;cursor:pointer}

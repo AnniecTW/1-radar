@@ -43,6 +43,17 @@ python manage.py seed_mock_data --confirm
 
 The command requires `--confirm` because it writes demo users, an organization, events, RSVPs, and sample activity to the configured database. Without the flag, it exits with an error and writes nothing. Do not run it against a production database.
 
+## Sending real emails (verification links)
+
+Without email settings, Radar prints emails in the terminal running `runserver` and sends nothing. To deliver real email, add these to `.env` and restart the server:
+
+```
+EMAIL_HOST_USER=your.address@gmail.com
+EMAIL_HOST_PASSWORD=your-16-character-app-password
+```
+
+For Gmail, turn on 2-Step Verification and create an App Password (Google Account → Security → App passwords); your normal password will not work. For another provider also set `EMAIL_HOST` and `EMAIL_PORT` (defaults: `smtp.gmail.com`, `587`). Optionally set `DEFAULT_FROM_EMAIL`; it defaults to `EMAIL_HOST_USER`.
+
 ## Updating the Django secret key
 
 1. Copy `.env.example` to `.env` in the project folder (the same folder as `manage.py`).

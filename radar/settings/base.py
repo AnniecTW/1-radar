@@ -131,6 +131,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
@@ -159,8 +162,32 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+# Real emails need SMTP credentials in .env (EMAIL_HOST_USER and EMAIL_HOST_PASSWORD).
+# Without them, emails print to the terminal running the server and nothing is delivered.
+# (Django rejects settings named EMAIL_HOST_* when MAILERS is defined, hence the SMTP_ names.)
+SMTP_USER = os.environ.get('EMAIL_HOST_USER', '')
+SMTP_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+if SMTP_USER and SMTP_PASSWORD:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+            'OPTIONS': {
+                'host': os.environ.get('EMAIL_HOST', 'smtp.gmail.com'),
+                'port': int(os.environ.get('EMAIL_PORT', '587')),
+                'use_tls': True,
+                'username': SMTP_USER,
+                'password': SMTP_PASSWORD,
+                'timeout': 10,
+            },
+        },
+    }
+else:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        },
+    }
+
+# SMTP providers such as Gmail only accept the authenticated account as the sender.
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or SMTP_USER or 'RADAR <no-reply@radar.local>'

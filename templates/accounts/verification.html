@@ -1,0 +1,36 @@
+{% extends 'accounts/auth_base.html' %}
+{% block title %}Verify email{% endblock %}
+{% block form %}
+<div class="auth-heading">
+  {% if state == 'sent' %}
+    <div class="eyebrow">ALMOST THERE</div>
+    <h1>Check your <i>email</i></h1>
+    <p>We sent a verification link to <b>{{ request.user.email }}</b>. Verify it to RSVP to events. You can keep browsing in the meantime.</p>
+  {% elif state == 'verified' %}
+    <div class="eyebrow">ALL SET</div>
+    <h1>Email <i>verified</i></h1>
+    <p>Your email is confirmed. You can now RSVP to events.</p>
+  {% else %}
+    <div class="eyebrow">LINK PROBLEM</div>
+    <h1>Link <i>expired</i></h1>
+    <p>This verification link is invalid or has expired. Sign in and request a new one.</p>
+  {% endif %}
+</div>
+
+{% for message in messages %}<div class="form-notice" role="status">{{ message }}</div>{% endfor %}
+
+<div class="auth-form">
+  {% if state == 'sent' %}
+    <form method="post" action="{% url 'resend_verification_email' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="social-button" type="submit" style="width:100%">Resend verification email</button>
+    </form>
+    <a class="auth-submit" href="{{ next }}" style="text-decoration:none">Continue to RADAR <span aria-hidden="true">→</span></a>
+  {% elif state == 'verified' %}
+    <a class="auth-submit" href="{{ next|default:'/' }}" style="text-decoration:none">Continue to RADAR <span aria-hidden="true">→</span></a>
+  {% else %}
+    <a class="auth-submit" href="{% url 'login' %}" style="text-decoration:none">Sign in <span aria-hidden="true">→</span></a>
+  {% endif %}
+</div>
+{% endblock %}

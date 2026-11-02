@@ -1,0 +1,133 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RADAR · Discover what’s happening</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'radar/favicon.svg' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="{% static 'radar/landing.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'dashboard' %}" aria-label="RADAR home">
+      <svg class="brand-mark" viewBox="0 0 56 64" aria-hidden="true">
+        <path d="M45.9 16.1A25.5 25.5 0 1 0 52.9 36" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M40 22A17 17 0 1 0 44.9 35" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="m16 33 24-9-11 23-2-11z" transform="translate(28 35) scale(.94) translate(-28 -35)" fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-width="1.4"/>
+        <circle cx="49" cy="26" r="3.6" fill="#f45143"/>
+      </svg>
+      <span>RADAR</span>
+    </a>
+    <nav class="top-actions" aria-label="Account">
+      <a class="ghost-link" href="{% url 'login' %}">Sign in</a>
+      <a class="primary-button small" href="{% url 'signup' %}">Create account</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">HYPER-LOCAL AI EVENT RADAR</div>
+      <h1>Find what’s happening<br>around <i>campus.</i></h1>
+      <p>Browse events, see where the crowd is heading, and RSVP in a tap. No account needed to look around.</p>
+      <form class="hero-search" action="{% url 'dashboard' %}#browse" method="get" role="search">
+        <label class="visually-hidden" for="hero-q">Search events</label>
+        <input id="hero-q" type="search" name="q" value="{{ search_text }}" maxlength="100" placeholder="Try: free food near the library tonight">
+        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+        <button class="primary-button" type="submit">Search <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+
+    {% include 'discovery/_carousel.html' with section_id='today' eyebrow='LIVE & NEXT UP' heading='Happening today' subheading='Starting today or already underway' events=happening_today %}
+    {% include 'discovery/_carousel.html' with section_id='weekend' eyebrow='PLAN AHEAD' heading='This weekend' subheading='Saturday and Sunday on campus' events=this_weekend %}
+    {% include 'discovery/_carousel.html' with section_id='trending' eyebrow='POPULAR' heading='Trending on campus' subheading='Most popular events over the next two weeks' events=trending %}
+
+    <section class="section" id="browse" aria-labelledby="browse-title">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">BROWSE</div>
+          <h2 id="browse-title">{% if search_text %}Results for “{{ search_text }}”{% else %}Browse by category{% endif %}</h2>
+          <p>Upcoming public and campus-only events</p>
+        </div>
+      </div>
+      <div class="category-row">
+        <a class="chip{% if not selected_category %} selected{% endif %}" href="{% url 'dashboard' %}{% if search_text %}?q={{ search_text|urlencode }}{% endif %}#browse">All events</a>
+        {% for interest in categories %}
+          <a class="chip{% if interest.slug == selected_category %} selected{% endif %}" href="?category={{ interest.slug }}{% if search_text %}&amp;q={{ search_text|urlencode }}{% endif %}#browse">{{ interest.name }}</a>
+        {% endfor %}
+      </div>
+      {% if browse_events %}
+        <div class="event-grid">
+          {% for event in browse_events %}{% include 'discovery/_event_card.html' %}{% endfor %}
+        </div>
+      {% else %}
+        <p class="empty">No upcoming events match{% if search_text or selected_category %} your filters{% endif %}. {% if search_text or selected_category %}<a href="{% url 'dashboard' %}#browse">Clear filters</a>{% endif %}</p>
+      {% endif %}
+    </section>
+
+    <section class="section" id="map" aria-labelledby="map-title">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">WHERE THE CROWD IS</div>
+          <h2 id="map-title">Campus heat map</h2>
+          <p>Brighter spots have more likes, saves and RSVPs</p>
+        </div>
+      </div>
+      <div id="map-preview" class="map-preview" role="img" aria-label="Heat map of upcoming campus events"></div>
+      {{ map_points|json_script:"map-points" }}
+      {{ map_center|json_script:"map-center" }}
+    </section>
+
+    {% if featured_organizations %}
+    <section class="section" id="organizations" aria-labelledby="orgs-title">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">FOLLOW ALONG</div>
+          <h2 id="orgs-title">Featured organizations</h2>
+          <p>Follow a group to hear about its next event first</p>
+        </div>
+      </div>
+      <div class="org-grid">
+        {% for organization in featured_organizations %}
+          <article class="org-card">
+            {% if organization.logo %}<img class="org-logo" src="{{ organization.logo }}" alt="" loading="lazy">{% else %}<div class="org-logo fallback" aria-hidden="true">{{ organization.name|slice:":1" }}</div>{% endif %}
+            <div class="org-info">
+              <h3>{{ organization.name }}{% if organization.is_verified %} <span class="verified" title="Verified organization">✓</span>{% endif %}</h3>
+              <p>{{ organization.get_org_type_display }} · {{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}</p>
+            </div>
+            <button class="rsvp" type="button" data-gate data-prompt="Sign in to follow {{ organization.name }}">Follow</button>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="cta">
+      <div>
+        <h2>Get events picked for you</h2>
+        <p>Create an account to RSVP, save events, and follow the organizations you like.</p>
+      </div>
+      <a class="primary-button" href="{% url 'signup' %}">Create an account <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <dialog id="signin-dialog" class="signin-dialog" aria-labelledby="signin-message">
+    <form method="dialog" class="dialog-close"><button aria-label="Close">✕</button></form>
+    <div class="eyebrow">JOIN RADAR</div>
+    <h2 id="signin-message">Sign in to continue</h2>
+    <p>It only takes a moment, and you’ll come right back to this page.</p>
+    <div class="dialog-actions">
+      <a class="primary-button" id="signin-link" href="{% url 'login' %}">Sign in</a>
+      <a class="secondary-button" id="signup-link" href="{% url 'signup' %}">Create account</a>
+    </div>
+  </dialog>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+  <script src="{% static 'radar/landing.js' %}"></script>
+</body>
+</html>

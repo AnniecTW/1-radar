@@ -1,0 +1,19 @@
+{% comment %}Needs: section_id, eyebrow, heading, subheading, events.{% endcomment %}
+{% if events %}
+<section class="section" id="{{ section_id }}" aria-labelledby="{{ section_id }}-title">
+  <div class="section-heading">
+    <div>
+      <div class="eyebrow">{{ eyebrow }}</div>
+      <h2 id="{{ section_id }}-title">{{ heading }}</h2>
+      <p>{{ subheading }}</p>
+    </div>
+    <div class="carousel-buttons">
+      <button type="button" class="round-button" data-scroll="-1" aria-label="Scroll {{ heading }} left">←</button>
+      <button type="button" class="round-button" data-scroll="1" aria-label="Scroll {{ heading }} right">→</button>
+    </div>
+  </div>
+  <div class="card-row" data-row>
+    {% for event in events %}{% include 'discovery/_event_card.html' %}{% endfor %}
+  </div>
+</section>
+{% endif %}

@@ -1,0 +1,36 @@
+<article class="event-card">
+  <div class="event-image">
+    {% if event.cover_image %}<img src="{{ event.cover_image }}" alt="" loading="lazy">{% else %}<div class="cover-fallback" aria-hidden="true">{{ event.title|slice:":1" }}</div>{% endif %}
+    <span class="date-badge">{{ event.start_at|date:"D, M j" }}</span>
+    {% if event.visibility == 'campus_only' %}<span class="campus-badge">Campus only</span>{% endif %}
+    <button class="save" type="button" data-gate data-prompt="Sign in to save {{ event.title }}" aria-label="Save {{ event.title }}">♡</button>
+  </div>
+  <div class="event-body">
+    <h3>{{ event.title }}</h3>
+    <p class="event-meta">
+      {{ event.start_at|date:"g:i A" }} – {{ event.end_at|date:"g:i A" }}<br>
+      {% if event.venue %}{{ event.venue.name }}{% if event.location_text %}, {{ event.location_text }}{% endif %}{% else %}{{ event.location_text }}{% endif %}
+      {% if event.organization %}<br>by {{ event.organization.name }}{% endif %}
+    </p>
+    <div class="tags">
+      {% for interest in event.interests.all|slice:":2" %}<span>{{ interest.name }}</span>{% endfor %}
+      {% if event.is_free %}<span>Free</span>{% else %}<span>{{ event.price_text }}</span>{% endif %}
+    </div>
+    <div class="card-footer">
+      <span>
+        {% if not event.is_free %}Paid event
+        {% elif event.rsvp_required %}{{ event.going_count }} going
+        {% else %}{{ event.interested_count }} interested{% endif %}
+      </span>
+      {% if not event.is_free and event.external_url|slice:":4" == "http" %}
+        <a class="rsvp" href="{{ event.external_url }}" target="_blank" rel="noopener noreferrer">Get tickets</a>
+      {% elif not event.is_free %}
+        <button class="rsvp" type="button" data-gate data-prompt="Sign in to contact the host of {{ event.title }}">Contact host</button>
+      {% elif event.rsvp_required %}
+        <button class="rsvp" type="button" data-gate data-prompt="Sign in to RSVP to {{ event.title }}">RSVP</button>
+      {% else %}
+        <button class="rsvp" type="button" data-gate data-prompt="Sign in to show interest in {{ event.title }}">Interested</button>
+      {% endif %}
+    </div>
+  </div>
+</article>
