@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'radar/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'radar/dashboard.css' %}?v=3">
 </head>
 <body>
   <div class="app-shell">
@@ -58,8 +58,20 @@
         <button class="icon-button" aria-label="Notifications">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><i></i>
         </button>
-        <button class="profile"><span class="avatar">AC</span><span><b>Alex Chen</b><small>UIUC Student</small></span><span class="chevron">⌄</span></button>
-        <form method="post" action="{% url 'logout' %}" class="signout-form">{% csrf_token %}<button class="signout" type="submit">Sign out</button></form>
+        <details class="profile-menu">
+          <summary class="profile" aria-haspopup="menu">
+            <span class="avatar">{% if user.first_name or user.last_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}</span>
+            <span><b>{{ user.get_full_name|default:user.email }}</b><small>{% if user.is_campus_verified %}Campus member{% else %}Attendee{% endif %}</small></span>
+            <span class="chevron">⌄</span>
+          </summary>
+          <div class="profile-dropdown" role="menu">
+            <a role="menuitem" href="#profile">Profile</a>
+            <a role="menuitem" href="#tickets">My Tickets</a>
+            <a role="menuitem" href="#saved">Saved Events</a>
+            <a role="menuitem" href="{% url 'onboarding_interests' %}">Edit Interests</a>
+            <form method="post" action="{% url 'logout' %}" class="signout-form">{% csrf_token %}<button class="signout" type="submit" role="menuitem">Sign out</button></form>
+          </div>
+        </details>
       </header>
 
       <section class="hero" id="discover">
@@ -92,6 +104,6 @@
       </div>
     </main>
   </div>
-  <script src="{% static 'radar/dashboard.js' %}"></script>
+  <script src="{% static 'radar/dashboard.js' %}?v=3"></script>
 </body>
 </html>

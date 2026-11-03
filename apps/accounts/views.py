@@ -31,6 +31,10 @@ def get_safe_next_url(request: HttpRequest) -> str:
     return next_url if is_safe else reverse('dashboard')
 
 
+def get_onboarding_url(next_url: str) -> str:
+    return f"{reverse('onboarding_interests')}?{urlencode({'next': next_url})}"
+
+
 def send_verification_email_to(request: HttpRequest) -> bool:
     """Return False instead of raising, so a mail outage never turns signup into a 500."""
     token = make_verification_token(request.user)
@@ -62,7 +66,7 @@ def login_user(request: HttpRequest) -> HttpResponse:
             login(request, user)
             if not form.cleaned_data['remember']:
                 request.session.set_expiry(0)
-            return redirect(next_url)
+            return redirect(next_url if user.onboarding_completed else get_onboarding_url(next_url))
     return render(request, 'accounts/login.html', {'form': form, 'next': next_url})
 
 
@@ -86,7 +90,7 @@ def signup_user(request: HttpRequest) -> HttpResponse:
         else:
             login(request, user)
             send_verification_email_to(request)
-            return redirect(f"{reverse('verification_sent')}?{urlencode({'next': next_url})}")
+            return redirect(f"{reverse('verification_sent')}?{urlencode({'next': get_onboarding_url(next_url)})}")
     return render(request, 'accounts/signup.html', {'form': form, 'next': next_url})
 
 
@@ -119,7 +123,8 @@ def resend_verification_email(request: HttpRequest) -> HttpResponse:
 def verify_email(request: HttpRequest, token: str) -> HttpResponse:
     """Works without a session: people often open the link on a different device."""
     try:
-        verify_user_email(token)
+        user = verify_user_email(token)
     except InvalidVerificationTokenError:
         return render(request, 'accounts/verification.html', {'state': 'invalid'}, status=400)
-    return render(request, 'accounts/verification.html', {'state': 'verified', 'next': reverse('dashboard')})
+    next_url = reverse('dashboard') if user.onboarding_completed else get_onboarding_url(reverse('dashboard'))
+    return render(request, 'accounts/verification.html', {'state': 'verified', 'next': next_url})

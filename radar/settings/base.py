@@ -74,6 +74,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# OpenStreetMap tile servers reject requests with no Referer (403). Django's
+# default "same-origin" policy strips it on cross-origin requests.
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 ROOT_URLCONF = 'radar.urls'
 
 TEMPLATES = [

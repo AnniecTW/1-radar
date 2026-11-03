@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const profileMenu = document.querySelector('.profile-menu')
+  if (profileMenu) {
+    document.addEventListener('click', (event) => {
+      if (!profileMenu.contains(event.target)) profileMenu.open = false
+    })
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && profileMenu.open) {
+        profileMenu.open = false
+        profileMenu.querySelector('summary').focus()
+      }
+    })
+  }
   document.querySelectorAll('.chip').forEach((chip) => {
     chip.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach((item) => item.classList.remove('selected'))

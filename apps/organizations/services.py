@@ -1,7 +1,8 @@
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import F
 
-from .models import Organization, OrganizationMembership
+from .models import Organization, OrganizationFollow, OrganizationMembership
 from .permissions import user_can_manage_members
 
 
@@ -51,3 +52,15 @@ def transfer_organization_ownership(*, actor, organization_id, new_owner_id):
     new_owner.role = OrganizationMembership.Role.OWNER
     new_owner.save(update_fields=['role', 'updated_at'])
     return new_owner
+
+
+def follow_organization(*, user, organization, source):
+    """Follow once; repeat calls change nothing. Keeps the cached follower_count in step."""
+    with transaction.atomic():
+        _, created = OrganizationFollow.objects.get_or_create(
+            user=user, organization=organization, defaults={'source': source}
+        )
+        if created:
+            Organization.objects.filter(pk=organization.pk).update(follower_count=F('follower_count') + 1)
+    return created
+

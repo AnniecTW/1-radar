@@ -22,5 +22,6 @@ from apps.discovery.views import show_landing_page
 urlpatterns = [
     path('', show_landing_page, name='dashboard'),
     path('accounts/', include('apps.accounts.urls')),
+    path('onboarding/', include('apps.interests.urls')),
     path('admin/', admin.site.urls),
 ]
