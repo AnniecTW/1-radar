@@ -21,3 +21,7 @@ def get_user_by_id(user_id: str) -> User | None:
         return User.objects.filter(pk=user_id).first()
     except (ValueError, TypeError):
         return None
+
+
+def get_initials(name: str) -> str:
+    return ''.join(word[0] for word in name.split()[:2]).upper()

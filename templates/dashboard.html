@@ -40,7 +40,8 @@
         <a href="#recommendations"><span>✧</span>Recommendations</a>
         <a href="#create"><span>▷</span>Create Event</a>
         <a href="#dashboard"><span>▦</span>My Dashboard</a>
-        <a href="#profile"><span>♙</span>Profile</a>
+        <a href="{% url 'profile' %}"><span>♙</span>Profile</a>
+        <a href="{% url 'preferences' %}"><span>☰</span>Preferences</a>
       </nav>
       <div class="sidebar-spacer"></div>
       <section class="promo">
@@ -61,14 +62,14 @@
         <details class="profile-menu">
           <summary class="profile" aria-haspopup="menu">
             <span class="avatar">{% if user.first_name or user.last_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}</span>
-            <span><b>{{ user.get_full_name|default:user.email }}</b><small>{% if user.is_campus_verified %}Campus member{% else %}Attendee{% endif %}</small></span>
+            <span><b>{% firstof user.profile.display_name user.get_full_name user.email %}</b><small>{% if user.is_campus_verified %}Campus member{% else %}Attendee{% endif %}</small></span>
             <span class="chevron">⌄</span>
           </summary>
           <div class="profile-dropdown" role="menu">
-            <a role="menuitem" href="#profile">Profile</a>
+            <a role="menuitem" href="{% url 'profile' %}">Profile</a>
+            <a role="menuitem" href="{% url 'preferences' %}">Preferences</a>
             <a role="menuitem" href="#tickets">My Tickets</a>
             <a role="menuitem" href="#saved">Saved Events</a>
-            <a role="menuitem" href="{% url 'onboarding_interests' %}">Edit Interests</a>
             <form method="post" action="{% url 'logout' %}" class="signout-form">{% csrf_token %}<button class="signout" type="submit" role="menuitem">Sign out</button></form>
           </div>
         </details>

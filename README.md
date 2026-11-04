@@ -43,6 +43,12 @@ python manage.py seed_mock_data --confirm
 
 The command requires `--confirm` because it writes demo users, an organization, events, RSVPs, and sample activity to the configured database. Without the flag, it exits with an error and writes nothing. Do not run it against a production database.
 
+For the Profile and Preferences pages, this adds a filled-in student (`alex.chen@demo.example.edu`, same demo password as `seed_mock_data`) who follows four organizations. It needs the dataset above and is safe to re-run:
+
+```sh
+python manage.py seed_profile_demo --confirm
+```
+
 ## Sending real emails (verification links)
 
 Without email settings, Radar prints emails in the terminal running `runserver` and sends nothing. To deliver real email, add these to `.env` and restart the server:

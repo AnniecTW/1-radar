@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 
 from .models import User
 from .selectors import is_email_registered
+from .validators import validate_graduation_year
 
 
 class LoginForm(forms.Form):
@@ -45,3 +46,10 @@ class SignupForm(forms.Form):
         except ValidationError as error:
             self.add_error('password1', error)
         return cleaned_data
+
+
+class ProfileForm(forms.Form):
+    display_name = forms.CharField(max_length=80)
+    bio = forms.CharField(max_length=500, required=False)
+    major = forms.CharField(max_length=120, required=False)
+    graduation_year = forms.IntegerField(required=False, validators=[validate_graduation_year])

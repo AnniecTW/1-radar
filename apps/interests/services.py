@@ -25,3 +25,13 @@ def complete_onboarding(user) -> None:
     if not user.onboarding_completed:
         user.onboarding_completed = True
         user.save(update_fields=['onboarding_completed'])
+
+
+def save_interests_from_preferences(*, user, interests) -> None:
+    """Make the user's interests match their picks. Unchecking removes a row whatever its source."""
+    with transaction.atomic():
+        UserInterest.objects.filter(user=user).exclude(interest__in=interests).delete()
+        for interest in interests:
+            UserInterest.objects.get_or_create(
+                user=user, interest=interest, defaults={'source': UserInterest.Source.SETTINGS, 'weight': 1.0}
+            )

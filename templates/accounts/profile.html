@@ -1,0 +1,104 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<section class="card hero">
+  <span class="avatar large">{{ initials }}</span>
+  <div class="hero-copy">
+    <div class="eyebrow">YOUR PROFILE</div>
+    <h1>{{ display_name }}</h1>
+    <p>
+      {% if profile.major %}{{ profile.major }}{% else %}Add your major below{% endif %}{% if profile.graduation_year %} · Class of {{ profile.graduation_year }}{% endif %}
+    </p>
+    {% if user.is_campus_verified %}
+      <span class="badge verified"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Campus member</span>
+    {% endif %}
+  </div>
+</section>
+
+<div class="columns">
+  <section class="card" aria-labelledby="details-heading">
+    <div class="card-heading">
+      <h2 id="details-heading">Your details</h2>
+      <p>Your display name appears on events you host. When you RSVP, that event's host can see your name and email. Your bio and major aren't shown to other people.</p>
+    </div>
+    <form class="stack" method="post" novalidate>
+      {% csrf_token %}
+      <label class="field">
+        <span>Display name</span>
+        <input type="text" name="display_name" value="{{ form.display_name.value|default_if_none:'' }}" maxlength="80" required>
+        {% for error in form.display_name.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      </label>
+      <label class="field">
+        <span>Bio <span class="hint">(optional)</span></span>
+        <textarea name="bio" rows="4" maxlength="500" data-counter="bio-count" placeholder="What are you into on campus?">{{ form.bio.value|default_if_none:'' }}</textarea>
+        <small class="hint" id="bio-count" aria-live="polite">Up to 500 characters</small>
+        {% for error in form.bio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>Major <span class="hint">(optional)</span></span>
+          <input type="text" name="major" value="{{ form.major.value|default_if_none:'' }}" maxlength="120" placeholder="e.g. Computer Science">
+          {% for error in form.major.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+        </label>
+        <label class="field">
+          <span>Graduation year <span class="hint">(optional)</span></span>
+          <input type="text" name="graduation_year" value="{{ form.graduation_year.value|default_if_none:'' }}" inputmode="numeric" maxlength="4" placeholder="e.g. 2028">
+          {% for error in form.graduation_year.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+        </label>
+      </div>
+      <div class="actions"><button class="primary-button" type="submit">Save changes</button></div>
+    </form>
+  </section>
+
+  <div class="rail">
+    <section class="card" aria-labelledby="account-heading">
+      <div class="card-heading"><h2 id="account-heading">Account</h2></div>
+      <dl class="status-list">
+        <div>
+          <dt>Email</dt>
+          <dd class="email">{{ user.email }}</dd>
+        </div>
+        <div>
+          <dt>Email status</dt>
+          <dd>
+            {% if user.is_email_verified %}
+              <span class="badge verified"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Verified</span>
+            {% else %}
+              <span class="badge pending">Not verified</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Campus access</dt>
+          <dd>
+            {% if user.is_campus_verified %}
+              <span class="badge verified"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Can host events</span>
+            {% else %}
+              <span class="badge pending">Campus email needed to host</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+      {% if not user.is_email_verified %}
+        <p class="hint">Verify your email to RSVP to events.</p>
+        <form method="post" action="{% url 'resend_verification_email' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'profile' %}">
+          <button class="secondary-button" type="submit">Resend verification email</button>
+        </form>
+      {% endif %}
+    </section>
+
+    <section class="card navy" aria-labelledby="snapshot-heading">
+      <div class="card-heading"><h2 id="snapshot-heading">Your preferences</h2></div>
+      {% if interests %}
+        <ul class="chip-list">{% for interest in interests %}<li>{{ interest.name }}</li>{% endfor %}</ul>
+      {% else %}
+        <p>Pick a few interests to tune your recommendations.</p>
+      {% endif %}
+      <p class="snapshot-line"><b>{{ following_count }}</b> organization{{ following_count|pluralize }} followed{% if muted_count %} · <b>{{ muted_count }}</b> muted{% endif %}</p>
+      <a class="arrow-link" href="{% url 'preferences' %}">Edit preferences <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </section>
+  </div>
+</div>
+{% endblock %}

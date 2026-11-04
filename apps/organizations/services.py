@@ -64,3 +64,19 @@ def follow_organization(*, user, organization, source):
             Organization.objects.filter(pk=organization.pk).update(follower_count=F('follower_count') + 1)
     return created
 
+
+
+def unfollow_organization(*, user, organization) -> bool:
+    """Unfollow once; repeat calls change nothing. Keeps the cached follower_count in step."""
+    with transaction.atomic():
+        deleted, _ = OrganizationFollow.objects.filter(user=user, organization=organization).delete()
+        if deleted:
+            Organization.objects.filter(pk=organization.pk, follower_count__gt=0).update(
+                follower_count=F('follower_count') - 1
+            )
+    return bool(deleted)
+
+
+def set_follow_notifications(*, user, organization, notify: bool) -> None:
+    """Mute or unmute an organization; muted organizations stay followed (FR-59)."""
+    OrganizationFollow.objects.filter(user=user, organization=organization).update(notify=notify)

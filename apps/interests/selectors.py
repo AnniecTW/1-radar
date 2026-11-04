@@ -35,3 +35,7 @@ def list_suggested_organizations(user) -> list[Organization]:
         .filter(matching_events__gt=0)
         .order_by('-matching_events', '-follower_count', 'name')[:SUGGESTED_ORGANIZATION_LIMIT]
     )
+
+
+def list_user_interests(user) -> list[Interest]:
+    return list(Interest.objects.filter(userinterest__user=user, is_active=True).order_by('name'))

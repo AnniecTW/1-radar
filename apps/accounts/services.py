@@ -26,6 +26,21 @@ def create_user_account(*, email: str, password: str, first_name: str, last_name
     return user
 
 
+def get_or_create_profile(user: User) -> Profile:
+    profile, _ = Profile.objects.get_or_create(user=user, defaults={'display_name': user.first_name})
+    return profile
+
+
+def update_profile(*, user: User, display_name: str, bio: str, major: str, graduation_year: int | None) -> Profile:
+    profile = get_or_create_profile(user)
+    profile.display_name = display_name
+    profile.bio = bio
+    profile.major = major or None
+    profile.graduation_year = graduation_year
+    profile.save(update_fields=['display_name', 'bio', 'major', 'graduation_year', 'updated_at'])
+    return profile
+
+
 def make_verification_token(user: User) -> str:
     # The email is signed in so a link stops working if the address changes.
     return signing.dumps({'user_id': str(user.pk), 'email': user.email}, salt=VERIFICATION_TOKEN_SALT)

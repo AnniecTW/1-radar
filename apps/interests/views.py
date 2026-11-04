@@ -6,6 +6,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
+from apps.accounts.services import get_or_create_profile
 from apps.accounts.views import get_safe_next_url
 from apps.organizations.models import Organization, OrganizationFollow
 from apps.organizations.services import follow_organization
@@ -34,7 +35,7 @@ def pick_interests(request: HttpRequest) -> HttpResponse:
         )
         return redirect(with_next('onboarding_organizations', next_url))
 
-    profile = request.user.profile
+    profile = get_or_create_profile(request.user)
     selected_ids = (
         {interest.pk for interest in form.cleaned_data.get('interests', [])}
         if request.method == 'POST'
