@@ -28,3 +28,9 @@ class PreferredInterestsForm(forms.Form):
     interests = forms.ModelMultipleChoiceField(
         queryset=Interest.objects.filter(is_active=True), required=False
     )
+
+    def clean_interests(self):
+        interests = self.cleaned_data['interests']
+        if len(interests) < MIN_INTERESTS:
+            raise forms.ValidationError(f'Pick at least {MIN_INTERESTS} interests to save.')
+        return interests

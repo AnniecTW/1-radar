@@ -1,0 +1,37 @@
+    <aside class="sidebar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 56 64" role="img" aria-label="RADAR logo">
+          <path d="M45.9 16.1A25.5 25.5 0 1 0 52.9 36" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M40 22A17 17 0 1 0 44.9 35" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="m16 33 24-9-11 23-2-11z" transform="translate(28 35) scale(.94) translate(-28 -35)" fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-width="1.4"/>
+          <circle cx="49" cy="26" r="3.6" fill="#f45143"/>
+        </svg>
+        <span>
+          <svg class="brand-wordmark" viewBox="0 0 300 90" role="img" aria-label="RADAR">
+            <g fill="currentColor" fill-rule="evenodd">
+              <path d="M0 4h27c17 0 25 8 25 22 0 11-5 18-15 21l17 9H36L22 49H13v7H0zm13 11v23h14c8 0 12-4 12-12s-4-11-12-11z"/>
+              <path d="m58 56 20-52h15l21 52H99L85.5 19 72 56z"/>
+              <path d="M122 4h22c18 0 30 10 30 26s-12 26-30 26h-22zm13 12v28h9c10 0 16-5 16-14s-6-14-16-14z" transform="translate(-4 0)"/>
+              <path d="m178 56 20-52h15l21 52h-15L205.5 19 192 56z" transform="translate(-4 0)"/>
+              <path d="M240 4h27c17 0 25 8 25 22 0 11-5 18-15 21l17 9h-18l-14-7h-9v7h-13zm13 11v23h14c8 0 12-4 12-12s-4-11-12-11z" transform="translate(-6 0)"/>
+            </g>
+          </svg>
+          <small>Hyper-local ai event<br>radar</small>
+        </span>
+      </div>
+      <nav class="nav" aria-label="Main navigation">
+        <a{% if active_nav == 'discover' %} class="active"{% endif %} href="{% url 'dashboard' %}#discover"><span>◎</span>Discover</a>
+        <a href="{% url 'dashboard' %}#map"><span>⌖</span>Explore Map</a>
+        <a href="{% url 'dashboard' %}#recommendations"><span>✧</span>Recommendations</a>
+        <a href="{% url 'dashboard' %}#create"><span>▷</span>Create Event</a>
+        <a href="{% url 'dashboard' %}#dashboard"><span>▦</span>My Dashboard</a>
+        <a{% if active_nav == 'profile' %} class="active" aria-current="page"{% endif %} href="{% url 'profile' %}"><span>♙</span>Profile</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <section class="promo">
+        <div class="mini-mark">◉<i></i></div>
+        <strong>Events.<br>People.<br>A stronger<br>campus.</strong>
+        <em></em>
+      </section>
+      <div class="sidebar-footer"><span class="footer-icon">♧</span><span>Good events,<br><b>brighter people.</b></span><span>›</span></div>
+    </aside>

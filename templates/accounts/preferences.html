@@ -1,72 +1,61 @@
 {% extends 'accounts/app_base.html' %}
 {% block title %}Preferences{% endblock %}
 {% block content %}
-<section class="page-heading">
-  <div class="eyebrow">YOUR PREFERENCES</div>
-  <h1>Make Radar <em>yours.</em></h1>
-  <p>Choose what you care about and whose events you want to hear about.</p>
-</section>
+{% include 'accounts/_preferences_header.html' with form_id='preferences-form' %}
 
-<div class="columns">
-  <section class="card" aria-labelledby="interests-heading">
-    <div class="card-heading">
-      <h2 id="interests-heading">Your interests</h2>
-      <p>These shape your recommendations. Pick at least 3 for the best results.</p>
-    </div>
-    <form class="stack" method="post" id="preferences-form">
-      {% csrf_token %}
-      {% for group, interests in groups %}
-        <fieldset class="chip-group">
-          <legend>{{ group }}</legend>
-          <div class="chips">
-            {% for interest in interests %}
-              <label class="chip"><input type="checkbox" name="interests" value="{{ interest.pk }}"{% if interest.pk in selected_ids %} checked{% endif %}><span>{{ interest.name }}</span></label>
-            {% endfor %}
-          </div>
-        </fieldset>
-      {% empty %}
-        <p class="hint">No interests are available yet.</p>
-      {% endfor %}
-      <div class="actions spread">
-        <span class="hint" id="interest-count" aria-live="polite"></span>
-        <button class="primary-button" type="submit">Save interests</button>
-      </div>
-    </form>
-  </section>
+<form id="preferences-form" method="post" hidden>{% csrf_token %}</form>
 
-  <section class="card" id="following" aria-labelledby="following-heading">
-    <div class="card-heading">
-      <h2 id="following-heading">Following</h2>
-      <p>Muted organizations stay on your list and still shape your feed, but won't notify you.</p>
-    </div>
-    {% if follows %}
-      <ul class="follow-list">
-        {% for follow in follows %}
-          <li class="follow-row{% if not follow.notify %} muted{% endif %}">
-            <span class="org-mark" aria-hidden="true">{{ follow.organization.name|slice:":1"|upper }}</span>
-            <div class="org-copy">
-              <b>{{ follow.organization.name }}</b>
-              <small>{{ follow.organization.get_org_type_display }} · {{ follow.organization.follower_count }} follower{{ follow.organization.follower_count|pluralize }}{% if not follow.notify %} · Muted{% endif %}</small>
-            </div>
-            <form class="follow-actions" method="post" action="{% url 'update_followed_organization' follow.organization.slug %}">
-              {% csrf_token %}
-              {% if follow.notify %}
-                <button class="pill-button" type="submit" name="action" value="mute" aria-label="Mute {{ follow.organization.name }}">Mute</button>
-              {% else %}
-                <button class="pill-button" type="submit" name="action" value="unmute" aria-label="Unmute {{ follow.organization.name }}">Unmute</button>
-              {% endif %}
-              <button class="pill-button quiet" type="submit" name="action" value="unfollow" aria-label="Unfollow {{ follow.organization.name }}">Unfollow</button>
-            </form>
-          </li>
+<main class="two-columns">
+  <div class="stack-large">
+    <section aria-labelledby="interests-heading">
+      <div class="heading-row"><h2 id="interests-heading">Interests</h2><span class="hint" id="interest-count" aria-live="polite"></span></div>
+      <p class="section-note">Pick at least 3. They seed your For You feed.</p>
+      {% for error in form.interests.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+      <div class="chips" id="interest-chips">
+        {% for group, interests in groups %}
+          {% for interest in interests %}
+            <label class="chip"><input form="preferences-form" type="checkbox" name="interests" value="{{ interest.pk }}"{% if interest.pk in selected_ids %} checked{% endif %}><span>{{ interest.name }}</span></label>
+          {% endfor %}
+        {% empty %}
+          <p class="hint">No interests are available yet.</p>
         {% endfor %}
-      </ul>
-    {% else %}
-      <div class="empty-state">
-        <p><b>You're not following anyone yet.</b></p>
-        <p>Follow an organization from one of its events to see it here.</p>
-        <a class="secondary-button" href="{% url 'dashboard' %}">Discover events</a>
       </div>
-    {% endif %}
-  </section>
-</div>
+    </section>
+
+    <section class="divided" aria-labelledby="feed-heading">
+      <h2 id="feed-heading">Feed</h2>
+      <label class="setting">
+        <span>Open the feed on</span>
+        <select form="preferences-form" name="default_tab">
+          <option value="for_you"{% if default_tab == 'for_you' %} selected{% endif %}>For You</option>
+          <option value="following"{% if default_tab == 'following' %} selected{% endif %}>Following</option>
+        </select>
+      </label>
+      <label class="setting">
+        <span>Free events only</span>
+        <span class="switch"><input form="preferences-form" type="checkbox" role="switch" name="free_only"{% if free_only %} checked{% endif %}><i></i></span>
+      </label>
+    </section>
+  </div>
+
+  <div class="stack-large">
+    <section aria-labelledby="notifications-heading">
+      <h2 id="notifications-heading">Notifications</h2>
+      <div class="matrix-head"><span>Update</span><span>In-app</span><span>Email</span></div>
+      {% for item in notifications %}
+        <div class="matrix-row">
+          <span>{{ item.label }}</span>
+          <label class="switch"><input form="preferences-form" type="checkbox" role="switch" name="{{ item.key }}_app" aria-label="{{ item.label }} in-app"{% if item.app %} checked{% endif %}><i></i></label>
+          <label class="switch"><input form="preferences-form" type="checkbox" role="switch" name="{{ item.key }}_email" aria-label="{{ item.label }} by email"{% if item.email %} checked{% endif %}><i></i></label>
+        </div>
+      {% endfor %}
+    </section>
+
+    <section aria-labelledby="following-heading">
+      <h2 id="following-heading">Following</h2>
+      <p class="section-note">Muting stops alerts but keeps their events boosted in your feed. These buttons save right away.</p>
+      {% include 'accounts/_follow_rows.html' with rows=follows %}
+    </section>
+  </div>
+</main>
 {% endblock %}

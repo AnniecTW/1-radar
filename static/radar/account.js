@@ -20,14 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCounter()
   }
 
-  const preferencesForm = document.getElementById('preferences-form')
-  if (preferencesForm) {
+  const chips = document.getElementById('interest-chips')
+  if (chips) {
     const count = document.getElementById('interest-count')
     const updateCount = () => {
-      const selected = preferencesForm.querySelectorAll('input[name="interests"]:checked').length
-      count.textContent = `${selected} selected`
+      count.textContent = `${chips.querySelectorAll('input:checked').length} selected`
     }
-    preferencesForm.addEventListener('change', updateCount)
+    chips.addEventListener('change', updateCount)
     updateCount()
   }
 })

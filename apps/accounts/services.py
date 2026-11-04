@@ -2,9 +2,11 @@ from django.core import signing
 from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
 
+from apps.interests.services import save_interests_from_preferences
+
 from .exceptions import EmailAlreadyRegisteredError, InvalidVerificationTokenError
 from .models import Profile, User
-from .selectors import get_campus_domain_for_email, get_user_by_id, is_email_registered
+from .selectors import NOTIFICATION_UPDATES, get_campus_domain_for_email, get_user_by_id, is_email_registered
 
 VERIFICATION_TOKEN_SALT = 'accounts.email-verification'
 VERIFICATION_TOKEN_MAX_AGE_SECONDS = 3 * 24 * 60 * 60
@@ -39,6 +41,26 @@ def update_profile(*, user: User, display_name: str, bio: str, major: str, gradu
     profile.graduation_year = graduation_year
     profile.save(update_fields=['display_name', 'bio', 'major', 'graduation_year', 'updated_at'])
     return profile
+
+
+def save_feed_preferences(*, user: User, cleaned_data: dict) -> None:
+    """Save interests and the settings on the Feed & notifications page."""
+    profile = get_or_create_profile(user)
+    notifications = {
+        key: {'app': cleaned_data[f'{key}_app'], 'email': cleaned_data[f'{key}_email']}
+        for key, _ in NOTIFICATION_UPDATES
+    }
+    feed = {'default_tab': cleaned_data['default_tab'], 'free_only': cleaned_data['free_only']}
+    with transaction.atomic():
+        save_interests_from_preferences(user=user, interests=cleaned_data['interests'])
+        profile.notification_prefs = {**profile.notification_prefs, 'notifications': notifications, 'feed': feed}
+        profile.save(update_fields=['notification_prefs', 'updated_at'])
+
+
+def save_location_preferences(*, user: User, cleaned_data: dict) -> None:
+    profile = get_or_create_profile(user)
+    profile.notification_prefs = {**profile.notification_prefs, 'location': cleaned_data}
+    profile.save(update_fields=['notification_prefs', 'updated_at'])
 
 
 def make_verification_token(user: User) -> str:

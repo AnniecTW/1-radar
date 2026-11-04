@@ -1,0 +1,15 @@
+<section class="banner slim">
+  <div class="banner-copy">
+    <a class="back-link" href="{% url 'profile' %}">‹ Back to Profile</a>
+    <h1>Preferences</h1>
+  </div>
+  <div class="banner-actions">
+    <a class="banner-button" href="{% url 'profile' %}">Cancel</a>
+    <button class="banner-button solid" type="submit" form="{{ form_id }}">Save changes</button>
+  </div>
+</section>
+
+<nav class="tabs" aria-label="Preference pages">
+  <a href="{% url 'preferences' %}"{% if preferences_page == 'feed' %} class="active" aria-current="page"{% endif %}>Feed &amp; notifications</a>
+  <a href="{% url 'account_preferences' %}"{% if preferences_page == 'account' %} class="active" aria-current="page"{% endif %}>Account &amp; privacy</a>
+</nav>

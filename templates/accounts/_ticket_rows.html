@@ -1,0 +1,12 @@
+{% for rsvp in rows %}
+  <article class="row">
+    <div class="date-block"><span>{{ rsvp.event.start_at|date:"M"|upper }}</span><b>{{ rsvp.event.start_at|date:"j" }}</b></div>
+    <div class="row-copy">
+      <h3>{{ rsvp.event.title }}</h3>
+      <p>{{ rsvp.event.start_at|date:"g:i A" }} · {% include 'accounts/_event_place.html' with event=rsvp.event %}</p>
+      <p class="muted">{% if rsvp.event.organization %}Hosted by {{ rsvp.event.organization.name }} · {% endif %}<b>{% if rsvp.status == 'waitlisted' %}Waitlist{% if rsvp.waitlist_position %} #{{ rsvp.waitlist_position }}{% endif %}{% else %}Going{% endif %}</b></p>
+    </div>
+  </article>
+{% empty %}
+  <p class="empty">No upcoming tickets. <a href="{% url 'dashboard' %}">Discover events</a></p>
+{% endfor %}

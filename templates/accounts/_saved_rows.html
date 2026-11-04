@@ -1,0 +1,19 @@
+{% for event in rows %}
+  <article class="row">
+    <div class="thumb" aria-hidden="true">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="">{% else %}{{ event.title|slice:":1" }}{% endif %}</div>
+    <div class="row-copy">
+      <h3>{{ event.title }}</h3>
+      <p>{{ event.start_at|date:"D, M j, g:i A" }} · {% include 'accounts/_event_place.html' %}</p>
+      <p class="muted">{{ event.going_count }} going</p>
+    </div>
+    <form method="post" action="{% url 'remove_from_saved' event.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="heart-button" type="submit" aria-label="Remove {{ event.title }} from saved" title="Remove from saved">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.5-7 10-7 10z"/></svg>
+      </button>
+    </form>
+  </article>
+{% empty %}
+  <p class="empty">Nothing saved yet. <a href="{% url 'dashboard' %}">Discover events</a></p>
+{% endfor %}

@@ -1,0 +1,80 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}Account &amp; privacy{% endblock %}
+{% block content %}
+{% include 'accounts/_preferences_header.html' with form_id='location-form' %}
+
+<main class="two-columns">
+  <section aria-labelledby="location-heading">
+    <h2 id="location-heading">Location &amp; map</h2>
+    <p class="section-note">Used for "events near you," the 15-minute walk filter, and the map.</p>
+    <form id="location-form" method="post">
+      {% csrf_token %}
+      <fieldset class="radio-group">
+        <legend>When can we use your location?</legend>
+        <label class="radio-row"><input type="radio" name="use" value="session"{% if location.use == 'session' %} checked{% endif %}><span><b>Only while I'm using the app</b><small>Recommended. Used for this session and not saved.</small></span></label>
+        <label class="radio-row"><input type="radio" name="use" value="save"{% if location.use == 'save' %} checked{% endif %}><span><b>Remember my location</b><small>Helps rank nearby events in your For You feed.</small></span></label>
+        <label class="radio-row"><input type="radio" name="use" value="off"{% if location.use == 'off' %} checked{% endif %}><span><b>Don't use my location</b><small>The map starts from the center of campus.</small></span></label>
+      </fieldset>
+      <label class="setting ruled">
+        <span>Start with a 15-minute walk</span>
+        <span class="switch"><input type="checkbox" role="switch" name="start_with_walk"{% if location.start_with_walk %} checked{% endif %}><i></i></span>
+      </label>
+      <label class="setting ruled">
+        <span>Show heat map</span>
+        <span class="switch"><input type="checkbox" role="switch" name="show_heat_map"{% if location.show_heat_map %} checked{% endif %}><i></i></span>
+      </label>
+      <label class="setting">
+        <span>Default map view</span>
+        <select name="default_map_view">
+          <option value="map"{% if location.default_map_view == 'map' %} selected{% endif %}>Map</option>
+          <option value="satellite"{% if location.default_map_view == 'satellite' %} selected{% endif %}>Satellite</option>
+          <option value="list"{% if location.default_map_view == 'list' %} selected{% endif %}>List</option>
+        </select>
+      </label>
+    </form>
+  </section>
+
+  <div class="stack-large">
+    <section aria-labelledby="account-heading">
+      <h2 id="account-heading">Account &amp; email</h2>
+      <p class="section-note">A verified campus email lets you create events and organizations.</p>
+      <div class="info-row">
+        <small>Sign-in email</small>
+        <div>
+          <b class="email">{{ user.email }}</b>
+          {% if user.is_email_verified %}<span class="status-ok">Verified</span>{% else %}<span class="status-warn">Not verified</span>{% endif %}
+        </div>
+      </div>
+      {% if user.campus_email %}
+        <div class="info-row">
+          <small>Campus email</small>
+          <div><b class="email">{{ user.campus_email }}</b>{% if user.is_campus_verified %}<span class="status-ok">Verified · can host</span>{% else %}<span class="status-warn">Not verified</span>{% endif %}</div>
+        </div>
+      {% else %}
+        <div class="info-row">
+          <small>Hosting</small>
+          <div>{% if user.is_campus_verified %}<span class="status-ok">Campus verified · can host</span>{% else %}<span class="status-warn">A campus email is needed to host</span>{% endif %}</div>
+        </div>
+      {% endif %}
+      <div class="password-row">
+        <span>Password</span>
+        <a class="link-strong" href="{% url 'change_password' %}">Change password</a>
+      </div>
+      {% if not user.is_email_verified %}
+        <form method="post" action="{% url 'resend_verification_email' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'account_preferences' %}">
+          <button class="text-button strong" type="submit">Resend verification email</button>
+        </form>
+      {% endif %}
+    </section>
+
+    <section class="divided" aria-labelledby="privacy-heading">
+      <h2 id="privacy-heading">Privacy &amp; data</h2>
+      <p class="privacy-line"><b>Follows:</b> organizations see how many people follow them, not who.</p>
+      <p class="privacy-line"><b>Attendance:</b> only an event's host and organizers can see its attendee list.</p>
+      <p class="privacy-line"><b>Location:</b> stays in your session unless you choose to save it.</p>
+    </section>
+  </div>
+</main>
+{% endblock %}

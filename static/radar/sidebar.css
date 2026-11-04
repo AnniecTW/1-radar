@@ -1,0 +1,49 @@
+/* The dashboard's sidebar rules from dashboard.css, for pages that don't load that file. Keep the two in step. */
+.sidebar{--navy:#102942;--ink:#18293d;--terra:#c65024;font-family:'DM Sans',sans-serif;font-size:14px;line-height:normal;flex:none}
+.sidebar{width:248px;background:#fbf8f3;border:1px solid #eee6dc;border-radius:24px;margin:20px 18px 20px 20px;padding:27px 16px 20px;display:flex;flex-direction:column;min-height:calc(100vh - 40px)}
+.brand{display:flex;align-items:center;padding:0 9px 27px;gap:11px}
+.brand img{width:39px;height:39px;object-fit:contain;object-position:top;transform:scale(1.35);clip-path:inset(0 0 54% 0)}
+.brand span{display:flex;flex-direction:column}
+.brand b{font-size:21px;letter-spacing:3px;font-weight:600}
+.brand small{font-size:10px;line-height:1.3;color:#464c55}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav a{color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:15px;border-radius:14px;padding:13px 14px;font-size:15px;font-weight:600}
+.nav a span{font-size:21px;width:18px;text-align:center;color:#4d5660;font-weight:400}
+.nav a.active{background:#fff;box-shadow:0 5px 16px rgba(43,32,24,.08)}
+.nav a.active span{color:var(--terra)}
+.sidebar-spacer{flex:1}
+.promo{background:var(--navy);color:white;border-radius:20px;padding:25px 20px 23px;min-height:210px;position:relative;overflow:hidden}
+.mini-mark{font-size:34px;margin-bottom:18px;position:relative}
+.mini-mark i{position:absolute;width:5px;height:5px;background:#e35a36;border-radius:50%;top:11px;left:28px}
+.promo strong{font-size:18px;line-height:1.4;letter-spacing:.2px}
+.promo em{display:block;width:33px;height:3px;background:#dc6743;margin-top:17px}
+.sidebar-footer{background:#fff;margin-top:13px;border-radius:18px;padding:14px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 5px 16px rgba(43,32,24,.06);font-size:12px;line-height:1.35}
+.footer-icon{font-size:25px;color:var(--terra)}
+.sidebar-footer>span:last-child{margin-left:auto;font-size:22px}
+@media(max-width:1120px){.sidebar{width:215px}}
+@media(max-width:850px){.sidebar{width:76px;padding:20px 10px}}
+@media(max-width:850px){.brand{padding:0 8px 27px}}
+@media(max-width:850px){.brand span,.nav a:not(.active)::after,.nav a{font-size:0}}
+@media(max-width:850px){.nav a{justify-content:center;padding:14px}}
+@media(max-width:850px){.nav a span{font-size:22px}}
+@media(max-width:850px){.promo strong,.promo em,.sidebar-footer span:not(.footer-icon){display:none}}
+@media(max-width:850px){.promo{min-height:84px;padding:20px 15px}}
+@media(max-width:850px){.sidebar-footer{padding:13px;justify-content:center}}
+@media(max-width:620px){.sidebar{display:none}}
+.brand-mark{width:39px;height:44px;flex:0 0 auto;color:var(--navy);overflow:visible}
+.brand-wordmark{display:block;width:100px;height:30px;color:var(--navy);overflow:visible;flex:none}
+.brand>span{min-height:53px;justify-content:flex-start;overflow:visible;flex-shrink:0}
+@media (min-width:621px) and (max-width:850px){.sidebar{width:120px;flex:0 0 120px;margin:10px;padding:14px 8px;min-height:calc(100vh - 20px);border-radius:18px}}
+@media (min-width:621px) and (max-width:850px){.brand{padding:0 4px 16px;gap:6px}}
+@media (min-width:621px) and (max-width:850px){.brand-mark{width:28px;height:32px}}
+@media (min-width:621px) and (max-width:850px){.brand-wordmark{width:66px;height:20px}}
+@media (min-width:621px) and (max-width:850px){.brand small{font-size:7px}}
+@media (min-width:621px) and (max-width:850px){.nav{gap:3px}}
+@media (min-width:621px) and (max-width:850px){.nav a{font-size:10px;padding:9px 7px;gap:6px;border-radius:10px}}
+@media (min-width:621px) and (max-width:850px){.nav a span{font-size:14px;width:15px}}
+@media (min-width:621px) and (max-width:850px){.promo{min-height:126px;padding:13px 10px;border-radius:14px}}
+@media (min-width:621px) and (max-width:850px){.mini-mark{font-size:23px;margin-bottom:8px}}
+@media (min-width:621px) and (max-width:850px){.promo strong{font-size:12px;line-height:1.3}}
+@media (min-width:621px) and (max-width:850px){.promo em{margin-top:10px;width:22px}}
+@media (min-width:621px) and (max-width:850px){.sidebar-footer{font-size:9px;padding:9px 7px;gap:5px}}
+@media (min-width:621px) and (max-width:850px){.footer-icon{font-size:18px}}

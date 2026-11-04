@@ -1,104 +1,124 @@
 {% extends 'accounts/app_base.html' %}
 {% block title %}Profile{% endblock %}
 {% block content %}
-<section class="card hero">
-  <span class="avatar large">{{ initials }}</span>
-  <div class="hero-copy">
-    <div class="eyebrow">YOUR PROFILE</div>
-    <h1>{{ display_name }}</h1>
-    <p>
-      {% if profile.major %}{{ profile.major }}{% else %}Add your major below{% endif %}{% if profile.graduation_year %} · Class of {{ profile.graduation_year }}{% endif %}
-    </p>
-    {% if user.is_campus_verified %}
-      <span class="badge verified"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Campus member</span>
-    {% endif %}
+<section class="banner">
+  <div class="banner-top">
+    <span class="avatar large">{{ initials }}</span>
+    <div class="banner-copy">
+      <span class="banner-eyebrow">MY PROFILE</span>
+      <div class="banner-name">
+        <h1>{{ display_name }}</h1>
+        {% if user.is_campus_verified %}<span class="verified">Campus verified</span>{% endif %}
+      </div>
+      <p class="banner-line">
+        {% if profile.major %}{{ profile.major }}{% else %}<a href="{% url 'edit_profile' %}">Add your major</a>{% endif %}{% if profile.graduation_year %} · Class of {{ profile.graduation_year }}{% endif %}
+      </p>
+      {% if profile.bio %}<p class="banner-bio">{{ profile.bio }}</p>{% endif %}
+      <p class="banner-meta">Joined {{ user.date_joined|date:"M Y" }}</p>
+    </div>
+    <div class="banner-actions">
+      <a class="banner-button" href="{% url 'edit_profile' %}">Edit profile</a>
+      <a class="banner-button solid" href="{% url 'preferences' %}">Preferences</a>
+    </div>
   </div>
+  <dl class="stats">
+    <div><dd>{{ attended_count }}</dd><dt>Events attended</dt></div>
+    <div><dd>{{ tickets|length }}</dd><dt>Upcoming tickets</dt></div>
+    <div><dd>{{ saved_events|length }}</dd><dt>Saved events</dt></div>
+    <div><dd>{{ follows|length }}</dd><dt>Following</dt></div>
+  </dl>
 </section>
 
-<div class="columns">
-  <section class="card" aria-labelledby="details-heading">
-    <div class="card-heading">
-      <h2 id="details-heading">Your details</h2>
-      <p>Your display name appears on events you host. When you RSVP, that event's host can see your name and email. Your bio and major aren't shown to other people.</p>
-    </div>
-    <form class="stack" method="post" novalidate>
-      {% csrf_token %}
-      <label class="field">
-        <span>Display name</span>
-        <input type="text" name="display_name" value="{{ form.display_name.value|default_if_none:'' }}" maxlength="80" required>
-        {% for error in form.display_name.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-      </label>
-      <label class="field">
-        <span>Bio <span class="hint">(optional)</span></span>
-        <textarea name="bio" rows="4" maxlength="500" data-counter="bio-count" placeholder="What are you into on campus?">{{ form.bio.value|default_if_none:'' }}</textarea>
-        <small class="hint" id="bio-count" aria-live="polite">Up to 500 characters</small>
-        {% for error in form.bio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-      </label>
-      <div class="field-row">
-        <label class="field">
-          <span>Major <span class="hint">(optional)</span></span>
-          <input type="text" name="major" value="{{ form.major.value|default_if_none:'' }}" maxlength="120" placeholder="e.g. Computer Science">
-          {% for error in form.major.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-        </label>
-        <label class="field">
-          <span>Graduation year <span class="hint">(optional)</span></span>
-          <input type="text" name="graduation_year" value="{{ form.graduation_year.value|default_if_none:'' }}" inputmode="numeric" maxlength="4" placeholder="e.g. 2028">
-          {% for error in form.graduation_year.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
-        </label>
-      </div>
-      <div class="actions"><button class="primary-button" type="submit">Save changes</button></div>
-    </form>
-  </section>
+<nav class="tabs" aria-label="Profile sections">
+  {% for key, label in tabs %}
+    <a href="{% url 'profile' %}{% if key != 'overview' %}?tab={{ key }}{% endif %}"{% if key == tab %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
 
-  <div class="rail">
-    <section class="card" aria-labelledby="account-heading">
-      <div class="card-heading"><h2 id="account-heading">Account</h2></div>
-      <dl class="status-list">
-        <div>
-          <dt>Email</dt>
-          <dd class="email">{{ user.email }}</dd>
-        </div>
-        <div>
-          <dt>Email status</dt>
-          <dd>
-            {% if user.is_email_verified %}
-              <span class="badge verified"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Verified</span>
-            {% else %}
-              <span class="badge pending">Not verified</span>
-            {% endif %}
-          </dd>
-        </div>
-        <div>
-          <dt>Campus access</dt>
-          <dd>
-            {% if user.is_campus_verified %}
-              <span class="badge verified"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Can host events</span>
-            {% else %}
-              <span class="badge pending">Campus email needed to host</span>
-            {% endif %}
-          </dd>
-        </div>
-      </dl>
-      {% if not user.is_email_verified %}
-        <p class="hint">Verify your email to RSVP to events.</p>
-        <form method="post" action="{% url 'resend_verification_email' %}">
-          {% csrf_token %}
-          <input type="hidden" name="next" value="{% url 'profile' %}">
-          <button class="secondary-button" type="submit">Resend verification email</button>
-        </form>
-      {% endif %}
-    </section>
-
-    <section class="card navy" aria-labelledby="snapshot-heading">
-      <div class="card-heading"><h2 id="snapshot-heading">Your preferences</h2></div>
-      {% if interests %}
-        <ul class="chip-list">{% for interest in interests %}<li>{{ interest.name }}</li>{% endfor %}</ul>
-      {% else %}
-        <p>Pick a few interests to tune your recommendations.</p>
-      {% endif %}
-      <p class="snapshot-line"><b>{{ following_count }}</b> organization{{ following_count|pluralize }} followed{% if muted_count %} · <b>{{ muted_count }}</b> muted{% endif %}</p>
-      <a class="arrow-link" href="{% url 'preferences' %}">Edit preferences <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-    </section>
+{% if tab == 'overview' %}
+  <div class="dashboard">
+    <main class="stack-large">
+      <section>
+        <div class="heading-row"><h2>My upcoming tickets</h2><a href="?tab=tickets">See all →</a></div>
+        {% include 'accounts/_ticket_rows.html' with rows=tickets|slice:":3" %}
+      </section>
+      <section>
+        <div class="heading-row"><h2>Saved events</h2><a href="?tab=saved">See all →</a></div>
+        <p class="section-note">Events you saved for later</p>
+        {% include 'accounts/_saved_rows.html' with rows=saved_events|slice:":3" %}
+      </section>
+    </main>
+    <aside class="rail">
+      <section>
+        <div class="heading-row small"><h2>My interests</h2><a href="{% url 'preferences' %}">Edit</a></div>
+        <p class="section-note">These shape your recommendations</p>
+        {% if interests %}
+          <p class="interest-line">{% for interest in interests %}{{ interest.name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+        {% else %}
+          <p class="interest-line"><a href="{% url 'preferences' %}">Pick a few interests</a> to tune your recommendations.</p>
+        {% endif %}
+      </section>
+      <section class="rail-section">
+        <div class="heading-row small"><h2>Following</h2><a href="?tab=following">See all</a></div>
+        <p class="section-note">New events from these orgs show up in your feed</p>
+        {% include 'accounts/_follow_rows.html' with rows=follows|slice:":4" compact=True %}
+      </section>
+      <section class="rail-section">
+        <h2 class="small-title">This semester</h2>
+        <p class="section-note">Check-ins from events you RSVP'd to</p>
+        {% if semester.total %}
+          <p class="semester-count"><b>{{ semester.attended }}</b> of {{ semester.total }} RSVP{{ semester.total|pluralize }} attended</p>
+          <div class="progress"><div style="width: {{ semester.percent }}%"></div></div>
+          {% if semester.top_interests %}
+            <p class="section-note">Mostly {% for interest in semester.top_interests %}{{ interest.name }} ({{ interest.attended_count }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>
+          {% endif %}
+        {% else %}
+          <p class="interest-line">Your attendance shows up here after your first event.</p>
+        {% endif %}
+      </section>
+    </aside>
   </div>
-</div>
+{% elif tab == 'tickets' %}
+  <section><h2 class="tab-title">My Tickets</h2>{% include 'accounts/_ticket_rows.html' with rows=tickets %}</section>
+{% elif tab == 'saved' %}
+  <section><h2 class="tab-title">Saved</h2>{% include 'accounts/_saved_rows.html' with rows=saved_events %}</section>
+{% elif tab == 'following' %}
+  <section>
+    <h2 class="tab-title">Following</h2>
+    <p class="section-note">Use the bell to mute an organization. It stays on your list and still shapes your feed, but won't notify you.</p>
+    {% include 'accounts/_follow_rows.html' with rows=follows %}
+  </section>
+{% elif tab == 'hosting' %}
+  <section>
+    <h2 class="tab-title">Hosting</h2>
+    {% for event in hosted_events %}
+      <article class="row">
+        <div class="date-block">{% if event.start_at %}<span>{{ event.start_at|date:"M"|upper }}</span><b>{{ event.start_at|date:"j" }}</b>{% else %}<span>DRAFT</span>{% endif %}</div>
+        <div class="row-copy">
+          <h3>{{ event.title|default:"Untitled draft" }}</h3>
+          <p>{% include 'accounts/_event_place.html' %}</p>
+          <p class="muted">{{ event.get_status_display }} · {{ event.going_count }} going</p>
+        </div>
+      </article>
+    {% empty %}
+      <p class="empty">You haven't hosted any events yet.</p>
+    {% endfor %}
+  </section>
+{% elif tab == 'past' %}
+  <section>
+    <h2 class="tab-title">Past events</h2>
+    {% for rsvp in past_rsvps %}
+      <article class="row">
+        <div class="date-block"><span>{{ rsvp.event.start_at|date:"M"|upper }}</span><b>{{ rsvp.event.start_at|date:"j" }}</b></div>
+        <div class="row-copy">
+          <h3>{{ rsvp.event.title }}</h3>
+          <p>{% include 'accounts/_event_place.html' with event=rsvp.event %}</p>
+          <p class="muted">{% if rsvp.attended %}Attended{% else %}RSVP'd, no check-in{% endif %}</p>
+        </div>
+      </article>
+    {% empty %}
+      <p class="empty">Events you RSVP to will show up here after they end.</p>
+    {% endfor %}
+  </section>
+{% endif %}
 {% endblock %}

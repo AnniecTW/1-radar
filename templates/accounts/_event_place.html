@@ -1,0 +1,1 @@
+{% if event.venue %}{{ event.venue.name }}{% if event.location_text %}, {{ event.location_text }}{% endif %}{% else %}{{ event.location_text }}{% endif %}

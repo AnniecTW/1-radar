@@ -3,7 +3,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from .models import User
-from .selectors import is_email_registered
+from apps.interests.forms import PreferredInterestsForm
+
+from .selectors import NOTIFICATION_UPDATES, is_email_registered
 from .validators import validate_graduation_year
 
 
@@ -53,3 +55,21 @@ class ProfileForm(forms.Form):
     bio = forms.CharField(max_length=500, required=False)
     major = forms.CharField(max_length=120, required=False)
     graduation_year = forms.IntegerField(required=False, validators=[validate_graduation_year])
+
+
+class FeedPreferencesForm(PreferredInterestsForm):
+    default_tab = forms.ChoiceField(choices=[('for_you', 'For You'), ('following', 'Following')])
+    free_only = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for key, _ in NOTIFICATION_UPDATES:
+            self.fields[f'{key}_app'] = forms.BooleanField(required=False)
+            self.fields[f'{key}_email'] = forms.BooleanField(required=False)
+
+
+class LocationPreferencesForm(forms.Form):
+    use = forms.ChoiceField(choices=[('session', 'Session'), ('save', 'Save'), ('off', 'Off')])
+    start_with_walk = forms.BooleanField(required=False)
+    show_heat_map = forms.BooleanField(required=False)
+    default_map_view = forms.ChoiceField(choices=[('map', 'Map'), ('satellite', 'Satellite'), ('list', 'List')])
