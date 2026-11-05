@@ -23,5 +23,6 @@ urlpatterns = [
     path('', show_landing_page, name='dashboard'),
     path('accounts/', include('apps.accounts.urls')),
     path('onboarding/', include('apps.interests.urls')),
+    path('', include('apps.rsvps.urls')),
     path('admin/', admin.site.urls),
 ]
