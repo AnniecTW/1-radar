@@ -1,6 +1,16 @@
 {% extends 'accounts/app_base.html' %}
 {% block title %}Profile{% endblock %}
 {% block content %}
+{% if not user.is_email_verified %}
+<div class="verify-banner" role="alert">
+  <p><b>Verify your email.</b> Check <b>{{ user.email }}</b> for a link. Until you verify, you can't RSVP, and a campus email won't unlock hosting.</p>
+  <form method="post" action="{% url 'resend_verification_email' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'profile' %}">
+    <button class="banner-button solid" type="submit">Resend email</button>
+  </form>
+</div>
+{% endif %}
 <section class="banner">
   <div class="banner-top">
     <span class="avatar large">{{ initials }}</span>

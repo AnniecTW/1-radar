@@ -58,7 +58,7 @@ body{margin:0;background:var(--cream);color:var(--ink);font-family:'DM Sans',san
 .org-info{flex:1;min-width:0}
 .org-info h3{margin:0 0 3px;font-size:15px}
 .org-info p{margin:0;color:var(--muted);font-size:12px}
-.verified{color:var(--terra);font-size:12px}
+.verified{color:#1e5636;font-size:12px}
 .cta{margin-top:48px;background:var(--navy);color:#fff;border-radius:25px;padding:34px 38px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .cta h2{font-family:'Playfair Display',serif;font-size:28px;margin:0 0 6px}
 .cta p{margin:0;color:#c9d3de}

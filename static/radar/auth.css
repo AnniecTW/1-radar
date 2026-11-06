@@ -55,7 +55,7 @@ body{margin:0;background:var(--cream);color:var(--ink);font-family:'DM Sans',san
 .org-option input{position:absolute;opacity:0;pointer-events:none}
 .org-info{flex:1;display:flex;flex-direction:column;gap:2px}
 .org-info small{color:var(--muted)}
-.verified{color:var(--terra)}
+.verified{color:#1e5636}
 .org-follow{padding:7px 16px;border:1px solid var(--navy);border-radius:20px;font-weight:700;color:var(--navy)}
 .org-option input:checked~.org-follow{background:var(--navy);color:#fff}
 .org-option input:checked~.org-follow::after{content:"ing"}

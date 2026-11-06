@@ -219,3 +219,10 @@ select{height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:1
 .guest-brand{font-weight:700;letter-spacing:.2em;color:var(--navy)}
 .guest-spacer{flex:1}
 .banner-button.navy{border-color:var(--navy);background:var(--navy);color:var(--white)}
+.verify-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px;border-radius:16px;background:#f7e4d8;color:#5c2408}
+.verify-banner .banner-button.solid{border-color:var(--navy);background:var(--navy);color:var(--white)}
+.verified-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 11px 3px 8px;border-radius:999px;background:#e2eee6;color:var(--ok);font-size:13px;font-weight:600;vertical-align:middle}
+.verified-badge svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.verify-card{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px;padding:16px 20px;border-radius:16px;background:var(--white);border:1.5px solid var(--line)}
+.verify-card form{display:flex;flex-direction:column;gap:10px;flex:1 1 280px}
+.verify-card .banner-button.solid{align-self:flex-start;border-color:var(--navy);background:var(--navy);color:var(--white)}

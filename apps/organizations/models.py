@@ -47,6 +47,40 @@ class Organization(models.Model):
         return self.name
 
 
+class OrganizationVerificationRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending'
+        APPROVED = 'approved'
+        REJECTED = 'rejected'
+
+    id = models.BigAutoField(primary_key=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='verification_requests')
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='+'
+    )
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    # What the Owner tells reviewers: which RSO or office this is, and where to confirm it.
+    note = models.TextField(max_length=1000, blank=True)
+    review_note = models.TextField(max_length=1000, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization'],
+                condition=models.Q(status='pending'),
+                name='one_pending_verification_request',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.organization} verification ({self.status})'
+
+
 class OrganizationMembership(models.Model):
     class Role(models.TextChoices):
         OWNER = 'owner'

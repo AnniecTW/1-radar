@@ -5,7 +5,7 @@ from apps.events.models import Event
 
 from apps.events.selectors import filter_discoverable_events
 
-from .models import OrganizationFollow, OrganizationMembership
+from .models import OrganizationFollow, OrganizationMembership, OrganizationVerificationRequest
 
 
 def list_followed_organizations(user) -> QuerySet[OrganizationFollow]:
@@ -37,3 +37,7 @@ def list_organization_events(organization, now):
     upcoming = events.filter(end_at__gt=now).order_by('start_at')
     past = events.filter(end_at__lte=now).order_by('-start_at')[:12]
     return list(upcoming), list(past)
+
+
+def get_latest_verification_request(organization):
+    return OrganizationVerificationRequest.objects.filter(organization=organization).order_by('-created_at').first()

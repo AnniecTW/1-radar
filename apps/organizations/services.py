@@ -1,10 +1,13 @@
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F
+from django.utils import timezone
 from django.utils.text import slugify
 
-from .models import Organization, OrganizationFollow, OrganizationMembership
+from .models import Organization, OrganizationFollow, OrganizationMembership, OrganizationVerificationRequest
 from .permissions import user_can_manage_members, user_can_manage_organization
+
+MAX_OWNED_ORGANIZATIONS = 3
 
 
 def add_organization_member(*, actor, organization, user, role):
@@ -97,11 +100,20 @@ def create_organization(*, creator, name, org_type, description='', logo=None, c
     """FR-5: only campus members create organizations; the model makes the creator its Owner."""
     if not creator.is_campus_verified:
         raise PermissionDenied('Only campus members can create an organization.')
-    return Organization.objects.create(
-        name=name, slug=_unique_organization_slug(name), org_type=org_type, description=description,
-        logo=logo or '', contact_email=contact_email, website_url=website_url or None,
-        instagram_url=instagram_url or None, created_by=creator,
-    )
+    with transaction.atomic():
+        # Lock the user row so two simultaneous submits can't both pass the count.
+        type(creator).objects.select_for_update().get(pk=creator.pk)
+        # Count Owner roles, not created_by, so transferring ownership away doesn't free a slot.
+        owned = OrganizationMembership.objects.filter(
+            user=creator, role=OrganizationMembership.Role.OWNER
+        ).count()
+        if owned >= MAX_OWNED_ORGANIZATIONS:
+            raise ValidationError(f'You can own up to {MAX_OWNED_ORGANIZATIONS} organizations.')
+        return Organization.objects.create(
+            name=name, slug=_unique_organization_slug(name), org_type=org_type, description=description,
+            logo=logo or '', contact_email=contact_email, website_url=website_url or None,
+            instagram_url=instagram_url or None, created_by=creator,
+        )
 
 
 def update_organization_profile(*, actor, organization, name, org_type, description='', logo=None,
@@ -121,3 +133,40 @@ def update_organization_profile(*, actor, organization, name, org_type, descript
         organization.logo = ''
     organization.save()
     return organization
+
+
+def request_organization_verification(*, actor, organization, note=''):
+    """Owner asks Platform Admins to verify the organization. One pending request at a time."""
+    if not user_can_manage_organization(actor, organization):
+        raise PermissionDenied('Only the organization Owner can request verification.')
+    if organization.is_verified:
+        raise ValidationError('This organization is already verified.')
+    if not organization.contact_email or not (organization.website_url or organization.instagram_url):
+        raise ValidationError('Add an organization email and a website or social media link first.')
+    try:
+        with transaction.atomic():
+            return OrganizationVerificationRequest.objects.create(
+                organization=organization, requested_by=actor, note=note
+            )
+    except IntegrityError:
+        raise ValidationError('A verification request is already pending.') from None
+
+
+@transaction.atomic
+def review_verification_request(*, reviewer, verification_request, approve, review_note=''):
+    """Platform Admin decision (FR-66). Approving sets the organization's verified badge."""
+    if not reviewer.is_staff:
+        raise PermissionDenied('Only Platform Admins review verification requests.')
+    locked = OrganizationVerificationRequest.objects.select_for_update().get(pk=verification_request.pk)
+    if locked.status != OrganizationVerificationRequest.Status.PENDING:
+        raise ValidationError('This request was already reviewed.')
+    locked.status = (
+        OrganizationVerificationRequest.Status.APPROVED if approve else OrganizationVerificationRequest.Status.REJECTED
+    )
+    locked.reviewed_by = reviewer
+    locked.reviewed_at = timezone.now()
+    locked.review_note = review_note
+    locked.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'review_note'])
+    if approve:
+        Organization.objects.filter(pk=locked.organization_id).update(is_verified=True)
+    return locked

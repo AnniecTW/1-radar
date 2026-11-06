@@ -12,9 +12,11 @@
 </section>
 
 <main class="narrow">
+  <p class="section-note">Reviewers use your email, website and social media to confirm this is the real group, so add as many as you can.</p>
   {% if not organization %}<p class="section-note">You become the Owner. Only the Owner can edit this profile and manage members.</p>{% endif %}
   <form class="stack" id="organization-form" method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="message error">{{ error }}</p>{% endfor %}
     <label class="field">
       <span>Name</span>
       <input type="text" name="name" value="{{ form.name.value|default_if_none:'' }}" maxlength="150" required>
@@ -42,18 +44,18 @@
       {% for error in form.logo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
     </label>
     <label class="field">
-      <span>Contact email <span class="hint">(optional, shown publicly)</span></span>
-      <input type="email" name="contact_email" value="{{ form.contact_email.value|default_if_none:'' }}" maxlength="254">
+      <span>Organization email <span class="hint">(shown publicly; used to verify you)</span></span>
+      <input type="email" name="contact_email" value="{{ form.contact_email.value|default_if_none:'' }}" maxlength="254" required>
       {% for error in form.contact_email.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
     </label>
     <div class="field-row">
       <label class="field">
-        <span>Website <span class="hint">(optional)</span></span>
+        <span>Website <span class="hint">(recommended)</span></span>
         <input type="url" name="website_url" value="{{ form.website_url.value|default_if_none:'' }}" maxlength="255" placeholder="https://">
         {% for error in form.website_url.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
       </label>
       <label class="field">
-        <span>Instagram <span class="hint">(optional)</span></span>
+        <span>Social media <span class="hint">(Instagram link, recommended)</span></span>
         <input type="url" name="instagram_url" value="{{ form.instagram_url.value|default_if_none:'' }}" maxlength="255" placeholder="https://instagram.com/…">
         {% for error in form.instagram_url.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
       </label>

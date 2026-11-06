@@ -11,7 +11,7 @@ class OrganizationForm(forms.Form):
     description = forms.CharField(max_length=2000, required=False)
     logo = forms.ImageField(required=False)
     clear_logo = forms.BooleanField(required=False)
-    contact_email = forms.EmailField(max_length=254, required=False)
+    contact_email = forms.EmailField(max_length=254)
     website_url = forms.URLField(max_length=255, required=False)
     instagram_url = forms.URLField(max_length=255, required=False)
 
@@ -20,3 +20,7 @@ class OrganizationForm(forms.Form):
         if logo and logo.size > MAX_LOGO_BYTES:
             raise forms.ValidationError('Logo must be 2 MB or smaller.')
         return logo
+
+
+class VerificationRequestForm(forms.Form):
+    note = forms.CharField(max_length=1000, required=False)

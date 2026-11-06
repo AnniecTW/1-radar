@@ -8,7 +8,7 @@
       <span class="banner-eyebrow">{{ organization.get_org_type_display|upper }}</span>
       <div class="banner-name">
         <h1>{{ organization.name }}</h1>
-        {% if organization.is_verified %}<span class="verified">Verified</span>{% endif %}
+        {% if organization.is_verified %}{% include 'organizations/_verified_badge.html' %}{% endif %}
       </div>
       <p class="banner-meta">{{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}{% if role %} · You are {{ role|cut:"_"|title }}{% endif %}</p>
       {% if organization.description %}<p class="banner-bio">{{ organization.description|linebreaksbr }}</p>{% endif %}
@@ -25,6 +25,29 @@
   </p>
   {% endif %}
 </section>
+
+{% if can_edit and not organization.is_verified %}
+<section class="verify-card">
+  {% if verification_request.status == 'pending' %}
+    <p><b>Verification pending.</b> A Radar admin is reviewing your request (sent {{ verification_request.created_at|date:"M j" }}).</p>
+  {% else %}
+    <div>
+      <p><b>Get verified.</b> A green badge tells students this is the real organization.
+      {% if verification_request.status == 'rejected' %}Your last request was declined{% if verification_request.review_note %}: {{ verification_request.review_note }}{% endif %}.{% endif %}</p>
+      {% if not organization.contact_email or not organization.website_url and not organization.instagram_url %}
+        <p class="hint">Add an organization email and a website or social media link first. <a href="{% url 'edit_organization_profile' organization.slug %}">Edit profile</a></p>
+      {% endif %}
+    </div>
+    <form method="post" action="{% url 'request_organization_verification' organization.slug %}">
+      {% csrf_token %}
+      <label class="field"><span class="visually-hidden">Note for reviewers</span>
+        <textarea name="note" rows="2" maxlength="1000" placeholder="Optional: how can we confirm you officially represent this group?"></textarea>
+      </label>
+      <button class="banner-button solid" type="submit">Request verification</button>
+    </form>
+  {% endif %}
+</section>
+{% endif %}
 
 <main class="stack-large">
   <section>

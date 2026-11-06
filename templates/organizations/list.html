@@ -21,7 +21,7 @@
     <a class="org-row" href="{% url 'show_organization_profile' organization.slug %}">
       {% include 'organizations/_logo.html' %}
       <span class="org-row-info">
-        <b>{{ organization.name }}</b>
+        <b>{{ organization.name }}</b>{% if organization.is_verified %} {% include 'organizations/_verified_badge.html' %}{% endif %}
         <small>{{ organization.get_org_type_display }} · {{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}</small>
       </span>
       <span class="role-badge">{{ membership.get_role_display }}</span>
