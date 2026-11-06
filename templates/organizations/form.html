@@ -1,0 +1,63 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}{% if organization %}Edit organization{% else %}Create organization{% endif %}{% endblock %}
+{% block content %}
+<section class="banner slim">
+  <div class="banner-copy">
+    <a class="back-link" href="{% if organization %}{% url 'show_organization_profile' organization.slug %}{% else %}{% url 'list_my_organizations' %}{% endif %}">‹ Back</a>
+    <h1>{% if organization %}Edit organization profile{% else %}Create organization{% endif %}</h1>
+  </div>
+  <div class="banner-actions">
+    <button class="banner-button solid" type="submit" form="organization-form">{% if organization %}Save changes{% else %}Create organization{% endif %}</button>
+  </div>
+</section>
+
+<main class="narrow">
+  {% if not organization %}<p class="section-note">You become the Owner. Only the Owner can edit this profile and manage members.</p>{% endif %}
+  <form class="stack" id="organization-form" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    <label class="field">
+      <span>Name</span>
+      <input type="text" name="name" value="{{ form.name.value|default_if_none:'' }}" maxlength="150" required>
+      {% for error in form.name.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    </label>
+    <label class="field">
+      <span>Type</span>
+      <select name="org_type" required>
+        {% for value, label in form.fields.org_type.choices %}
+          <option value="{{ value }}"{% if form.org_type.value == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% for error in form.org_type.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    </label>
+    <label class="field">
+      <span>Description <span class="hint">(optional)</span></span>
+      <textarea name="description" rows="5" maxlength="2000">{{ form.description.value|default_if_none:'' }}</textarea>
+      {% for error in form.description.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    </label>
+    <label class="field">
+      <span>Logo <span class="hint">(optional, image up to 2 MB)</span></span>
+      {% if organization.logo %}{% include 'organizations/_logo.html' %}{% endif %}
+      <input type="file" name="logo" accept="image/*">
+      {% if organization.logo %}<span class="check"><input type="checkbox" name="clear_logo"> Remove current logo</span>{% endif %}
+      {% for error in form.logo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    </label>
+    <label class="field">
+      <span>Contact email <span class="hint">(optional, shown publicly)</span></span>
+      <input type="email" name="contact_email" value="{{ form.contact_email.value|default_if_none:'' }}" maxlength="254">
+      {% for error in form.contact_email.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    </label>
+    <div class="field-row">
+      <label class="field">
+        <span>Website <span class="hint">(optional)</span></span>
+        <input type="url" name="website_url" value="{{ form.website_url.value|default_if_none:'' }}" maxlength="255" placeholder="https://">
+        {% for error in form.website_url.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      </label>
+      <label class="field">
+        <span>Instagram <span class="hint">(optional)</span></span>
+        <input type="url" name="instagram_url" value="{{ form.instagram_url.value|default_if_none:'' }}" maxlength="255" placeholder="https://instagram.com/…">
+        {% for error in form.instagram_url.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      </label>
+    </div>
+  </form>
+</main>
+{% endblock %}

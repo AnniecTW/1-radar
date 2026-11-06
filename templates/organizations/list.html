@@ -1,0 +1,34 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}My organizations{% endblock %}
+{% block content %}
+<section class="banner slim">
+  <div class="banner-copy">
+    <span class="banner-eyebrow">HOSTING</span>
+    <h1>My organizations</h1>
+  </div>
+  {% if user.is_campus_verified %}
+  <div class="banner-actions"><a class="banner-button solid" href="{% url 'create_organization' %}">Create organization</a></div>
+  {% endif %}
+</section>
+
+{% if not user.is_campus_verified %}
+  <p class="section-note">Creating an organization needs a verified campus email. Add and verify one in your <a href="{% url 'account_preferences' %}"><b>account preferences</b></a>.</p>
+{% endif %}
+
+<main class="narrow">
+  {% for membership in memberships %}
+    {% with organization=membership.organization %}
+    <a class="org-row" href="{% url 'show_organization_profile' organization.slug %}">
+      {% include 'organizations/_logo.html' %}
+      <span class="org-row-info">
+        <b>{{ organization.name }}</b>
+        <small>{{ organization.get_org_type_display }} · {{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}</small>
+      </span>
+      <span class="role-badge">{{ membership.get_role_display }}</span>
+    </a>
+    {% endwith %}
+  {% empty %}
+    <p class="empty">You aren't a member of any organization yet.{% if user.is_campus_verified %} <a href="{% url 'create_organization' %}">Create one</a>.{% endif %}</p>
+  {% endfor %}
+</main>
+{% endblock %}

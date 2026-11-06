@@ -1,0 +1,23 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Organization{% endblock %} · RADAR</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'radar/favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'radar/account.css' %}">
+</head>
+<body>
+  <div class="guest-shell">
+    <header class="topbar guest-bar">
+      <a class="guest-brand" href="{% url 'dashboard' %}">RADAR</a>
+      <span class="guest-spacer"></span>
+      <a href="{% url 'login' %}">Sign in</a>
+      <a class="banner-button solid navy" href="{% url 'signup' %}">Create account</a>
+    </header>
+    <div class="main">{% block content %}{% endblock %}</div>
+  </div>
+</body>
+</html>

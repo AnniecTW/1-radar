@@ -8,16 +8,16 @@ from django.db import transaction
 class Organization(models.Model):
     class OrgType(models.TextChoices):
         RSO = 'rso', 'RSO'
-        DEPARTMENT = 'department'
-        CAMPUS_OFFICE = 'campus_office'
-        OTHER = 'other'
+        DEPARTMENT = 'department', 'Department'
+        CAMPUS_OFFICE = 'campus_office', 'Campus office'
+        OTHER = 'other', 'Other'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, unique=True)
     org_type = models.CharField(max_length=20, choices=OrgType.choices)
     description = models.TextField(blank=True)
-    logo = models.CharField(max_length=255, blank=True)
+    logo = models.ImageField(upload_to='organization_logos/', max_length=255, blank=True)
     contact_email = models.EmailField(max_length=254, blank=True)
     website_url = models.CharField(max_length=255, null=True, blank=True)
     instagram_url = models.CharField(max_length=255, null=True, blank=True)

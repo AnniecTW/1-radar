@@ -1,0 +1,43 @@
+{% extends user.is_authenticated|yesno:'accounts/app_base.html,organizations/guest_base.html' %}
+{% block title %}{{ organization.name }}{% endblock %}
+{% block content %}
+<section class="banner">
+  <div class="banner-top">
+    {% include 'organizations/_logo.html' with large=True %}
+    <div class="banner-copy">
+      <span class="banner-eyebrow">{{ organization.get_org_type_display|upper }}</span>
+      <div class="banner-name">
+        <h1>{{ organization.name }}</h1>
+        {% if organization.is_verified %}<span class="verified">Verified</span>{% endif %}
+      </div>
+      <p class="banner-meta">{{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}{% if role %} · You are {{ role|cut:"_"|title }}{% endif %}</p>
+      {% if organization.description %}<p class="banner-bio">{{ organization.description|linebreaksbr }}</p>{% endif %}
+    </div>
+    {% if can_edit %}
+    <div class="banner-actions"><a class="banner-button solid" href="{% url 'edit_organization_profile' organization.slug %}">Edit profile</a></div>
+    {% endif %}
+  </div>
+  {% if organization.contact_email or organization.website_url or organization.instagram_url %}
+  <p class="banner-meta">
+    {% if organization.contact_email %}<a href="mailto:{{ organization.contact_email }}">{{ organization.contact_email }}</a>{% endif %}
+    {% if organization.website_url %} · <a href="{{ organization.website_url }}" rel="noopener nofollow">Website</a>{% endif %}
+    {% if organization.instagram_url %} · <a href="{{ organization.instagram_url }}" rel="noopener nofollow">Instagram</a>{% endif %}
+  </p>
+  {% endif %}
+</section>
+
+<main class="stack-large">
+  <section>
+    <div class="heading-row"><h2>Upcoming events</h2></div>
+    {% for event in upcoming_events %}
+      <a class="org-row" href="#"><span class="org-row-info"><b>{{ event.title }}</b><small>{{ event.start_at|date:"D, M j · g:i A" }} · {{ event.location_text }}</small></span></a>
+    {% empty %}<p class="empty">No upcoming events.</p>{% endfor %}
+  </section>
+  <section>
+    <div class="heading-row"><h2>Past events</h2></div>
+    {% for event in past_events %}
+      <a class="org-row" href="#"><span class="org-row-info"><b>{{ event.title }}</b><small>{{ event.start_at|date:"M j, Y" }}</small></span></a>
+    {% empty %}<p class="empty">No past events.</p>{% endfor %}
+  </section>
+</main>
+{% endblock %}

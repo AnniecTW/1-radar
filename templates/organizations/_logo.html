@@ -1,0 +1,1 @@
+{% if organization.logo %}<img class="org-logo{% if large %} large{% endif %}" src="{{ organization.logo.url }}" alt="">{% else %}<span class="org-logo fallback{% if large %} large{% endif %}" aria-hidden="true">{{ organization.name|slice:":1"|upper }}</span>{% endif %}

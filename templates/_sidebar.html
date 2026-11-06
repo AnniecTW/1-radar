@@ -24,6 +24,7 @@
         <a href="{% url 'dashboard' %}#map"><span>⌖</span>Explore Map</a>
         <a href="{% url 'dashboard' %}#recommendations"><span>✧</span>Recommendations</a>
         <a href="{% url 'dashboard' %}#create"><span>▷</span>Create Event</a>
+        {% if user.is_authenticated %}<a{% if active_nav == 'organizations' %} class="active" aria-current="page"{% endif %} href="{% url 'list_my_organizations' %}"><span>◈</span>My Organizations</a>{% endif %}
         <a href="{% url 'dashboard' %}#dashboard"><span>▦</span>My Dashboard</a>
         <a{% if active_nav == 'profile' %} class="active" aria-current="page"{% endif %} href="{% url 'profile' %}"><span>♙</span>Profile</a>
       </nav>

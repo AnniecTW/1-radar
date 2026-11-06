@@ -94,9 +94,9 @@
       <div class="org-grid">
         {% for organization in featured_organizations %}
           <article class="org-card">
-            {% if organization.logo %}<img class="org-logo" src="{{ organization.logo }}" alt="" loading="lazy">{% else %}<div class="org-logo fallback" aria-hidden="true">{{ organization.name|slice:":1" }}</div>{% endif %}
+            {% if organization.logo %}<img class="org-logo" src="{{ organization.logo.url }}" alt="" loading="lazy">{% else %}<div class="org-logo fallback" aria-hidden="true">{{ organization.name|slice:":1" }}</div>{% endif %}
             <div class="org-info">
-              <h3>{{ organization.name }}{% if organization.is_verified %} <span class="verified" title="Verified organization">✓</span>{% endif %}</h3>
+              <h3><a href="{% url 'show_organization_profile' organization.slug %}">{{ organization.name }}</a>{% if organization.is_verified %} <span class="verified" title="Verified organization">✓</span>{% endif %}</h3>
               <p>{{ organization.get_org_type_display }} · {{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}</p>
             </div>
             <button class="rsvp" type="button" data-gate data-prompt="Sign in to follow {{ organization.name }}">Follow</button>

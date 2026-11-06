@@ -1,9 +1,10 @@
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F
+from django.utils.text import slugify
 
 from .models import Organization, OrganizationFollow, OrganizationMembership
-from .permissions import user_can_manage_members
+from .permissions import user_can_manage_members, user_can_manage_organization
 
 
 def add_organization_member(*, actor, organization, user, role):
@@ -80,3 +81,43 @@ def unfollow_organization(*, user, organization) -> bool:
 def set_follow_notifications(*, user, organization, notify: bool) -> None:
     """Mute or unmute an organization; muted organizations stay followed (FR-59)."""
     OrganizationFollow.objects.filter(user=user, organization=organization).update(notify=notify)
+
+
+def _unique_organization_slug(name):
+    base = slugify(name)[:140].strip('-') or 'organization'
+    slug, counter = base, 2
+    while Organization.objects.filter(slug=slug).exists():
+        slug = f'{base}-{counter}'
+        counter += 1
+    return slug
+
+
+def create_organization(*, creator, name, org_type, description='', logo=None, contact_email='',
+                        website_url=None, instagram_url=None):
+    """FR-5: only campus members create organizations; the model makes the creator its Owner."""
+    if not creator.is_campus_verified:
+        raise PermissionDenied('Only campus members can create an organization.')
+    return Organization.objects.create(
+        name=name, slug=_unique_organization_slug(name), org_type=org_type, description=description,
+        logo=logo or '', contact_email=contact_email, website_url=website_url or None,
+        instagram_url=instagram_url or None, created_by=creator,
+    )
+
+
+def update_organization_profile(*, actor, organization, name, org_type, description='', logo=None,
+                                clear_logo=False, contact_email='', website_url=None, instagram_url=None):
+    """FR-64: only the Owner edits the profile. The slug stays fixed so links keep working."""
+    if not user_can_manage_organization(actor, organization):
+        raise PermissionDenied('Only the organization Owner can edit the profile.')
+    organization.name = name
+    organization.org_type = org_type
+    organization.description = description
+    organization.contact_email = contact_email
+    organization.website_url = website_url or None
+    organization.instagram_url = instagram_url or None
+    if logo:
+        organization.logo = logo
+    elif clear_logo:
+        organization.logo = ''
+    organization.save()
+    return organization
