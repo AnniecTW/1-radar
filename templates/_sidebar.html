@@ -24,7 +24,7 @@
         <a{% if active_nav == 'explore_map' %} class="active" aria-current="page"{% endif %} href="{% url 'explore_map' %}"><i data-lucide="map" aria-hidden="true"></i>Explore Map</a>
         <a href="{% url 'dashboard' %}#recommendations"><i data-lucide="sparkles" aria-hidden="true"></i>Recommendations</a>
         <a{% if active_nav == 'create_event' %} class="active" aria-current="page"{% endif %} href="{% url 'create_event' %}"><i data-lucide="plus-circle" aria-hidden="true"></i>Create Event</a>
-        {% if user.is_campus_verified %}<a{% if active_nav == 'organizations' %} class="active" aria-current="page"{% endif %} href="{% url 'list_my_organizations' %}"><span>◈</span>My Organizations</a>{% endif %}
+        {% if user.is_campus_verified %}<a{% if active_nav == 'organizations' %} class="active" aria-current="page"{% endif %} href="{% url 'list_my_organizations' %}"><i data-lucide="building-2" aria-hidden="true"></i>My Organizations</a>{% endif %}
         <a{% if active_nav == 'my_dashboard' %} class="active" aria-current="page"{% endif %} href="{% url 'my_events' %}"><i data-lucide="layout-dashboard" aria-hidden="true"></i>My Dashboard</a>
         <a{% if active_nav == 'profile' %} class="active" aria-current="page"{% endif %} href="{% url 'profile' %}"><i data-lucide="user-round" aria-hidden="true"></i>Profile</a>
       </nav>
