@@ -1,0 +1,20 @@
+{% if event.can_view_analytics and event.status != 'draft' %}<a href="{% url 'event_analytics' event.pk %}">Analytics</a>{% endif %}
+{% if past and event.can_export and event.status != 'cancelled' and event.rsvp_required and event.is_free %}<a href="{% url 'export_attendee_csv' event.pk %}">Export CSV</a>{% endif %}
+{% if event.can_manage and event.status == 'draft' %}<a href="{% url 'edit_event' event.pk %}">Continue editing</a>
+{% elif event.can_manage and event.status == 'published' and event.start_at > now %}<a href="{% url 'edit_event' event.pk %}">Edit</a>{% endif %}
+{% if event.status == 'draft' and event.can_manage and not event.missing_fields %}
+  <form method="post" action="{% url 'publish_draft_event' event.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="host-link accent" type="submit">Publish</button></form>
+{% endif %}
+{% if event.status == 'published' and event.can_manage and event.end_at > now %}
+  <details class="cancel-event">
+    <summary>Cancel</summary>
+    <form method="post" action="{% url 'cancel_hosted_event' event.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <label for="reason-{{ event.pk }}">Tell attendees why (optional)</label>
+      <textarea id="reason-{{ event.pk }}" name="reason" rows="2" maxlength="500" placeholder="e.g. The room is no longer available"></textarea>
+      <p class="hint">Everyone going, waitlisted or interested gets a notice, and their tickets stop working.</p>
+      <button class="host-danger" type="submit">Cancel event</button>
+    </form>
+  </details>
+{% endif %}

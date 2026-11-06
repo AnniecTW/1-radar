@@ -80,6 +80,17 @@ class MyEventsTests(HostTestCase):
         self.assertNotContains(staff, 'Cancel event')
         self.assertNotContains(staff, reverse('event_analytics', args=[event.pk]))
 
+    def test_next_up_spotlights_the_soonest_event_with_its_photo(self):
+        self.make_event('Later Thing', hours_away=200)
+        self.make_event('Soon Thing', hours_away=30, cover_image='https://example.com/soon.jpg')
+        response = self.tab('past')
+        self.assertEqual(response.context['next_up'].title, 'Soon Thing')
+        self.assertContains(response, 'src="https://example.com/soon.jpg"')
+
+    def test_no_spotlight_without_upcoming_events(self):
+        self.make_event('Old', hours_away=-30)
+        self.assertNotContains(self.tab('upcoming'), 'class="next-up"')
+
     def test_sidebar_links_here(self):
         self.assertContains(self.tab('upcoming'), f'class="active" aria-current="page" href="{reverse("my_events")}"')
 

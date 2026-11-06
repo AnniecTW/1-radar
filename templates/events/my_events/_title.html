@@ -1,0 +1,1 @@
+{% if event.slug and event.status != 'draft' %}<a class="row-link" href="{% url 'event_detail' event.slug %}">{{ event.title }}</a>{% else %}{{ event.title|default:"Untitled draft" }}{% endif %}

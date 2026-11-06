@@ -1,0 +1,2 @@
+{# The event's cover photo, or its first letter on navy when it has none. #}
+{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="" loading="lazy">{% else %}<span class="cover-letter" aria-hidden="true">{{ event.title|default:"?"|slice:":1"|upper }}</span>{% endif %}

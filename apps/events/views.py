@@ -48,6 +48,24 @@ def show_event_detail(request, slug):
         'interested_count':counts['interested'],'now':timezone.now()})
 
 
+def _decorate_hosted_event(event, user, now, tz):
+    """Per-row permissions and display values for My Events."""
+    event.can_manage = user_can_edit_event(user, event)
+    event.can_view_analytics = user_can_view_analytics(user, event)
+    event.can_export = user_can_export_attendees(user, event)
+    if event.status == Event.Status.DRAFT:
+        event.missing_fields = get_missing_publish_fields(event)
+    if event.capacity and event.going_count:
+        event.fill_percent = min(100, round(event.going_count * 100 / event.capacity))
+    event.is_full = bool(event.capacity and event.going_count >= event.capacity)
+    if event.status == Event.Status.PUBLISHED and event.start_at:
+        if event.start_at <= now:
+            event.countdown = 'Happening now'
+        else:
+            days = (timezone.localtime(event.start_at, tz).date() - timezone.localtime(now, tz).date()).days
+            event.countdown = {0: 'Today', 1: 'Tomorrow'}.get(days, f'In {days} days')
+
+
 @login_required
 @require_GET
 def show_my_events(request):
@@ -56,6 +74,7 @@ def show_my_events(request):
     from apps.discovery.selectors import get_campus_timezone
 
     now = timezone.now()
+    tz = get_campus_timezone()
     user = request.user
     tab = request.GET.get('tab', 'upcoming')
     if tab not in dict(MY_EVENT_TABS):
@@ -67,14 +86,9 @@ def show_my_events(request):
 
     lists = {key: list(list_my_events(user, key, now, host)) for key, _ in MY_EVENT_TABS}
     rows = lists[tab]
-    for event in rows:
-        event.can_manage = user_can_edit_event(user, event)
-        event.can_view_analytics = user_can_view_analytics(user, event)
-        event.can_export = user_can_export_attendees(user, event)
-        if event.status == Event.Status.DRAFT:
-            event.missing_fields = get_missing_publish_fields(event)
-        if event.capacity and event.going_count:
-            event.fill_percent = min(100, round(event.going_count * 100 / event.capacity))
+    next_up = lists['upcoming'][0] if lists['upcoming'] else None
+    for event in {*rows, *([next_up] if next_up else [])}:
+        _decorate_hosted_event(event, user, now, tz)
 
     context = {
         **get_account_shell_context(user),
@@ -82,6 +96,9 @@ def show_my_events(request):
         'tab': tab,
         'tabs': [(key, label, len(lists[key])) for key, label in MY_EVENT_TABS],
         'rows': rows,
+        'next_up': next_up,
+        'staff_view': tab == 'staff',
+        'past': tab == 'past',
         'host': host,
         'organizations': organizations,
         'upcoming_count': len(lists['upcoming']),
@@ -89,7 +106,7 @@ def show_my_events(request):
         'summary': get_my_events_summary(lists['upcoming'], lists['past']),
         'now': now,
     }
-    with timezone.override(get_campus_timezone()):
+    with timezone.override(tz):
         return render(request, 'events/my_events.html', context)
 
 
