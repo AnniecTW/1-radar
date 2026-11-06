@@ -11,6 +11,7 @@ from apps.events.permissions import user_can_edit_event
 
 from .models import RSVP, Ticket, TrafficSource
 from .permissions import user_can_manage_rsvp
+from .selectors import WAITLIST_CUTOFF
 
 
 class RSVPServiceError(Exception):
@@ -26,7 +27,7 @@ class RSVPClosedError(RSVPServiceError):
 
 
 def _cutoff_at(event):
-    return event.start_at - timedelta(minutes=30)
+    return event.start_at - WAITLIST_CUTOFF
 
 
 def _notify(user, event, notification_type, **payload):
@@ -123,6 +124,10 @@ def request_rsvp(*, event_id, actor, source=TrafficSource.DIRECT):
             return rsvp
         if rsvp.status == RSVP.Status.INTERESTED and status == RSVP.Status.INTERESTED:
             return rsvp
+        full = event.capacity is not None and _going_count(event) >= event.capacity
+        if rsvp.status == RSVP.Status.WAITLISTED and full:
+            # Tapping RSVP again must not send someone to the back of the line.
+            return rsvp
 
         rsvp.source = source
         rsvp.cancelled_at = None
@@ -134,7 +139,6 @@ def request_rsvp(*, event_id, actor, source=TrafficSource.DIRECT):
             rsvp.save()
             return rsvp
 
-        full = event.capacity is not None and _going_count(event) >= event.capacity
         if rsvp.status == RSVP.Status.WAITLISTED and not full:
             rsvp.status = RSVP.Status.GOING
             rsvp.save()
