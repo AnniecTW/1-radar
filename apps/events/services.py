@@ -9,6 +9,7 @@ from apps.notifications.models import Notification
 from apps.rsvps.models import RSVP, Ticket
 
 from .models import Event, EventCheckInStaff, EventReport
+from .permissions import user_can_edit_event
 
 
 def _unique_event_slug(event):
@@ -157,3 +158,52 @@ def publish_event(*, actor, event_id):
         event.full_clean()
         event.save(update_fields=['slug', 'status', 'published_at', 'updated_at'])
         return event
+
+
+# Fields the Create/Edit Event form writes directly. Capacity goes through update_event_capacity.
+EVENT_FORM_FIELDS = (
+    'title', 'description', 'start_at', 'end_at', 'venue', 'location_text', 'location', 'cover_image',
+    'visibility', 'rsvp_required', 'waitlist_enabled', 'is_free', 'price_text', 'external_url', 'contact_info',
+)
+# Changes attendees are told about (FR-22).
+NOTIFY_ON_CHANGE = ('start_at', 'end_at', 'venue_id', 'location_text')
+
+
+def set_event_interests(*, event, interests):
+    from .models import EventInterest
+
+    wanted = {interest.pk for interest in interests}
+    EventInterest.objects.filter(event=event).exclude(interest_id__in=wanted).delete()
+    existing = set(EventInterest.objects.filter(event=event).values_list('interest_id', flat=True))
+    EventInterest.objects.bulk_create([EventInterest(event=event, interest_id=pk) for pk in wanted - existing])
+
+
+@transaction.atomic
+def save_event_from_form(*, actor, event=None, organization=None, fields, capacity, interests):
+    """Create a draft, or update a draft or published event, from the manual form.
+
+    Returns the saved event. Publishing stays a separate step (publish_event).
+    """
+    from apps.rsvps.services import update_event_capacity
+
+    fields = {key: fields[key] for key in EVENT_FORM_FIELDS if key in fields}
+    if event is None:
+        event = create_event(actor=actor, organization=organization, **fields)
+        before = {}
+    else:
+        before = {key: getattr(event, key) for key in NOTIFY_ON_CHANGE}
+        event = update_event(actor=actor, event_id=event.pk, changes=fields)
+    if capacity != event.capacity:
+        event = update_event_capacity(actor=actor, event_id=event.pk, capacity=capacity)
+    set_event_interests(event=event, interests=interests)
+
+    changed = before and event.status == Event.Status.PUBLISHED and any(
+        getattr(event, key) != value for key, value in before.items()
+    )
+    if changed:
+        for rsvp in RSVP.objects.filter(
+            event=event, status__in=[RSVP.Status.GOING, RSVP.Status.WAITLISTED, RSVP.Status.INTERESTED]
+        ):
+            Notification.objects.create(user_id=rsvp.user_id, event=event, type=Notification.Type.EVENT_UPDATED,
+                                        payload={'changed': 'time or place'})
+    return event

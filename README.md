@@ -49,6 +49,17 @@ For the Profile and Preferences pages, this adds a filled-in student (`alex.chen
 python manage.py seed_profile_demo --confirm
 ```
 
+For My Dashboard and the event analytics page, this makes the same student the Owner of a demo club ("Illini Robotics Club") with upcoming, draft, past, paid, drop-in and cancelled events, plus 70 demo attendees with RSVPs, check-ins, views, likes and saves. Run it after `seed_profile_demo`. Re-running replaces the earlier demo host data, and `--remove` deletes all of it:
+
+```sh
+python manage.py seed_host_demo --confirm
+python manage.py seed_host_demo --confirm --remove
+```
+
+## Shared image uploads (Supabase Storage)
+
+Event covers and organization logos are stored in the team's Supabase Storage bucket, so everyone sees the same images. Add the five `SUPABASE_S3_*` values to your `.env` (ask a teammate for them privately; the names are in `.env.example`), run `pip install -r requirements.txt`, and restart the server. Without them, uploads are saved in `media/` on your computer only, and other people see a broken image.
+
 ## Sending real emails (verification links)
 
 Without email settings, Radar prints emails in the terminal running `runserver` and sends nothing. To deliver real email, add these to `.env` and restart the server:

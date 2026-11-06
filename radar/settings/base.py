@@ -163,9 +163,37 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 MAPTILER_API_KEY = os.environ.get('MAPTILER_API_KEY', '')
 
-# User uploads (organization logos). Local disk for now; production needs object storage.
+# User uploads (organization logos, event covers).
+# With the SUPABASE_S3_* keys in .env they go to the shared Supabase Storage bucket, so everyone
+# sees the same images. Without them they stay on this computer in media/.
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+SUPABASE_S3_KEYS = ('ENDPOINT', 'REGION', 'ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'BUCKET')
+SUPABASE_S3 = {key: os.environ.get(f'SUPABASE_S3_{key}', '').strip() for key in SUPABASE_S3_KEYS}
+USE_SUPABASE_STORAGE = all(SUPABASE_S3.values())
+if USE_SUPABASE_STORAGE:
+    # https://<project>.supabase.co/storage/v1/s3 -> <project>.supabase.co/storage/v1/object/public/<bucket>
+    _project_host = SUPABASE_S3['ENDPOINT'].split('://', 1)[-1].split('/', 1)[0]
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                'bucket_name': SUPABASE_S3['BUCKET'],
+                'endpoint_url': SUPABASE_S3['ENDPOINT'],
+                'region_name': SUPABASE_S3['REGION'],
+                'access_key': SUPABASE_S3['ACCESS_KEY_ID'],
+                'secret_key': SUPABASE_S3['SECRET_ACCESS_KEY'],
+                'addressing_style': 'path',
+                'signature_version': 's3v4',
+                # Public bucket: plain links, no expiring signatures.
+                'custom_domain': f"{_project_host}/storage/v1/object/public/{SUPABASE_S3['BUCKET']}",
+                'querystring_auth': False,
+                'file_overwrite': False,
+                'default_acl': None,
+            },
+        },
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
 
 
 # Email

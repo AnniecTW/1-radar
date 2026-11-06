@@ -215,7 +215,8 @@ def update_event_capacity(*, actor, event_id, capacity):
 
         if capacity is None:
             _promote_waitlisted(event)
-        elif (old_capacity is None or capacity > old_capacity) and timezone.now() < _cutoff_at(event):
+        # Drafts may have no start time yet, and nobody can be waitlisted on them.
+        elif event.start_at and (old_capacity is None or capacity > old_capacity) and timezone.now() < _cutoff_at(event):
             new_slots = capacity - going
             if old_capacity is not None:
                 new_slots = capacity - old_capacity

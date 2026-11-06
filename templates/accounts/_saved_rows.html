@@ -3,7 +3,7 @@
   <article class="row">
     <div class="thumb" aria-hidden="true">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="">{% else %}{{ event.title|slice:":1" }}{% endif %}</div>
     <div class="row-copy">
-      <h3>{{ event.title }}</h3>
+      <h3>{% if event.slug %}<a class="row-link" href="{% url 'event_detail' event.slug %}">{{ event.title }}</a>{% else %}{{ event.title }}{% endif %}</h3>
       <p>{{ event.start_at|date:"D, M j, g:i A" }} · {% include 'accounts/_event_place.html' %}</p>
       <p class="muted">{{ event.going_count }} going</p>
     </div>

@@ -101,6 +101,8 @@ h2{font-size:21px;font-weight:700}
 .thumb img{width:100%;height:100%;object-fit:cover}
 .row-copy{flex:1 1 220px;min-width:0}
 .row-copy h3{font-size:17px;font-weight:600}
+.row-link{color:inherit;text-decoration:none}
+.row-link:hover,.row-link:focus-visible{text-decoration:underline;text-underline-offset:3px}
 .row-copy p{font-size:14px;color:var(--body)}
 .row-copy p.muted{color:var(--muted)}
 .row-copy p.muted b{font-weight:600;color:var(--ink)}

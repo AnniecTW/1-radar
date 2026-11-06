@@ -1,0 +1,95 @@
+{% extends 'accounts/app_base.html' %}{% load static %}
+{% block title %}{{ event.title }} analytics{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/host.css' %}">{% endblock %}
+{% block content %}
+<nav class="crumbs" aria-label="Breadcrumb"><a href="{% url 'my_events' %}">My Events</a><span aria-hidden="true">›</span><span>{{ event.title }}</span></nav>
+
+<header class="host-header">
+  <div>
+    <div class="host-title">
+      <h1>{{ event.title }}</h1>
+      {% if event.status == 'cancelled' %}<span class="status status-cancelled">Cancelled</span>
+      {% elif ended %}<span class="status status-ended">Ended</span>
+      {% elif started %}<span class="status status-live">Happening now</span>
+      {% else %}<span class="status status-live">Upcoming</span>{% endif %}
+    </div>
+    <p class="host-lede">{{ event.start_at|date:"D, M j" }} · {{ event.start_at|date:"g:i A" }} – {{ event.end_at|date:"g:i A" }} · {% if event.organization %}{{ event.organization.name }}{% else %}Hosted by you{% endif %}</p>
+    <p class="hint">Live numbers as of {{ now|date:"g:i A" }}.</p>
+  </div>
+  <div class="host-header-actions">
+    {% if event.slug %}<a class="host-button" href="{% url 'event_detail' event.slug %}">View event page</a>{% endif %}
+    {% if can_export and kind == 'rsvp' %}<a class="host-button solid" href="{% url 'export_attendee_csv' event.pk %}"><i data-lucide="download" aria-hidden="true"></i>Export attendee CSV</a>{% endif %}
+  </div>
+</header>
+
+<dl class="kpis" aria-label="Key numbers">
+  {% for kpi in kpis %}
+    <div><dd class="{% if kpi.tone %}tone-{{ kpi.tone }}{% endif %}">{{ kpi.value }}</dd><dt>{{ kpi.label }}{% if kpi.note %}<small>{{ kpi.note }}</small>{% endif %}</dt></div>
+  {% endfor %}
+</dl>
+
+<section class="host-section" aria-labelledby="funnel-heading">
+  <div class="heading-row"><h2 id="funnel-heading">Funnel</h2><span class="section-note">Percentages are a share of views</span></div>
+  {% if not views_tracked %}<p class="section-note">Views and likes aren't being recorded yet, so the first steps read 0 for now.</p>{% endif %}
+  <div class="funnel">
+    {% for step in funnel %}
+      <div class="funnel-row">
+        <span class="funnel-label">{{ step.label }}</span>
+        <div class="funnel-track" aria-hidden="true"><span class="step-{{ step.step }}" style="width: {{ step.width }}%"></span></div>
+        <span class="funnel-value"><b>{{ step.count }}</b>{% if step.share is not None %} <span class="muted">{{ step.share }}%</span>{% endif %}</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="chart-pair">
+  <section class="host-section" aria-labelledby="line-heading">
+    <h2 id="line-heading">{{ line_title }}</h2>
+    <p class="section-note">Running total since the event was published on {{ published_at|date:"M j" }}</p>
+    <svg class="line-chart" viewBox="0 0 600 220" role="img" aria-label="{{ line_title }}: {{ line.total }} by {{ line.end_day|date:'M j' }}">
+      <g class="grid"><line x1="40" y1="20" x2="590" y2="20"></line><line x1="40" y1="105" x2="590" y2="105"></line><line x1="40" y1="190" x2="590" y2="190"></line></g>
+      <g class="axis"><text x="30" y="24" text-anchor="end">{{ line.y_max }}</text><text x="30" y="109" text-anchor="end">{{ line.y_half }}</text><text x="30" y="194" text-anchor="end">0</text>
+        <text x="40" y="214">{{ line.start_day|date:"M j" }}</text><text x="315" y="214" text-anchor="middle">{{ line.middle_day|date:"M j" }}</text><text x="590" y="214" text-anchor="end">{{ line.end_day|date:"M j" }}</text></g>
+      <polyline points="{{ line.points }}"></polyline>
+    </svg>
+  </section>
+
+  <section class="host-section" aria-labelledby="checkin-heading">
+    <h2 id="checkin-heading">Check-ins during the event</h2>
+    {% if checkins %}
+      <p class="section-note">Every {{ checkins.size }} minutes, {{ event.start_at|date:"g:i A" }} – {{ event.end_at|date:"g:i A" }}.{% if checkins.busiest %} Busiest at {{ checkins.busiest.start|date:"g:i A" }} with {{ checkins.busiest.count }}.{% endif %}</p>
+      <div class="bars" role="img" aria-label="{% if checkins.busiest %}Check-ins per {{ checkins.size }} minutes, busiest at {{ checkins.busiest.start|date:'g:i A' }} with {{ checkins.busiest.count }}{% else %}No check-ins yet{% endif %}">
+        {% for bucket in checkins.buckets %}<span title="{{ bucket.start|date:'g:i A' }} · {{ bucket.count }} check-in{{ bucket.count|pluralize }}" style="height: {{ bucket.height }}px"></span>{% endfor %}
+      </div>
+      <div class="bar-axis"><span>{{ event.start_at|date:"g:i" }}</span><span>{{ checkins.middle|date:"g:i" }}</span><span>{{ event.end_at|date:"g:i A" }}</span></div>
+      {% if not checkins.busiest %}<p class="section-note">{% if started %}No one has checked in yet.{% else %}Check-ins show up here once the event starts.{% endif %}</p>{% endif %}
+    {% else %}
+      <p class="section-note">{% if kind == 'drop_in' %}Drop-in events have no check-in, so there's nothing to chart here.{% else %}Paid events sell tickets on the host's site, so Radar doesn't check people in.{% endif %}</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="sources-heading">
+    <h2 id="sources-heading">Where views came from</h2>
+    {% for source in sources %}
+      <div class="source-row"><span>{{ source.label }}</span><div class="source-track" aria-hidden="true"><span style="width: {{ source.percent }}%"></span></div><span>{{ source.percent }}%</span></div>
+    {% empty %}
+      <p class="section-note">No views recorded yet.</p>
+    {% endfor %}
+  </section>
+
+  {% if audience %}
+    <section class="host-section" aria-labelledby="audience-heading">
+      <h2 id="audience-heading">Who came</h2>
+      <p class="section-note">Based on {{ audience.total }} {{ audience.based_on }}. Groups smaller than 5 count as Other so no one can be singled out.</p>
+      {% if audience.total %}
+        <div class="audience">
+          <div><h3>Major</h3>{% for row in audience.majors %}<p><span>{{ row.label }}</span><b>{{ row.count }}</b></p>{% endfor %}</div>
+          <div><h3>Class year</h3>{% for row in audience.years %}<p><span>{{ row.label }}</span><b>{{ row.count }}</b></p>{% endfor %}</div>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

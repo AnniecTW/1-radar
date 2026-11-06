@@ -100,12 +100,12 @@
   </section>
 {% elif tab == 'hosting' %}
   <section>
-    <h2 class="tab-title">Hosting</h2>
+    <div class="heading-row"><h2 class="tab-title">Hosting</h2><a href="{% url 'my_events' %}">Manage in My Dashboard →</a></div>
     {% for event in hosted_events %}
       <article class="row">
         <div class="date-block">{% if event.start_at %}<span>{{ event.start_at|date:"M"|upper }}</span><b>{{ event.start_at|date:"j" }}</b>{% else %}<span>DRAFT</span>{% endif %}</div>
         <div class="row-copy">
-          <h3>{{ event.title|default:"Untitled draft" }}</h3>
+          <h3>{% if event.slug %}<a class="row-link" href="{% url 'event_detail' event.slug %}">{{ event.title|default:"Untitled draft" }}</a>{% else %}{{ event.title|default:"Untitled draft" }}{% endif %}</h3>
           <p>{% include 'accounts/_event_place.html' %}</p>
           <p class="muted">{{ event.get_status_display }} · {{ event.going_count }} going</p>
         </div>
@@ -121,7 +121,7 @@
       <article class="row">
         <div class="date-block"><span>{{ rsvp.event.start_at|date:"M"|upper }}</span><b>{{ rsvp.event.start_at|date:"j" }}</b></div>
         <div class="row-copy">
-          <h3>{{ rsvp.event.title }}</h3>
+          <h3>{% if rsvp.event.slug %}<a class="row-link" href="{% url 'event_detail' rsvp.event.slug %}">{{ rsvp.event.title }}</a>{% else %}{{ rsvp.event.title }}{% endif %}</h3>
           <p>{% include 'accounts/_event_place.html' with event=rsvp.event %}</p>
           <p class="muted">{% if rsvp.attended %}Attended{% else %}RSVP'd, no check-in{% endif %}</p>
         </div>

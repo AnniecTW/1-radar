@@ -1,0 +1,112 @@
+{% extends 'accounts/app_base.html' %}{% load static %}
+{% block title %}My Events{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/host.css' %}">{% endblock %}
+{% block content %}
+<header class="host-header">
+  <div>
+    <p class="eyebrow">My Dashboard</p>
+    <h1>My Events</h1>
+    <p class="host-lede">Events you host, drafts in progress, and events you check people in for.</p>
+  </div>
+  <div class="host-header-actions">
+  {% if organizations %}
+    <form class="host-filter" method="get">
+      <input type="hidden" name="tab" value="{{ tab }}">
+      <label for="host-filter">Hosting as</label>
+      <select id="host-filter" name="host" data-autosubmit>
+        <option value=""{% if not host %} selected{% endif %}>Everyone I host for</option>
+        <option value="me"{% if host == 'me' %} selected{% endif %}>Myself</option>
+        {% for org in organizations %}<option value="{{ org.slug }}"{% if host == org.slug %} selected{% endif %}>{{ org.name }}</option>{% endfor %}
+      </select>
+      <noscript><button class="host-button" type="submit">Show</button></noscript>
+    </form>
+  {% endif %}
+    <a class="host-button solid" href="{% url 'create_event' %}{% if host and host != 'me' %}?host={{ host|urlencode }}{% endif %}"><i data-lucide="plus" aria-hidden="true"></i>Create event</a>
+  </div>
+</header>
+
+<dl class="host-stats" aria-label="Your events at a glance">
+  <div><dd>{{ upcoming_count }}</dd><dt>Upcoming</dt></div>
+  <div><dd>{{ draft_count }}</dd><dt>Draft{{ draft_count|pluralize }}</dt></div>
+  <div><dd>{{ summary.upcoming_rsvps }}</dd><dt>RSVPs on upcoming events</dt></div>
+  <div><dd>{% if summary.attendance_rate is not None %}{{ summary.attendance_rate }}%{% else %}—{% endif %}</dd><dt>Avg. attendance, past events</dt></div>
+</dl>
+
+<nav class="tabs" aria-label="Event lists">
+  {% for key, label, count in tabs %}
+    <a href="?tab={{ key }}{% if host %}&amp;host={{ host|urlencode }}{% endif %}"{% if key == tab %} class="active" aria-current="page"{% endif %}>{{ label }}&nbsp;<span class="tab-count">{{ count }}</span></a>
+  {% endfor %}
+</nav>
+
+<section aria-label="{% for key, label, count in tabs %}{% if key == tab %}{{ label }}{% endif %}{% endfor %}">
+  {% if tab == 'staff' %}<p class="section-note">An organization Owner or Admin assigned you to check people in. You can't edit these events or see their analytics.</p>{% endif %}
+  {% for event in rows %}
+    <article class="row host-row">
+      <div class="date-block">{% if event.start_at %}<span>{{ event.start_at|date:"M"|upper }}</span><b>{{ event.start_at|date:"j" }}</b>{% else %}<span>DRAFT</span><b>–</b>{% endif %}</div>
+
+      <div class="row-copy">
+        <div class="host-title">
+          <h3>{% if event.slug and event.status != 'draft' %}<a class="row-link" href="{% url 'event_detail' event.slug %}">{{ event.title }}</a>{% else %}{{ event.title|default:"Untitled draft" }}{% endif %}</h3>
+          {% if event.status == 'draft' %}<span class="status status-draft">Draft</span>
+          {% elif event.status == 'cancelled' %}<span class="status status-cancelled">Cancelled</span>
+          {% elif event.status == 'completed' or event.end_at <= now %}<span class="status status-ended">Ended</span>
+          {% elif event.start_at <= now %}<span class="status status-live">Happening now</span>
+          {% else %}<span class="status status-live">Published</span>{% endif %}
+        </div>
+        <p>{% if event.start_at %}{{ event.start_at|date:"D g:i A" }}{% if event.end_at %} – {{ event.end_at|date:"g:i A" }}{% endif %}{% else %}No date yet{% endif %} · {% if event.venue or event.location_text %}{% include 'accounts/_event_place.html' %}{% else %}No location yet{% endif %}</p>
+        <p class="muted">{% if event.organization %}{{ event.organization.name }}{% else %}Hosted by you{% endif %}{% if event.status == 'draft' %} · Last edited {{ event.updated_at|timesince }} ago{% endif %}{% if event.status == 'cancelled' and event.cancel_reason %} · {{ event.cancel_reason }}{% endif %}</p>
+      </div>
+
+      <div class="host-count">
+        {% if event.status == 'draft' %}
+          {% if event.missing_fields %}<p><b>Missing:</b> <span class="muted">{{ event.missing_fields|join:", " }}</span></p>
+          {% else %}<p><b>Ready to publish</b></p>{% endif %}
+        {% elif event.status == 'cancelled' %}
+          <p><b>{{ event.rsvp_total }}</b> <span class="muted">RSVP{{ event.rsvp_total|pluralize }} notified</span></p>
+        {% elif not event.is_free %}
+          <p><b>Paid event</b> <span class="muted">· {{ event.price_text }}</span></p>
+        {% elif not event.rsvp_required %}
+          <p><b>{{ event.interested_count }} interested</b> <span class="muted">· Drop-in</span></p>
+        {% elif tab == 'past' %}
+          <p><b>{{ event.checkin_count }} of {{ event.going_count }}</b> <span class="muted">checked in</span></p>
+          {% if event.going_count %}<div class="meter" aria-hidden="true"><span style="width: {% widthratio event.checkin_count event.going_count 100 %}%"></span></div>{% endif %}
+        {% else %}
+          <p><b>{{ event.going_count }}{% if event.capacity %} / {{ event.capacity }}{% endif %} going</b>{% if event.waitlist_count %} <span class="muted">· {{ event.waitlist_count }} waitlisted</span>{% endif %}</p>
+          {% if event.fill_percent %}<div class="meter" aria-hidden="true"><span style="width: {{ event.fill_percent }}%"></span></div>{% endif %}
+        {% endif %}
+      </div>
+
+      <div class="host-actions">
+        {% if event.can_view_analytics and event.status != 'draft' %}<a href="{% url 'event_analytics' event.pk %}">Analytics</a>{% endif %}
+        {% if tab == 'past' and event.can_export and event.status != 'cancelled' and event.rsvp_required and event.is_free %}<a href="{% url 'export_attendee_csv' event.pk %}">Export CSV</a>{% endif %}
+        {% if event.can_manage and event.status == 'draft' %}<a href="{% url 'edit_event' event.pk %}">Continue editing</a>
+        {% elif event.can_manage and event.status == 'published' and event.start_at > now %}<a href="{% url 'edit_event' event.pk %}">Edit</a>{% endif %}
+        {% if event.status == 'draft' and event.can_manage and not event.missing_fields %}
+          <form method="post" action="{% url 'publish_draft_event' event.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="host-link accent" type="submit">Publish</button></form>
+        {% endif %}
+        {% if event.status == 'published' and event.can_manage and event.end_at > now %}
+          <details class="cancel-event">
+            <summary>Cancel</summary>
+            <form method="post" action="{% url 'cancel_hosted_event' event.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <label for="reason-{{ event.pk }}">Tell attendees why (optional)</label>
+              <textarea id="reason-{{ event.pk }}" name="reason" rows="2" maxlength="500" placeholder="e.g. The room is no longer available"></textarea>
+              <p class="hint">Everyone going, waitlisted or interested gets a notice, and their tickets stop working.</p>
+              <button class="host-danger" type="submit">Cancel event</button>
+            </form>
+          </details>
+        {% endif %}
+      </div>
+    </article>
+  {% empty %}
+    <p class="empty">
+      {% if tab == 'upcoming' %}No upcoming events. <a href="{% url 'create_event' %}">Create one</a>
+      {% elif tab == 'drafts' %}No drafts. Events you save before publishing show up here.
+      {% elif tab == 'past' %}No past events yet.
+      {% else %}You're not assigned to check people in for any upcoming events.{% endif %}
+    </p>
+  {% endfor %}
+</section>
+<script>document.querySelectorAll('[data-autosubmit]').forEach((el)=>el.addEventListener('change',()=>el.form.submit()));</script>
+{% endblock %}

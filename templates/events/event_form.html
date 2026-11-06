@@ -1,0 +1,189 @@
+{% extends 'accounts/app_base.html' %}{% load static %}
+{% block title %}{% if event %}Edit {{ event.title|default:"draft" }}{% else %}Create Event{% endif %}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'radar/host.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+{% endblock %}
+{% block content %}
+<nav class="crumbs" aria-label="Breadcrumb"><a href="{% url 'my_events' %}">My Events</a><span aria-hidden="true">›</span><span>{% if event %}Edit event{% else %}Create event{% endif %}</span></nav>
+<header class="host-header">
+  <div>
+    <h1>{% if event %}Edit event{% else %}Create Event{% endif %}</h1>
+    {% if not needs_campus %}<p class="host-lede">{% if is_published %}This event is live. If you change the time or place, everyone going, waitlisted or interested is told.{% else %}Fields marked * are needed to publish. You can save a draft any time.{% endif %}</p>{% endif %}
+  </div>
+</header>
+
+{% if needs_campus %}
+  <section class="gate">
+    <h2>Verify your campus email to host events</h2>
+    <p>Hosting is open to verified students and staff, so attendees know events come from real campus members. You can still browse and RSVP in the meantime.</p>
+    <a class="host-button solid" href="{% url 'account_preferences' %}">Add a campus email</a>
+  </section>
+{% else %}
+
+{% if saved_as_draft %}<div class="form-alert warn" role="status">Draft saved. Fill in the highlighted fields to publish.</div>{% endif %}
+{% if form.non_field_errors %}<div class="form-alert" role="alert">{% for error in form.non_field_errors %}{{ error }} {% endfor %}</div>
+{% elif form.errors and not saved_as_draft %}<div class="form-alert" role="alert">Some fields need a look. They're highlighted below.</div>{% endif %}
+
+<form class="event-form" method="post" enctype="multipart/form-data" action="{% if event %}{% url 'edit_event' event.pk %}{% else %}{% url 'create_event' %}{% endif %}" novalidate>
+  {% csrf_token %}
+  <div class="event-form-grid">
+    <div class="event-fields">
+
+      <section class="form-section">
+        <h2>Basics</h2>
+        <div class="field narrow{% if form.host.errors %} has-error{% endif %}">
+          <label for="{{ form.host.id_for_label }}">Post as</label>
+          {{ form.host }}
+          <p class="field-help" id="host-note" aria-live="polite"></p>
+          {% if form.host.errors %}<p class="field-error">{{ form.host.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="field{% if form.title.errors %} has-error{% endif %}">
+          <label for="{{ form.title.id_for_label }}">Title *</label>
+          {{ form.title }}
+          {% if form.title.errors %}<p class="field-error">{{ form.title.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="field{% if form.description.errors %} has-error{% endif %}">
+          <label for="{{ form.description.id_for_label }}">Description *</label>
+          {{ form.description }}
+          <p class="field-help">What will happen, who it's for, and what to bring.</p>
+          {% if form.description.errors %}<p class="field-error">{{ form.description.errors.0 }}</p>{% endif %}
+        </div>
+        <fieldset class="field{% if form.interests.errors %} has-error{% endif %}">
+          <legend>Categories * <span class="field-help inline">pick up to 3</span></legend>
+          <div class="chips" data-max="3">
+            {% for choice in form.interests %}<label class="chip">{{ choice.tag }}<span>{{ choice.choice_label }}</span></label>{% endfor %}
+          </div>
+          {% if form.interests.errors %}<p class="field-error">{{ form.interests.errors.0 }}</p>{% endif %}
+        </fieldset>
+      </section>
+
+      <section class="form-section">
+        <h2>When</h2>
+        <div class="field-row">
+          <div class="field{% if form.date.errors %} has-error{% endif %}"><label for="{{ form.date.id_for_label }}">Date *</label>{{ form.date }}{% if form.date.errors %}<p class="field-error">{{ form.date.errors.0 }}</p>{% endif %}</div>
+          <div class="field{% if form.start_time.errors %} has-error{% endif %}"><label for="{{ form.start_time.id_for_label }}">Starts *</label>{{ form.start_time }}{% if form.start_time.errors %}<p class="field-error">{{ form.start_time.errors.0 }}</p>{% endif %}</div>
+          <div class="field{% if form.end_time.errors %} has-error{% endif %}"><label for="{{ form.end_time.id_for_label }}">Ends *</label>{{ form.end_time }}{% if form.end_time.errors %}<p class="field-error">{{ form.end_time.errors.0 }}</p>{% endif %}</div>
+        </div>
+        <p class="field-help">Central Time (campus time).</p>
+      </section>
+
+      <section class="form-section{% if form.location_text.errors %} has-error{% endif %}">
+        <h2>Where *</h2>
+        <div class="field">
+          <label for="{{ form.venue.id_for_label }}">Campus building</label>
+          {{ form.venue }}
+        </div>
+        <div class="field">
+          <label for="{{ form.location_text.id_for_label }}">Room or other details</label>
+          {{ form.location_text }}
+          <p class="field-help">Not in a campus building? Leave the building empty, describe the place here, and drop a pin.</p>
+          {% if form.location_text.errors %}<p class="field-error">{{ form.location_text.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="field">
+          <div class="map-label"><b>Pin on the map</b><span class="field-help">Click the map to place the pin. Pinned events show on Explore Map.</span></div>
+          <div id="pin-map" class="pin-map" role="application" aria-label="Map. Click to place the event pin."></div>
+          <button class="text-button" type="button" id="clear-pin" hidden>Remove pin</button>
+          {{ form.latitude }}{{ form.longitude }}
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2>Cover image</h2>
+        <div class="cover-row">
+          <div class="cover-preview" id="cover-preview">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="Current cover image">{% else %}<span>No image yet</span>{% endif %}</div>
+          <div class="cover-actions">
+            <label class="host-button" for="{{ form.cover.id_for_label }}">{% if event.cover_image %}Replace image{% else %}Upload image{% endif %}</label>
+            <input class="visually-hidden" type="file" name="cover" id="{{ form.cover.id_for_label }}" accept="image/jpeg,image/png,image/webp">
+            {% if event.cover_image %}<label class="check-row small"><input type="checkbox" name="remove_cover"> Remove the current image</label>{% endif %}
+            <p class="field-help">JPG, PNG or WebP, up to 5 MB. Without one, the card shows your title.</p>
+            {% if form.cover.errors %}<p class="field-error">{{ form.cover.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2>Tickets &amp; RSVPs</h2>
+        <fieldset class="field">
+          <legend>What kind of event?</legend>
+          <div class="kind-cards">
+            {% for radio in form.kind %}
+              <label class="kind-card">{{ radio.tag }}<b>{{ radio.choice_label }}</b><span>{% if radio.data.value == 'rsvp' %}Set a capacity and waitlist{% elif radio.data.value == 'drop_in' %}No RSVP; people tap Interested{% else %}Add a price and where to buy tickets{% endif %}</span></label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <div class="kind-panel" data-kind="rsvp">
+          <div class="field-row">
+            <div class="field{% if form.capacity.errors %} has-error{% endif %}"><label for="{{ form.capacity.id_for_label }}">Capacity</label><input type="number" name="capacity" id="{{ form.capacity.id_for_label }}" min="1" placeholder="No limit" value="{{ form.capacity.value|default_if_none:'' }}">{% if form.capacity.errors %}<p class="field-error">{{ form.capacity.errors.0 }}</p>{% endif %}</div>
+            <label class="check-row">{{ form.waitlist_enabled }} Open a waitlist when it's full</label>
+          </div>
+          <p class="field-help">Leave capacity empty for no limit. The waitlist closes 30 minutes before the start.</p>
+        </div>
+        <div class="kind-panel" data-kind="paid">
+          <div class="field-row">
+            <div class="field{% if form.price_text.errors %} has-error{% endif %}"><label for="{{ form.price_text.id_for_label }}">Price *</label>{{ form.price_text }}{% if form.price_text.errors %}<p class="field-error">{{ form.price_text.errors.0 }}</p>{% endif %}</div>
+            <div class="field{% if form.external_url.errors %} has-error{% endif %}"><label for="{{ form.external_url.id_for_label }}">Ticket link</label>{{ form.external_url }}{% if form.external_url.errors %}<p class="field-error">{{ form.external_url.errors.0 }}</p>{% endif %}</div>
+          </div>
+          <div class="field"><label for="{{ form.contact_info.id_for_label }}">Or a contact for tickets</label>{{ form.contact_info }}</div>
+          <p class="field-help">Radar doesn't sell tickets. Attendees tap "Get tickets" and go to your link or contact.</p>
+        </div>
+        <div class="kind-panel" data-kind="drop_in"><p class="field-help">People tap "Interested" instead of RSVPing. There's no capacity, waitlist or check-in.</p></div>
+      </section>
+
+      <section class="form-section">
+        <h2>Who can see it</h2>
+        {% for radio in form.visibility %}
+          <label class="radio-card">{{ radio.tag }}<span><b>{{ radio.choice_label }}</b><small>{% if radio.data.value == 'public' %}{{ visibility_notes.public }}{% elif radio.data.value == 'campus_only' %}{{ visibility_notes.campus_only }}{% else %}{{ visibility_notes.unlisted }}{% endif %}</small></span></label>
+        {% endfor %}
+      </section>
+    </div>
+
+    <aside class="event-rail">
+      <section>
+        <h2>How it will look</h2>
+        <article class="preview-card" aria-live="off">
+          <div class="preview-cover" id="preview-cover">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="">{% endif %}<div><span id="preview-date">DATE</span><b id="preview-title">Your event title</b></div></div>
+          <div class="preview-body">
+            <p id="preview-when">Time · Location</p>
+            <p id="preview-host"></p>
+            <div class="preview-tags" id="preview-tags"></div>
+          </div>
+        </article>
+      </section>
+      {% if not is_published %}
+        <section class="rail-section">
+          <h2>Before you publish</h2>
+          <ul class="checklist" id="checklist">
+            <li data-check="title">Title</li>
+            <li data-check="description">Description</li>
+            <li data-check="when">Date and time</li>
+            <li data-check="where">Location</li>
+            <li data-check="categories">At least one category</li>
+            <li data-check="price" hidden>Price and a ticket link or contact</li>
+          </ul>
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+
+  <div class="action-bar">
+    <span class="hint">{% if is_published %}Published{% elif event %}Draft · last saved {{ event.updated_at|date:"M j, g:i A" }}{% else %}Not saved yet{% endif %}</span>
+    <div class="action-buttons">
+      <a class="host-button" href="{% url 'my_events' %}{% if event and not is_published %}?tab=drafts{% endif %}">Back</a>
+      {% if is_published %}
+        <button class="host-button solid" type="submit" name="action" value="save">Save changes</button>
+      {% else %}
+        <button class="host-button" type="submit" name="action" value="save">Save draft</button>
+        <button class="host-button solid" type="submit" name="action" value="publish">Publish</button>
+      {% endif %}
+    </div>
+  </div>
+</form>
+
+{{ verified_slugs|json_script:"verified-slugs" }}
+{{ venue_points|json_script:"venue-points" }}
+{{ map_center|json_script:"map-center" }}
+<script src="{% static 'radar/event-form.js' %}" defer></script>
+{% endif %}
+{% endblock %}

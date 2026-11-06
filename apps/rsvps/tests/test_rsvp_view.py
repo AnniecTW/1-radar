@@ -24,9 +24,9 @@ class RSVPTestCase(TestCase):
 
     def make_event(self, *, hours_away=72, **fields):
         start = timezone.now() + timedelta(hours=hours_away)
-        fields = {'status': Event.Status.PUBLISHED, **fields}
+        fields = {'status': Event.Status.PUBLISHED, 'slug': f'event-{Event.objects.count()}', **fields}
         return Event.objects.create(
-            slug=f'event-{Event.objects.count()}', title='Test Event', host_user=self.host,
+            title='Test Event', host_user=self.host,
             start_at=start, end_at=start + timedelta(hours=2), location_text='Room 1', **fields,
         )
 
@@ -157,3 +157,11 @@ class RSVPStateTests(RSVPTestCase):
         response = self.client.get(reverse('profile'))
         self.assertContains(response, 'Cancel RSVP')
         self.assertContains(response, reverse('rsvp', args=[event.pk]))
+
+    def test_profile_rows_link_to_the_event_page(self):
+        event = self.make_event()
+        RSVP.objects.create(event=event, user=self.user, status=RSVP.Status.GOING)
+        self.assertContains(self.client.get(reverse('profile') + '?tab=tickets'), reverse('event_detail', args=[event.slug]))
+        cancelled = self.make_event(status=Event.Status.CANCELLED, slug=None)
+        RSVP.objects.create(event=cancelled, user=self.user, status=RSVP.Status.GOING)
+        self.assertEqual(self.client.get(reverse('profile') + '?tab=tickets').status_code, 200)
