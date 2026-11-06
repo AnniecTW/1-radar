@@ -20,9 +20,14 @@ from django.contrib import admin
 from django.urls import include, path
 
 from apps.discovery.views import show_landing_page
+from apps.discovery.views import show_explore_map, events_in_map_bounds
+from apps.events.views import show_event_detail
 
 urlpatterns = [
     path('', show_landing_page, name='dashboard'),
+    path('explore/', show_explore_map, name='explore_map'),
+    path('api/map-events/', events_in_map_bounds, name='map_events'),
+    path('events/<slug:slug>/', show_event_detail, name='event_detail'),
     path('accounts/', include('apps.accounts.urls')),
     path('onboarding/', include('apps.interests.urls')),
     path('', include('apps.rsvps.urls')),

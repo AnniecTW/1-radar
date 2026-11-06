@@ -161,6 +161,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+MAPTILER_API_KEY = os.environ.get('MAPTILER_API_KEY', '')
 
 # User uploads (organization logos). Local disk for now; production needs object storage.
 MEDIA_URL = 'media/'

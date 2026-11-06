@@ -20,19 +20,19 @@
         </span>
       </div>
       <nav class="nav" aria-label="Main navigation">
-        <a{% if active_nav == 'discover' %} class="active"{% endif %} href="{% url 'dashboard' %}#discover"><span>◎</span>Discover</a>
-        <a href="{% url 'dashboard' %}#map"><span>⌖</span>Explore Map</a>
-        <a href="{% url 'dashboard' %}#recommendations"><span>✧</span>Recommendations</a>
-        <a href="{% url 'dashboard' %}#create"><span>▷</span>Create Event</a>
+        <a{% if active_nav == 'discover' %} class="active"{% endif %} href="{% url 'dashboard' %}#discover"><i data-lucide="compass" aria-hidden="true"></i>Discover</a>
+        <a{% if active_nav == 'explore_map' %} class="active" aria-current="page"{% endif %} href="{% url 'explore_map' %}"><i data-lucide="map" aria-hidden="true"></i>Explore Map</a>
+        <a href="{% url 'dashboard' %}#recommendations"><i data-lucide="sparkles" aria-hidden="true"></i>Recommendations</a>
+        <a href="{% url 'dashboard' %}#create"><i data-lucide="plus-circle" aria-hidden="true"></i>Create Event</a>
         {% if user.is_campus_verified %}<a{% if active_nav == 'organizations' %} class="active" aria-current="page"{% endif %} href="{% url 'list_my_organizations' %}"><span>◈</span>My Organizations</a>{% endif %}
-        <a href="{% url 'dashboard' %}#dashboard"><span>▦</span>My Dashboard</a>
-        <a{% if active_nav == 'profile' %} class="active" aria-current="page"{% endif %} href="{% url 'profile' %}"><span>♙</span>Profile</a>
+        <a href="{% url 'dashboard' %}#dashboard"><i data-lucide="layout-dashboard" aria-hidden="true"></i>My Dashboard</a>
+        <a{% if active_nav == 'profile' %} class="active" aria-current="page"{% endif %} href="{% url 'profile' %}"><i data-lucide="user-round" aria-hidden="true"></i>Profile</a>
       </nav>
       <div class="sidebar-spacer"></div>
       <section class="promo">
-        <div class="mini-mark">◉<i></i></div>
+        <div class="mini-mark" aria-hidden="true"><i data-lucide="radio"></i></div>
         <strong>Events.<br>People.<br>A stronger<br>campus.</strong>
         <em></em>
       </section>
-      <div class="sidebar-footer"><span class="footer-icon">♧</span><span>Good events,<br><b>brighter people.</b></span><span>›</span></div>
+      <div class="sidebar-footer"><i class="footer-icon" data-lucide="users-round" aria-hidden="true"></i><span>Good events,<br><b>brighter people.</b></span><i data-lucide="chevron-right" aria-hidden="true"></i></div>
     </aside>

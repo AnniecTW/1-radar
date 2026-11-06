@@ -1,6 +1,9 @@
 from django.http import HttpRequest, HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
+from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
 
 from radar.views import dashboard
@@ -18,6 +21,88 @@ from .selectors import (
 )
 
 MAX_SEARCH_LENGTH = 100
+
+
+def _map_events(request, bounds=None):
+    from django.db.models import Count, Q
+    from apps.events.models import Event
+    from apps.events.selectors import filter_discoverable_events
+    from apps.rsvps.models import RSVP
+
+    now = timezone.now()
+    qs = filter_discoverable_events(Event.objects.filter(end_at__gt=now, location__isnull=False))
+    from django.contrib.gis.geos import Point
+    from django.contrib.gis.measure import D
+    from .selectors import get_campus_center
+    walk_center = None
+    if request.GET.get('walk') == '1':
+        try:
+            lat, lng = float(request.GET['lat']), float(request.GET['lng'])
+            if not (-90 <= lat <= 90 and -180 <= lng <= 180): raise ValueError
+            walk_center = (lat, lng)
+        except (KeyError, ValueError):
+            walk_center = get_campus_center()
+        if walk_center:
+            qs = qs.filter(location__distance_lte=(Point(walk_center[1], walk_center[0], srid=4326), D(m=1250)))
+    search_text = request.GET.get('q', '').strip()[:MAX_SEARCH_LENGTH]
+    if search_text:
+        from django.db.models import Q
+        qs = qs.filter(Q(title__icontains=search_text) | Q(description__icontains=search_text)
+            | Q(location_text__icontains=search_text) | Q(venue__name__icontains=search_text)
+            | Q(organization__name__icontains=search_text) | Q(interests__name__icontains=search_text))
+    if request.GET.get('free') == '1':
+        qs = qs.filter(is_free=True)
+    category = request.GET.get('category', '')
+    if category:
+        qs = qs.filter(interests__slug=category)
+    date = request.GET.get('date', 'weekend')
+    if date == 'today':
+        qs = qs.filter(start_at__date=now.date())
+    elif date == 'weekend':
+        from .selectors import get_weekend_window, get_campus_timezone
+        start, end = get_weekend_window(now, get_campus_timezone())
+        qs = qs.filter(start_at__gte=start, start_at__lt=end)
+    elif date == 'week':
+        qs = qs.filter(start_at__lte=now + timezone.timedelta(days=7))
+    if bounds:
+        west, south, east, north = bounds
+        qs = qs.filter(location__within=f' SRID=4326;POLYGON(({west} {south},{east} {south},{east} {north},{west} {north},{west} {south}))')
+    ordering = ('-popularity_score','start_at') if request.GET.get('sort') == 'popular' else ('start_at',)
+    return qs.select_related('organization','venue').prefetch_related('interests').annotate(
+        going_count=Count('rsvps',filter=Q(rsvps__status=RSVP.Status.GOING),distinct=True),
+        interested_count=Count('rsvps',filter=Q(rsvps__status=RSVP.Status.INTERESTED),distinct=True),
+    ).distinct().order_by(*ordering)[:300]
+
+
+@require_GET
+def show_explore_map(request):
+    from .selectors import get_campus_center, list_category_interests
+    events = list(_map_events(request))
+    points = [{'id':str(e.pk),'title':e.title,'slug':e.slug,'lat':e.location.y,'lng':e.location.x,
+        'start':e.start_at.isoformat(),'venue':e.venue.name if e.venue else e.location_text,
+        'going':e.going_count,'popularity':e.popularity_score,'cover':e.cover_image,
+        'categories':[i.name for i in e.interests.all()]} for e in events]
+    return render(request,'discovery/explore_map.html',{
+        'events':events,'map_points':points,'map_center':get_campus_center() or (40.102,-88.2272),'active_nav':'explore_map',
+        'categories':list_category_interests(),'selected_category':request.GET.get('category',''),
+        'selected_date':request.GET.get('date','weekend'),
+        'search_text':request.GET.get('q','')[:MAX_SEARCH_LENGTH], 'free_only':request.GET.get('free') == '1',
+        'walk_only':request.GET.get('walk') == '1', 'popular_sort':request.GET.get('sort') == 'popular',
+        'maptiler_key':__import__('django.conf').conf.settings.MAPTILER_API_KEY,
+    })
+
+
+@require_GET
+def events_in_map_bounds(request):
+    from django.contrib.gis.geos import Polygon
+    raw=request.GET.get('bbox','').split(',')
+    if len(raw)!=4: return JsonResponse({'error':'bbox required'},status=400)
+    try: bounds=tuple(map(float,raw))
+    except ValueError: return JsonResponse({'error':'invalid bbox'},status=400)
+    events=list(_map_events(request,bounds))
+    return JsonResponse({'events':[{'id':str(e.pk),'title':e.title,'slug':e.slug,'lat':e.location.y,'lng':e.location.x,
+      'start':e.start_at.isoformat(),'venue':e.venue.name if e.venue else e.location_text,'going':e.going_count,
+      'popularity':e.popularity_score,'cover':e.cover_image,'categories':[i.name for i in e.interests.all()]} for e in events]})
 
 
 @require_http_methods(['GET'])
