@@ -240,3 +240,18 @@ select{height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:1
 .notification-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .notification-text b{font-weight:600;overflow-wrap:anywhere}
 .notification-text small{color:var(--muted);font-size:13.5px}
+
+/* Save / Like / Follow buttons (templates/engagement) */
+.engage-form{display:inline-flex;margin:0}
+.engage-btn{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 15px;border:1.5px solid #cdbfb2;border-radius:20px;background:#fff;color:#18293d;font:600 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.engage-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.engage-btn[aria-pressed="true"]{border-color:#c2410c;color:#a3360a}
+.engage-btn[aria-pressed="true"] svg{fill:currentColor}
+.engage-btn.follow svg .check,.engage-btn.follow[aria-pressed="true"] svg .plus{display:none}
+.engage-btn.follow[aria-pressed="true"] svg .check{display:inline}
+.engage-btn.follow[aria-pressed="true"] svg{fill:none}
+.engage-btn.follow{border-color:#c2410c;background:#c2410c;color:#fff}
+.engage-btn.follow[aria-pressed="true"]{background:#fff;color:#a3360a}
+.engage-btn.on-photo{border-color:transparent}
+.engage-btn:disabled{opacity:.6;cursor:wait}
+.engage-btn:focus-visible{outline:2px solid #102a4c;outline-offset:2px}

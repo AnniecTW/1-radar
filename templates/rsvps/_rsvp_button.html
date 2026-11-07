@@ -7,7 +7,7 @@
     <span class="rsvp-note warn">Campus email needed to RSVP</span>
   {% elif state == 'paid' %}
     {% if event.external_url|slice:":4" == "http" %}
-      <a class="rsvp-dark" href="{{ event.external_url }}" target="_blank" rel="noopener noreferrer">Get tickets ↗</a>
+      <a class="rsvp-dark" href="{% url 'event_tickets' event.pk %}" target="_blank" rel="noopener noreferrer">Get tickets ↗</a>
     {% else %}
       <span class="rsvp-note">Contact the host for tickets</span>
     {% endif %}

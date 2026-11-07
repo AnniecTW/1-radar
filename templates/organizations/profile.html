@@ -1,5 +1,5 @@
 {% extends user.is_authenticated|yesno:'accounts/app_base.html,organizations/guest_base.html' %}
-{% block title %}{{ organization.name }}{% endblock %}
+{% load engagement_tags %}{% block title %}{{ organization.name }}{% endblock %}
 {% block content %}
 <section class="banner">
   <div class="banner-top">
@@ -10,11 +10,13 @@
         <h1>{{ organization.name }}</h1>
         {% if organization.is_verified %}{% include 'organizations/_verified_badge.html' %}{% endif %}
       </div>
-      <p class="banner-meta">{{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}{% if role %} · You are {{ role|cut:"_"|title }}{% endif %}</p>
+      <p class="banner-meta"><span data-follower-count="{% url 'follow_organization' organization.slug %}">{{ organization.follower_count }}</span> follower{{ organization.follower_count|pluralize }}{% if role %} · You are {{ role|cut:"_"|title }}{% endif %}</p>
       {% if organization.description %}<p class="banner-bio">{{ organization.description|linebreaksbr }}</p>{% endif %}
     </div>
     {% if can_edit %}
     <div class="banner-actions"><a class="banner-button solid" href="{% url 'edit_organization_profile' organization.slug %}">Edit profile</a></div>
+    {% elif not role %}
+    <div class="banner-actions">{% follow_button organization 'org_page' %}</div>
     {% endif %}
   </div>
   {% if organization.contact_email or organization.website_url or organization.instagram_url %}

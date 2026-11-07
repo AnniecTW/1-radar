@@ -33,6 +33,7 @@ urlpatterns = [
     path('', include('apps.rsvps.urls')),
     path('', include('apps.events.urls')),
     path('', include('apps.analytics.urls')),
+    path('', include('apps.engagement.urls')),
     path('notifications/', include('apps.notifications.urls')),
     path('organizations/', include('apps.organizations.urls')),
     path('admin/', admin.site.urls),

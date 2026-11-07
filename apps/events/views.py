@@ -40,6 +40,7 @@ def show_event_detail(request, slug):
             raise Http404
     elif event.status not in (Event.Status.PUBLISHED, Event.Status.CANCELLED, Event.Status.COMPLETED):
         raise Http404
+    _track_view(request, event)
     counts=event.rsvps.aggregate(
         going=Count('id',filter=Q(status='going')),
         interested=Count('id',filter=Q(status='interested')),
@@ -64,6 +65,23 @@ def _decorate_hosted_event(event, user, now, tz):
         else:
             days = (timezone.localtime(event.start_at, tz).date() - timezone.localtime(now, tz).date()).days
             event.countdown = {0: 'Today', 1: 'Tomorrow'}.get(days, f'In {days} days')
+
+
+def _track_view(request, event):
+    """Log the visit for the host's analytics (views and where they came from)."""
+    from apps.engagement.services import guess_view_source, record_event_view
+
+    if event.status != Event.Status.PUBLISHED:
+        return
+    user = request.user if request.user.is_authenticated else None
+    if user and user_can_edit_event(user, event):
+        return
+    if user is None and not request.session.session_key:
+        request.session.save()
+    record_event_view(
+        event=event, user=user, session_key=request.session.session_key or '',
+        source=guess_view_source(request.headers.get('Referer', ''), request.get_host()), now=timezone.now(),
+    )
 
 
 @login_required
