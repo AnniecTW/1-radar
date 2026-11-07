@@ -17,7 +17,11 @@
 </head>
 <body>
   <div class="shell">
-    {% include '_sidebar.html' with active_nav=active_nav|default:'profile' %}
+    {% comment %}Highlight the section the page belongs to. Pages outside the menu, like an event page or notifications, highlight nothing.{% endcomment %}
+    {% if active_nav %}{% include '_sidebar.html' %}
+    {% elif request.path|slice:':15' == '/organizations/' %}{% include '_sidebar.html' with active_nav='organizations' %}
+    {% elif request.path|slice:':10' == '/accounts/' %}{% include '_sidebar.html' with active_nav='profile' %}
+    {% else %}{% include '_sidebar.html' %}{% endif %}
 
     <div class="main">
       <header class="topbar">
