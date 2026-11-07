@@ -41,3 +41,5 @@
 .signout-form{margin:0;border-top:1px solid #eee6dc;margin-top:6px;padding-top:6px}
 .signout{color:#9c2f12}
 .profile-menu[open] .chevron{transform:rotate(180deg)}
+.bell-link{display:grid;place-items:center;color:var(--ink);text-decoration:none}
+.bell-badge{position:absolute;top:5px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--terra);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}

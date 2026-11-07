@@ -90,6 +90,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.notifications.context_processors.unread_notifications',
             ],
         },
     },
@@ -119,6 +120,9 @@ GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH', '/opt/homebrew/lib/libge
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
+
+# Password reset links last one hour (FR-67).
+PASSWORD_RESET_TIMEOUT = 60 * 60
 
 AUTH_PASSWORD_VALIDATORS = [
     {

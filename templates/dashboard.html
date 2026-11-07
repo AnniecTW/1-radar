@@ -19,9 +19,10 @@
       <header class="topbar">
         <button class="mobile-menu" aria-label="Open menu">☰</button>
         <label class="search"><span>⌕</span><input type="search" placeholder="Search events, places, people, or keywords..."></label>
-        <button class="icon-button" aria-label="Notifications">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><i></i>
-        </button>
+        <a class="icon-button bell-link" href="{% url 'list_notifications' %}" aria-label="Notifications{% if unread_notification_count %}, {{ unread_notification_count }} unread{% endif %}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+          {% if unread_notification_count %}<span class="bell-badge" aria-hidden="true">{% if unread_notification_count > 9 %}9+{% else %}{{ unread_notification_count }}{% endif %}</span>{% endif %}
+        </a>
         <details class="profile-menu">
           <summary class="profile" aria-haspopup="menu">
             <span class="avatar">{% if user.first_name or user.last_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}</span>

@@ -7,6 +7,8 @@
   <p>Pick up where you left off and see what’s happening on campus.</p>
 </div>
 
+{% for message in messages %}<div class="form-notice" role="status">{{ message }}</div>{% endfor %}
+
 <form class="auth-form" method="post" novalidate>
   {% csrf_token %}
   <input type="hidden" name="next" value="{{ next }}">
@@ -16,7 +18,7 @@
     <input type="email" name="email" value="{{ form.email.value|default:'' }}" placeholder="you@university.edu" autocomplete="email" required>{% for error in form.email.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
   </label>
   <label class="field">
-    <span class="field-row">Password <a href="#forgot">Forgot password?</a></span>
+    <span class="field-row">Password <a href="{% url 'request_password_reset' %}">Forgot password?</a></span>
     <span class="password-wrap">
       <input type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
       <button type="button" class="toggle-password" aria-label="Show password">Show</button>

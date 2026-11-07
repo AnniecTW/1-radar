@@ -228,3 +228,15 @@ select{height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:1
 .verify-card{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px;padding:16px 20px;border-radius:16px;background:var(--white);border:1.5px solid var(--line)}
 .verify-card form{display:flex;flex-direction:column;gap:10px;flex:1 1 280px}
 .verify-card .banner-button.solid{align-self:flex-start;border-color:var(--navy);background:var(--navy);color:var(--white)}
+
+/* Notifications */
+.bell-link{position:relative}
+.bell-badge{position:absolute;top:4px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--white);font-size:11px;font-weight:700;line-height:18px;text-align:center}
+.notification-row{display:flex;align-items:flex-start;gap:12px;width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.notification-row:hover{background:var(--white)}
+.notification-row.unread{background:#fbf3ec}
+.notification-dot{flex:none;width:9px;height:9px;margin-top:7px;border-radius:50%;background:transparent}
+.notification-row.unread .notification-dot{background:var(--accent)}
+.notification-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.notification-text b{font-weight:600;overflow-wrap:anywhere}
+.notification-text small{color:var(--muted);font-size:13.5px}

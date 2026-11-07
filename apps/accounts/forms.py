@@ -73,3 +73,30 @@ class LocationPreferencesForm(forms.Form):
     start_with_walk = forms.BooleanField(required=False)
     show_heat_map = forms.BooleanField(required=False)
     default_map_view = forms.ChoiceField(choices=[('map', 'Map'), ('satellite', 'Satellite'), ('list', 'List')])
+
+
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(max_length=254)
+
+
+class ResetPasswordForm(forms.Form):
+    password1 = forms.CharField(strip=False)
+    password2 = forms.CharField(strip=False)
+
+    def __init__(self, *args, user: User, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean(self) -> dict:
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('password1')
+        if not password1:
+            return cleaned_data
+        if password1 != cleaned_data.get('password2'):
+            self.add_error('password2', 'Passwords do not match.')
+            return cleaned_data
+        try:
+            validate_password(password1, user=self.user)
+        except ValidationError as error:
+            self.add_error('password1', error)
+        return cleaned_data

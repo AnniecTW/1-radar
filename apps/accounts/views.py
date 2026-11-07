@@ -23,10 +23,16 @@ from apps.organizations.selectors import list_followed_organizations
 from apps.organizations.services import set_follow_notifications, unfollow_organization
 from apps.rsvps.selectors import list_past_rsvps, list_upcoming_tickets
 
-from .exceptions import EmailAlreadyRegisteredError, InvalidVerificationTokenError
-from .forms import FeedPreferencesForm, LocationPreferencesForm, LoginForm, ProfileForm, SignupForm
+from .exceptions import EmailAlreadyRegisteredError, InvalidPasswordResetLinkError, InvalidVerificationTokenError
+from .forms import (
+    FeedPreferencesForm, ForgotPasswordForm, LocationPreferencesForm, LoginForm, ProfileForm, ResetPasswordForm,
+    SignupForm,
+)
 from .selectors import NOTIFICATION_UPDATES, get_initials, get_preferences
 from .services import (
+    get_user_for_password_reset,
+    request_password_reset as send_password_reset,
+    reset_user_password,
     create_user_account,
     get_or_create_profile,
     make_verification_token,
@@ -126,6 +132,41 @@ def signup_user(request: HttpRequest) -> HttpResponse:
             send_verification_email_to(request)
             return redirect(f"{reverse('verification_sent')}?{urlencode({'next': get_onboarding_url(next_url)})}")
     return render(request, 'accounts/signup.html', {'form': form, 'next': next_url})
+
+
+@require_http_methods(['GET', 'POST'])
+def request_password_reset(request: HttpRequest) -> HttpResponse:
+    """FR-67: same confirmation whether or not the email has an account."""
+    form = ForgotPasswordForm(request.POST) if request.method == 'POST' else ForgotPasswordForm()
+    if request.method == 'POST' and form.is_valid():
+        email = form.cleaned_data['email']
+        try:
+            send_password_reset(
+                email=email,
+                ip_address=request.META.get('REMOTE_ADDR', ''),
+                build_reset_url=lambda uid, token: request.build_absolute_uri(
+                    reverse('confirm_password_reset', args=[uid, token])
+                ),
+            )
+        except Exception:
+            # A mail outage must not turn into an error page that reveals the account exists.
+            logger.exception('Could not send password reset email')
+        return render(request, 'accounts/password_reset_sent.html', {'email': email})
+    return render(request, 'accounts/forgot_password.html', {'form': form})
+
+
+@require_http_methods(['GET', 'POST'])
+def confirm_password_reset(request: HttpRequest, uidb64: str, token: str) -> HttpResponse:
+    try:
+        user = get_user_for_password_reset(uidb64, token)
+    except InvalidPasswordResetLinkError:
+        return render(request, 'accounts/reset_password.html', {'invalid': True}, status=400)
+    form = ResetPasswordForm(request.POST, user=user) if request.method == 'POST' else ResetPasswordForm(user=user)
+    if request.method == 'POST' and form.is_valid():
+        reset_user_password(user=user, new_password=form.cleaned_data['password1'])
+        messages.success(request, 'Your password is changed. Sign in with the new one.')
+        return redirect('login')
+    return render(request, 'accounts/reset_password.html', {'form': form})
 
 
 @require_POST
