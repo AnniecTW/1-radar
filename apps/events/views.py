@@ -173,6 +173,8 @@ def _form_fields(data, event):
     cover_image = event.cover_image if event else ''
     if data.get('cover'):
         cover_image = _save_cover(data['cover'])
+    elif data.get('pending_cover'):
+        cover_image = data['pending_cover']
     elif data.get('remove_cover'):
         cover_image = ''
     return {
@@ -211,6 +213,8 @@ def _save(request, form, event, organizations):
         organization = next(org for org in organizations if org.slug == data['host'])
     try:
         fields = _form_fields(data, event)
+        if data.get('cover'):
+            form.uploaded_cover_url = fields['cover_image']
     except Exception:
         # Image storage misconfigured or unreachable: keep the form instead of a crash page.
         logger.exception('Event cover upload failed')
@@ -226,6 +230,28 @@ def _save(request, form, event, organizations):
     except PermissionDenied:
         form.add_error(None, "You can't host events for this organization.")
     return None
+
+
+def _pending_cover(form):
+    """After a failed save, keep the photo the person chose so they don't have to pick it again."""
+    from django.core import signing
+
+    from .forms import PENDING_COVER_SALT
+
+    if not form.is_bound or form.data.get('remove_cover'):
+        return None
+    cleaned = getattr(form, 'cleaned_data', {}) or {}
+    url = getattr(form, 'uploaded_cover_url', None)
+    if not url and cleaned.get('cover'):
+        try:
+            url = _save_cover(cleaned['cover'])
+        except Exception:
+            logger.exception('Event cover upload failed')
+            return None
+    url = url or cleaned.get('pending_cover')
+    if not url:
+        return None
+    return {'url': url, 'token': signing.dumps(url, salt=PENDING_COVER_SALT)}
 
 
 def _event_form_page(request, event):
@@ -292,6 +318,7 @@ def _event_form_page(request, event):
     center = get_campus_center()
     context.update({
         'form': form,
+        'pending_cover': _pending_cover(form) if request.method == 'POST' else None,
         'is_published': is_published,
         'organizations': organizations,
         'verified_slugs': [org.slug for org in organizations if org.is_verified],

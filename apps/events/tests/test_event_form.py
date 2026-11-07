@@ -117,6 +117,20 @@ class EventFormTests(HostTestCase):
             response = self.client.post(reverse('create_event'), {**self.data(), 'cover': upload})
         self.assertContains(response, 'be uploaded right now. Save without it')
 
+    def test_a_chosen_photo_survives_a_mistake_and_is_saved_next_time(self):
+        buffer = io.BytesIO()
+        Image.new('RGB', (40, 20), 'orange').save(buffer, 'PNG')
+        upload = SimpleUploadedFile('cover.png', buffer.getvalue(), content_type='image/png')
+        response = self.client.post(reverse('create_event'), {**self.data(end_time='18:00'), 'cover': upload})
+        self.assertContains(response, 'Your new image is kept')
+        token = response.context['pending_cover']['token']
+        self.client.post(reverse('create_event'), {**self.data(), 'pending_cover': token})
+        self.assertIn('event_covers/', Event.objects.get(title='Robot Battle Night').cover_image)
+
+    def test_a_forged_pending_photo_is_ignored(self):
+        self.client.post(reverse('create_event'), {**self.data(), 'pending_cover': 'https://evil.example.com/x.png'})
+        self.assertEqual(Event.objects.get(title='Robot Battle Night').cover_image, '')
+
     def test_sidebar_and_my_events_link_here(self):
         self.assertContains(self.client.get(reverse('create_event')), f'class="active" aria-current="page" href="{reverse("create_event")}"')
         self.assertContains(self.client.get(reverse('my_events')), reverse('create_event'))

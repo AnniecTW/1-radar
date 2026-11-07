@@ -92,11 +92,12 @@
       <section class="form-section">
         <h2>Cover image</h2>
         <div class="cover-row">
-          <div class="cover-preview" id="cover-preview">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="Current cover image">{% else %}<span>No image yet</span>{% endif %}</div>
+          <div class="cover-preview" id="cover-preview">{% if pending_cover %}<img src="{{ pending_cover.url }}" alt="Your new cover image">{% elif event.cover_image %}<img src="{{ event.cover_image }}" alt="Current cover image">{% else %}<span>No image yet</span>{% endif %}</div>
           <div class="cover-actions">
             <label class="host-button" for="{{ form.cover.id_for_label }}">{% if event.cover_image %}Replace image{% else %}Upload image{% endif %}</label>
             <input class="visually-hidden" type="file" name="cover" id="{{ form.cover.id_for_label }}" accept="image/jpeg,image/png,image/webp">
             {% if event.cover_image %}<label class="check-row small"><input type="checkbox" name="remove_cover"> Remove the current image</label>{% endif %}
+            {% if pending_cover %}<input type="hidden" name="pending_cover" value="{{ pending_cover.token }}"><p class="field-help kept">Your new image is kept. It's saved with the event when you save again.</p>{% endif %}
             <p class="field-help">JPG, PNG or WebP, up to 5 MB. Without one, the card shows your title.</p>
             {% if form.cover.errors %}<p class="field-error">{{ form.cover.errors.0 }}</p>{% endif %}
           </div>
@@ -143,7 +144,7 @@
       <section>
         <h2>How it will look</h2>
         <article class="preview-card" aria-live="off">
-          <div class="preview-cover" id="preview-cover">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="">{% endif %}<div><span id="preview-date">DATE</span><b id="preview-title">Your event title</b></div></div>
+          <div class="preview-cover" id="preview-cover">{% if pending_cover %}<img src="{{ pending_cover.url }}" alt="">{% elif event.cover_image %}<img src="{{ event.cover_image }}" alt="">{% endif %}<div><span id="preview-date">DATE</span><b id="preview-title">Your event title</b></div></div>
           <div class="preview-body">
             <p id="preview-when">Time · Location</p>
             <p id="preview-host"></p>

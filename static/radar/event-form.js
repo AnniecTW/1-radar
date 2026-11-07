@@ -124,6 +124,50 @@
     if (e.target.name === 'host') showHost();
     update();
   });
+  // Catch an end time before the start time here, so nothing is sent and nothing is lost.
+  const endInput = $('end_time');
+  const endError = document.createElement('p');
+  endError.className = 'field-error';
+  endError.id = 'end-time-check';
+  endError.hidden = true;
+  endError.textContent = 'The end time must be after the start time.';
+  endInput?.closest('.field')?.append(endError);
+  const checkTimes = () => {
+    const start = text('start_time'), end = text('end_time');
+    const bad = !!(start && end && end <= start);
+    endError.hidden = !bad;
+    endInput?.closest('.field')?.classList.toggle('has-error', bad);
+    endInput?.setAttribute('aria-invalid', bad ? 'true' : 'false');
+    if (bad) endInput?.setAttribute('aria-describedby', 'end-time-check'); else endInput?.removeAttribute('aria-describedby');
+    return !bad;
+  };
+  endInput?.addEventListener('change', checkTimes);
+  $('start_time')?.addEventListener('change', checkTimes);
+
+  // Warn before leaving with unsaved changes.
+  let dirty = false, submitting = false;
+  form.addEventListener('input', () => { dirty = true; });
+  form.addEventListener('change', () => { dirty = true; });
+  window.addEventListener('beforeunload', (e) => {
+    if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; }
+  });
+  form.addEventListener('submit', (e) => {
+    if (!checkTimes()) {
+      e.preventDefault();
+      endInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      endInput.focus({ preventScroll: true });
+      return;
+    }
+    submitting = true;
+  });
+
+  // After a save with mistakes, go straight to the first one.
+  const firstError = form.querySelector('.has-error');
+  if (firstError) {
+    firstError.scrollIntoView({ block: 'center' });
+    firstError.querySelector('input:not([type=hidden]),select,textarea')?.focus({ preventScroll: true });
+  }
+
   showKind(); limitChips(); showHost(); update();
   if (window.L) startMap(); else window.addEventListener('load', startMap);
 })();

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django import forms
+from django.core import signing
 from django.utils import timezone
 
 from apps.interests.models import Interest
@@ -10,6 +11,8 @@ from .models import Event
 
 MAX_COVER_BYTES = 5 * 1024 * 1024
 MAX_CATEGORIES = 3
+PENDING_COVER_SALT = 'events.pending-cover'
+PENDING_COVER_MAX_AGE = 60 * 60 * 24
 KIND_CHOICES = [
     ('rsvp', 'Free, RSVP required'),
     ('drop_in', 'Free, drop-in'),
@@ -41,6 +44,8 @@ class EventForm(forms.Form):
     longitude = forms.FloatField(required=False, min_value=-180, max_value=180, widget=forms.HiddenInput)
     cover = forms.ImageField(required=False, label='Cover image')
     remove_cover = forms.BooleanField(required=False)
+    # Signed link to a photo uploaded on an earlier try that had a mistake, so it isn't lost.
+    pending_cover = forms.CharField(required=False, widget=forms.HiddenInput)
     kind = forms.ChoiceField(choices=KIND_CHOICES, initial='rsvp', widget=forms.RadioSelect)
     capacity = forms.IntegerField(required=False, min_value=1, max_value=100000)
     waitlist_enabled = forms.BooleanField(required=False, initial=True, label="Open a waitlist when it's full")
@@ -99,6 +104,15 @@ class EventForm(forms.Form):
         if len(interests) > MAX_CATEGORIES:
             raise forms.ValidationError(f'Pick up to {MAX_CATEGORIES} categories.')
         return interests
+
+    def clean_pending_cover(self):
+        token = self.cleaned_data.get('pending_cover')
+        if not token:
+            return ''
+        try:
+            return signing.loads(token, salt=PENDING_COVER_SALT, max_age=PENDING_COVER_MAX_AGE)
+        except signing.BadSignature:
+            return ''
 
     def clean_cover(self):
         cover = self.cleaned_data.get('cover')

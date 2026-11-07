@@ -203,3 +203,4 @@
 .row-photo img{width:100%;height:100%;object-fit:cover;display:block}
 .row-photo .cover-letter{font-size:28px}
 .row-photo.faded img{filter:grayscale(1)}
+.field-help.kept{color:var(--ok);font-weight:500}
