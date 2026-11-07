@@ -37,6 +37,11 @@
       <form class="hero-search" action="{% url 'dashboard' %}#browse" method="get" role="search">
         <label class="visually-hidden" for="hero-q">Search events</label>
         <input id="hero-q" type="search" name="q" value="{{ search_text }}" maxlength="100" placeholder="Try: free food near the library tonight">
+        <label class="semantic-switch">
+          <input type="checkbox" name="semantic" value="1"{% if semantic_search %} checked{% endif %} aria-label="Use natural language search" aria-describedby="semantic-search-tip">
+          <span class="semantic-switch-track" aria-hidden="true"></span><span class="semantic-switch-label">AI search</span>
+          <span class="semantic-tooltip" id="semantic-search-tip" role="tooltip">Search by meaning using natural language, such as “a relaxed event this weekend.”</span>
+        </label>
         {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
         <button class="primary-button" type="submit">Search <span aria-hidden="true">→</span></button>
       </form>
@@ -67,6 +72,8 @@
       {% else %}
         <p class="empty">No upcoming events match{% if search_text or selected_category %} your filters{% endif %}. {% if search_text or selected_category %}<a href="{% url 'dashboard' %}#browse">Clear filters</a>{% endif %}</p>
       {% endif %}
+      {% if search_error %}<p class="empty" role="alert">{{ search_error }}</p>{% endif %}
+      {% if keyword_fallback %}<p class="empty" role="status">AI search is temporarily unavailable. Showing keyword matches.</p>{% endif %}
     </section>
 
     <section class="section" id="map" aria-labelledby="map-title">

@@ -57,7 +57,8 @@ class Event(models.Model):
     source = models.CharField(max_length=20, choices=Source.choices, default=Source.MANUAL)
     # Recomputed by a background job.
     popularity_score = models.FloatField(default=0, db_index=True)
-    embedding = VectorField(dimensions=1536, null=True, blank=True)
+    # Cloudflare BGE small embeddings.
+    embedding = VectorField(dimensions=384, null=True, blank=True)
     search_vector = SearchVectorField(null=True, blank=True)
     # For self check-in (P1).
     checkin_qr_secret = models.CharField(max_length=64, blank=True)

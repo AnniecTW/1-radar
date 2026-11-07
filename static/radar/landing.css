@@ -19,7 +19,16 @@ body{margin:0;background:var(--cream);color:var(--ink);font-family:'DM Sans',san
 .hero h1 i{color:var(--terra)}
 .hero p{margin:0 0 24px;color:var(--muted);font-size:16px;max-width:560px;line-height:1.5}
 .hero-search{display:flex;gap:10px;max-width:640px;background:#fff;border:1px solid var(--line);border-radius:32px;padding:6px 6px 6px 22px;box-shadow:0 3px 12px rgba(40,34,26,.04)}
-.hero-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:400 15px 'DM Sans',sans-serif;color:var(--ink)}
+.hero-search>input[type=search]{flex:1;min-width:0;border:0;outline:0;background:transparent;font:400 15px 'DM Sans',sans-serif;color:var(--ink)}
+.semantic-switch{position:relative;display:inline-flex;align-items:center;gap:8px;align-self:center;padding:6px 8px;border-radius:20px;color:var(--muted);font:600 11px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.semantic-switch input{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;opacity:0!important}
+.semantic-switch-track{display:block;flex:0 0 42px;width:42px;height:24px;border-radius:14px;background:#d8d4ce;transition:background .18s;position:relative;box-shadow:inset 0 1px 2px rgba(40,34,26,.12)}
+.semantic-switch-track:after{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(40,34,26,.25);transition:transform .18s}
+.semantic-switch input:checked+.semantic-switch-track{background:var(--terra)}
+.semantic-switch input:checked+.semantic-switch-track:after{transform:translateX(18px)}
+.semantic-switch input:focus-visible+.semantic-switch-track{outline:2px solid var(--terra);outline-offset:2px}
+.semantic-tooltip{position:absolute;z-index:20;top:calc(100% + 8px);right:0;width:230px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--cream);color:var(--ink);font:400 12px/1.45 'DM Sans',sans-serif;white-space:normal;box-shadow:0 8px 22px rgba(16,41,66,.2);opacity:0;visibility:hidden;transform:translateY(-3px);transition:opacity .16s ease,transform .16s ease,visibility .16s}
+.semantic-switch:hover .semantic-tooltip,.semantic-switch:focus-within .semantic-tooltip{opacity:1;visibility:visible;transform:translateY(0)}
 .section{margin-top:40px}
 .section-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px;gap:12px}
 .section-heading h2{font-family:'Playfair Display',serif;font-size:28px;margin:0 0 3px;letter-spacing:-.5px}

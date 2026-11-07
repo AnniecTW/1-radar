@@ -117,7 +117,21 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
     category_slug = request.GET.get('category', '')
     if category_slug not in {interest.slug for interest in categories}:
         category_slug = ''
-    search_text = request.GET.get('q', '').strip()[:MAX_SEARCH_LENGTH]
+    raw_search_text = request.GET.get('q', '').strip()
+    search_text = raw_search_text[:MAX_SEARCH_LENGTH]
+    if request.GET.get('q') and not raw_search_text:
+        search_error = 'Enter a search phrase.'
+    elif len(raw_search_text) > MAX_SEARCH_LENGTH:
+        search_error = f'Searches must be {MAX_SEARCH_LENGTH} characters or fewer.'
+        search_text = ''
+    else:
+        search_error = ''
+    semantic_search = request.GET.get('semantic') == '1'
+    if search_text and semantic_search:
+        from .selectors import search_browse_events
+        browse_events, keyword_fallback = search_browse_events(now, category_slug, search_text)
+    else:
+        browse_events, keyword_fallback = list_browse_events(now, category_slug, search_text), False
 
     context = {
         'happening_today': get_happening_today_events(now, campus_timezone),
@@ -126,7 +140,10 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
         'categories': categories,
         'selected_category': category_slug,
         'search_text': search_text,
-        'browse_events': list_browse_events(now, category_slug, search_text),
+        'semantic_search': semantic_search,
+        'browse_events': browse_events,
+        'search_error': search_error,
+        'keyword_fallback': keyword_fallback,
         'featured_organizations': list_featured_organizations(now),
         'map_points': get_map_points(now),
         'map_center': get_campus_center(),

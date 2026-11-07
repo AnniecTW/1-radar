@@ -109,6 +109,44 @@ def list_browse_events(now: datetime, category_slug: str, search_text: str) -> l
     return list(events.distinct().order_by('start_at')[:BROWSE_GRID_SIZE])
 
 
+def search_browse_events(now: datetime, category_slug: str, search_text: str) -> tuple[list[Event], bool]:
+    """Rank eligible events in PostgreSQL using the pgvector cosine operator."""
+    from django.conf import settings
+    from pgvector.django import CosineDistance
+    from apps.events.semantic_search import EmbeddingError, embed_text
+
+    try:
+        query_vector = embed_text(search_text)
+    except EmbeddingError:
+        import logging
+        logging.getLogger(__name__).info("Semantic search unavailable; using keyword search")
+        return list_browse_events(now, category_slug, search_text), True
+
+    events = list_upcoming_events(now)
+    if category_slug:
+        events = events.filter(interests__slug=category_slug)
+    min_similarity = getattr(settings, "CLOUDFLARE_SEMANTIC_MIN_SIMILARITY", 0.58)
+    if not 0 <= min_similarity <= 1:
+        min_similarity = 0.58
+    import logging
+    logger = logging.getLogger(__name__)
+    ranked = (events.filter(embedding__isnull=False).distinct()
+              .annotate(cosine_distance=CosineDistance("embedding", query_vector))
+              .order_by("cosine_distance", "-popularity_score", "start_at"))
+    # Record a bounded, privacy-safe sample for relevance calibration. Do not log query text.
+    scored_candidates = list(ranked[:20])
+    shown = [event for event in scored_candidates
+             if 1 - event.cosine_distance >= min_similarity][:BROWSE_GRID_SIZE]
+    shown_ids = {str(event.pk) for event in shown}
+    logger.warning(
+        "Semantic search scores min_similarity=%.4f candidates=%s",
+        min_similarity,
+        [(str(event.pk), round(1 - event.cosine_distance, 4), str(event.pk) in shown_ids)
+         for event in scored_candidates],
+    )
+    return shown, False
+
+
 def list_featured_organizations(now: datetime) -> list[Organization]:
     upcoming = filter_discoverable_events(Event.objects.filter(end_at__gt=now))
     organizations = Organization.objects.annotate(

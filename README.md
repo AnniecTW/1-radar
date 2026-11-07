@@ -82,3 +82,9 @@ For Gmail, turn on 2-Step Verification and create an App Password (Google Accoun
 
 3. Put the generated value after `DJANGO_SECRET_KEY=` in `.env`.
 4. Keep `.env` private. It is ignored by Git, so don't add it to a commit.
+
+## Semantic event search
+
+Set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in `.env` locally or as server secrets. Optional settings are `CLOUDFLARE_EMBEDDING_MODEL` (defaults to `@cf/baai/bge-small-en-v1.5`), `CLOUDFLARE_TIMEOUT` (defaults to 5 seconds), and `CLOUDFLARE_SEMANTIC_MIN_SIMILARITY` (defaults to `0.58`; cosine similarity below this value is excluded). Tune the similarity cutoff against real searches and relevance judgments. Apply `python manage.py migrate`, then run `python manage.py rebuild_event_embeddings` to backfill published events; add `--force` to rebuild or `--all` to include drafts and ended events. Failed IDs are printed and the command is safe to rerun.
+
+The landing page GET search uses saved 384-dimensional pgvector embeddings and falls back to the existing keyword search when Cloudflare is unavailable. Check with `python manage.py test apps.events.tests.test_semantic_search`; a configured live smoke check is `python manage.py rebuild_event_embeddings` followed by a search from the home page. On PythonAnywhere, add both secrets in the web app environment/configuration, reload the app, and confirm outbound HTTPS access to `api.cloudflare.com`. Search uses one paid/limited Cloudflare call per submitted query, while event edits only re-embed when public searchable text changes.

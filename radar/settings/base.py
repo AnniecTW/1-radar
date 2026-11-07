@@ -166,6 +166,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 MAPTILER_API_KEY = os.environ.get('MAPTILER_API_KEY', '')
+CLOUDFLARE_ACCOUNT_ID = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '')
+CLOUDFLARE_API_TOKEN = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+CLOUDFLARE_EMBEDDING_MODEL = os.environ.get('CLOUDFLARE_EMBEDDING_MODEL', '@cf/baai/bge-small-en-v1.5')
+CLOUDFLARE_TIMEOUT = float(os.environ.get('CLOUDFLARE_TIMEOUT', '5'))
+CLOUDFLARE_SEMANTIC_MIN_SIMILARITY = float(os.environ.get('CLOUDFLARE_SEMANTIC_MIN_SIMILARITY', '0.58'))
 
 # User uploads (organization logos, event covers).
 # With the SUPABASE_S3_* keys in .env they go to the shared Supabase Storage bucket, so everyone
