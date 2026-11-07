@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" role="img" aria-labelledby="banner-title banner-desc">
+  <title id="banner-title">Radar</title>
+  <desc id="banner-desc">Find and host campus events in one place: AI search, Explore Map, RSVPs and host analytics.</desc>
+  <defs>
+    <clipPath id="frame"><rect width="1280" height="360" rx="28"/></clipPath>
+    <linearGradient id="sweep" x1="1" y1="0.5" x2="0" y2="0.1">
+      <stop offset="0" stop-color="#f2b08a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#f2b08a" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="360" fill="#102a4c"/>
+
+    <!-- Radar scope -->
+    <g transform="translate(980 190)">
+      <g fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.5">
+        <circle r="80"/><circle r="165"/><circle r="250"/><circle r="335"/>
+        <path d="M-345 0H345M0 -345V345"/>
+      </g>
+      <path d="M0 0L250 -142A287 287 0 0 0 96 -270Z" fill="url(#sweep)"/>
+      <path d="M0 0L250 -142" stroke="#f2b08a" stroke-width="2.5" stroke-linecap="round"/>
+      <circle r="7" fill="#f2b08a"/>
+      <!-- Event blips -->
+      <g fill="#c65024" stroke="#102a4c" stroke-width="3">
+        <circle cx="-205" cy="-88" r="9"/><circle cx="-96" cy="112" r="9"/><circle cx="212" cy="96" r="9"/>
+      </g>
+      <g fill="#f45143"><circle cx="150" cy="-142" r="11"/><circle cx="150" cy="-142" r="22" fill-opacity="0.28"/></g>
+    </g>
+
+    <!-- Logo: the same artwork as the app sidebar -->
+    <g transform="translate(64 44) scale(1.55)" color="#ffffff">
+      <path d="M45.9 16.1A25.5 25.5 0 1 0 52.9 36" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M40 22A17 17 0 1 0 44.9 35" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="m16 33 24-9-11 23-2-11z" transform="translate(28 35) scale(.94) translate(-28 -35)" fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-width="1.4"/>
+      <circle cx="49" cy="26" r="3.6" fill="#f45143"/>
+    </g>
+    <g transform="translate(166 68) scale(0.82)" fill="#ffffff" fill-rule="evenodd">
+      <path d="M0 4h27c17 0 25 8 25 22 0 11-5 18-15 21l17 9H36L22 49H13v7H0zm13 11v23h14c8 0 12-4 12-12s-4-11-12-11z"/>
+      <path d="m58 56 20-52h15l21 52H99L85.5 19 72 56z"/>
+      <path d="M122 4h22c18 0 30 10 30 26s-12 26-30 26h-22zm13 12v28h9c10 0 16-5 16-14s-6-14-16-14z" transform="translate(-4 0)"/>
+      <path d="m178 56 20-52h15l21 52h-15L205.5 19 192 56z" transform="translate(-4 0)"/>
+      <path d="M240 4h27c17 0 25 8 25 22 0 11-5 18-15 21l17 9h-18l-14-7h-9v7h-13zm13 11v23h14c8 0 12-4 12-12s-4-11-12-11z" transform="translate(-6 0)"/>
+    </g>
+
+    <g font-family="'Avenir Next','Segoe UI',Helvetica,Arial,sans-serif">
+      <text x="68" y="192" font-size="40" font-weight="700" fill="#ffffff">Find and host campus</text>
+      <text x="68" y="240" font-size="40" font-weight="700" fill="#ffffff">events in one place</text>
+      <g font-size="15" font-weight="600">
+        <g transform="translate(68 276)"><rect width="104" height="38" rx="19" fill="#c65024"/><text x="52" y="24.5" text-anchor="middle" fill="#ffffff">AI search</text></g>
+        <g transform="translate(182 276)" fill="#ffffff"><rect width="124" height="38" rx="19" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5"/><text x="62" y="24.5" text-anchor="middle">Explore Map</text></g>
+        <g transform="translate(316 276)" fill="#ffffff"><rect width="86" height="38" rx="19" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5"/><text x="43" y="24.5" text-anchor="middle">RSVPs</text></g>
+        <g transform="translate(412 276)" fill="#ffffff"><rect width="138" height="38" rx="19" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5"/><text x="69" y="24.5" text-anchor="middle">Host analytics</text></g>
+      </g>
+    </g>
+  </g>
+</svg>
