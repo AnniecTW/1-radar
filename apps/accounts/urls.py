@@ -15,6 +15,7 @@ urlpatterns = [
     path('preferences/', views.edit_preferences, name='preferences'),
     path('preferences/account/', views.edit_account_preferences, name='account_preferences'),
     path('preferences/password/', views.change_password, name='change_password'),
+    path('preferences/delete/', views.delete_account, name='delete_account'),
     path('verify-email/sent/', views.show_verification_sent, name='verification_sent'),
     path('verify-email/resend/', views.resend_verification_email, name='resend_verification_email'),
     path('verify-email/<str:token>/', views.verify_email, name='verify_email'),

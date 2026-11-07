@@ -2,17 +2,33 @@ import hashlib
 
 from django.contrib.auth.tokens import default_token_generator
 from django.core import signing
+from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
+from apps.discovery.models import RecommendationImpression
+from apps.engagement.models import EventLike, EventOutboundClick, EventSave, EventView
+from apps.events.models import Event, EventCheckInStaff
+from apps.flyers.models import FlyerUpload
+from apps.interests.models import UserInterest
 from apps.interests.services import save_interests_from_preferences
+from apps.notifications.models import Notification
+from apps.organizations.models import OrganizationFollow
+from apps.organizations.services import unfollow_organization
+from apps.rsvps.models import RSVP
+from apps.rsvps.services import cancel_rsvp
+from apps.search.models import SearchQueryLog
 
-from .exceptions import EmailAlreadyRegisteredError, InvalidPasswordResetLinkError, InvalidVerificationTokenError
+from .exceptions import AccountDeletionBlockedError, EmailAlreadyRegisteredError, InvalidPasswordResetLinkError, InvalidVerificationTokenError
 from .models import Profile, User
-from .selectors import NOTIFICATION_UPDATES, get_campus_domain_for_email, get_user_by_id, is_email_registered
+from .selectors import (
+    NOTIFICATION_UPDATES, get_account_deletion_blockers, get_campus_domain_for_email, get_user_by_id,
+    is_email_registered,
+)
 
 VERIFICATION_TOKEN_SALT = 'accounts.email-verification'
 VERIFICATION_TOKEN_MAX_AGE_SECONDS = 3 * 24 * 60 * 60
@@ -113,13 +129,13 @@ RESET_REQUESTS_PER_IP = 10
 RESET_WINDOW_SECONDS = 60 * 60
 
 
-def _hit_rate_limit(key: str, limit: int) -> bool:
+def _hit_rate_limit(key: str, limit: int, window: int = RESET_WINDOW_SECONDS) -> bool:
     """Count this request; True once the count passes the limit inside the window."""
-    cache.add(key, 0, RESET_WINDOW_SECONDS)
+    cache.add(key, 0, window)
     try:
         return cache.incr(key) > limit
     except ValueError:  # key expired between add and incr
-        cache.set(key, 1, RESET_WINDOW_SECONDS)
+        cache.set(key, 1, window)
         return False
 
 
@@ -169,3 +185,77 @@ def get_user_for_password_reset(uidb64: str, token: str) -> User:
 def reset_user_password(*, user: User, new_password: str) -> None:
     user.set_password(new_password)
     user.save(update_fields=['password'])
+
+
+# Login rate limit. Failures are counted per email and per IP whether or not the account exists, so the
+# lockout reveals nothing about which emails are registered. A lockout also blocks the correct password.
+LOGIN_FAILURES_PER_EMAIL = 5
+LOGIN_FAILURES_PER_IP = 20
+LOGIN_WINDOW_SECONDS = 15 * 60
+
+
+def _login_keys(email: str, ip_address: str) -> tuple[str, str]:
+    email_hash = hashlib.sha256(email.strip().lower().encode()).hexdigest()
+    return f'login:email:{email_hash}', f'login:ip:{ip_address}'
+
+
+def is_login_locked(*, email: str, ip_address: str) -> bool:
+    email_key, ip_key = _login_keys(email, ip_address)
+    return (cache.get(email_key, 0) >= LOGIN_FAILURES_PER_EMAIL
+            or cache.get(ip_key, 0) >= LOGIN_FAILURES_PER_IP)
+
+
+def record_failed_login(*, email: str, ip_address: str) -> None:
+    email_key, ip_key = _login_keys(email, ip_address)
+    _hit_rate_limit(email_key, LOGIN_FAILURES_PER_EMAIL, LOGIN_WINDOW_SECONDS)
+    _hit_rate_limit(ip_key, LOGIN_FAILURES_PER_IP, LOGIN_WINDOW_SECONDS)
+
+
+def clear_login_failures(*, email: str) -> None:
+    """A successful sign-in resets that email's count. The IP count keeps running."""
+    cache.delete(_login_keys(email, '')[0])
+
+
+# Account deletion (FR-6, FR-68 to FR-70). The row is anonymized, not deleted, so past events,
+# memberships, check-ins and reports keep pointing at a user who now has no personal data.
+def delete_account(*, user: User, password: str) -> None:
+    if not user.check_password(password):
+        raise ValidationError('That password is not correct.')
+    with transaction.atomic():
+        user = User.objects.select_for_update().get(pk=user.pk)
+        if get_account_deletion_blockers(user)['has_blockers']:
+            raise AccountDeletionBlockedError
+
+        # Cancel upcoming RSVPs one by one so each frees its spot for the waitlist.
+        upcoming = RSVP.objects.filter(
+            user=user, event__end_at__gt=timezone.now(),
+            status__in=[RSVP.Status.GOING, RSVP.Status.WAITLISTED, RSVP.Status.INTERESTED],
+        ).values_list('event_id', flat=True)
+        for event_id in list(upcoming):
+            cancel_rsvp(event_id=event_id, actor=user)
+
+        for follow in OrganizationFollow.objects.filter(user=user).select_related('organization'):
+            unfollow_organization(user=user, organization=follow.organization)
+        for model in (EventLike, EventSave, UserInterest, Notification, RecommendationImpression, EventCheckInStaff):
+            model.objects.filter(user=user).delete()
+        FlyerUpload.objects.filter(uploaded_by=user).delete()
+        # Drafts have no attendees and no one else can see them.
+        Event.objects.filter(host_user=user, status=Event.Status.DRAFT, organization__isnull=True).delete()
+        # Keep the counts, drop the link to a person.
+        for model in (EventView, EventOutboundClick, SearchQueryLog):
+            model.objects.filter(user=user).update(user=None)
+
+        profile = get_or_create_profile(user)
+        profile.display_name = profile.avatar = profile.bio = ''
+        profile.major = profile.graduation_year = None
+        profile.notification_prefs = {}
+        profile.save()
+
+        user.email = f'deleted-{user.pk.hex}@deleted.invalid'
+        user.username = f'deleted_{user.pk.hex}'
+        user.first_name = user.last_name = ''
+        user.campus_email = None
+        user.is_active = False
+        user.is_email_verified = user.is_campus_verified = False
+        user.set_unusable_password()
+        user.save()

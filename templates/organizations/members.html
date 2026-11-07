@@ -1,0 +1,79 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}Members · {{ organization.name }}{% endblock %}
+{% block content %}
+<section class="banner slim">
+  <div class="banner-copy">
+    <a class="back-link" href="{% url 'show_organization_profile' organization.slug %}">‹ Back to {{ organization.name }}</a>
+    <h1>Members</h1>
+  </div>
+</section>
+
+<main class="narrow">
+  <section class="stack">
+    <h2 class="small-title">Add a member</h2>
+    <p class="section-note">Add someone who already has a Radar account with a verified campus email. They get a notification and can start right away.</p>
+    <form class="member-add" method="post" action="{% url 'add_organization_member' organization.slug %}">
+      {% csrf_token %}
+      <label class="field"><span>Email</span>
+        <input type="email" name="email" placeholder="name@illinois.edu" maxlength="254" required>
+      </label>
+      <label class="field"><span>Role</span>
+        <select name="role">
+          <option value="admin">Admin: runs events</option>
+          <option value="checkin_staff">Check-in staff: scans tickets</option>
+        </select>
+      </label>
+      <button class="banner-button solid navy" type="submit">Add member</button>
+    </form>
+  </section>
+
+  <section>
+    <h2 class="small-title">Team ({{ members|length }})</h2>
+    {% for membership in members %}
+      <div class="member-row">
+        <span class="member-info">
+          <b>{% firstof membership.user.profile.display_name membership.user.get_full_name membership.user.email %}</b>
+          <small>{{ membership.user.email }}</small>
+        </span>
+        {% if membership.role == 'owner' %}
+          <span class="role-badge">Owner</span>
+        {% else %}
+          <form class="member-role" method="post" action="{% url 'set_organization_member_role' organization.slug membership.pk %}">
+            {% csrf_token %}
+            <label class="visually-hidden" for="role-{{ membership.pk }}">Role for {{ membership.user.email }}</label>
+            <select id="role-{{ membership.pk }}" name="role" onchange="this.form.submit()">
+              <option value="admin"{% if membership.role == 'admin' %} selected{% endif %}>Admin</option>
+              <option value="checkin_staff"{% if membership.role == 'checkin_staff' %} selected{% endif %}>Check-in staff</option>
+            </select>
+            <noscript><button type="submit">Save</button></noscript>
+          </form>
+          <form method="post" action="{% url 'remove_organization_member' organization.slug membership.pk %}" onsubmit="return confirm('Remove {{ membership.user.email|escapejs }} from {{ organization.name|escapejs }}?')">
+            {% csrf_token %}
+            <button class="text-button" type="submit" aria-label="Remove {{ membership.user.email }}">Remove</button>
+          </form>
+          <form method="post" action="{% url 'transfer_organization_ownership' organization.slug membership.pk %}" onsubmit="return confirm('Make {{ membership.user.email|escapejs }} the Owner of {{ organization.name|escapejs }}? You will become an Admin and cannot undo this yourself.')">
+            {% csrf_token %}
+            <button class="text-button" type="submit" aria-label="Make {{ membership.user.email }} the Owner">Make Owner</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </section>
+
+  <section class="danger-zone">
+    <h2 class="small-title">Delete organization</h2>
+    {% if blocking_event_count %}
+      <p class="section-note">You cannot delete {{ organization.name }} while it has {{ blocking_event_count }} published event{{ blocking_event_count|pluralize }} that {{ blocking_event_count|pluralize:"has,have" }} not ended. Cancel or wait for {{ blocking_event_count|pluralize:"it,them" }} first.</p>
+    {% else %}
+      <p class="section-note">This removes the organization, its team and its followers. Past and draft events stay with their hosts but no longer belong to an organization. This cannot be undone.</p>
+      <form class="member-add" method="post" action="{% url 'delete_organization' organization.slug %}">
+        {% csrf_token %}
+        <label class="field"><span>Type <b>{{ organization.name }}</b> to confirm</span>
+          <input type="text" name="confirm_name" maxlength="120" autocomplete="off" required>
+        </label>
+        <button class="banner-button danger" type="submit">Delete organization</button>
+      </form>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

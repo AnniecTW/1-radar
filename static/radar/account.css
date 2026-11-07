@@ -255,3 +255,15 @@ select{height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:1
 .engage-btn.on-photo{border-color:transparent}
 .engage-btn:disabled{opacity:.6;cursor:wait}
 .engage-btn:focus-visible{outline:2px solid #102a4c;outline-offset:2px}
+
+/* Organization members */
+.member-add{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) auto;gap:14px;align-items:end}
+.member-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.member-info{flex:1;min-width:0}
+.member-info b{display:block;font-weight:600;overflow-wrap:anywhere}
+.member-info small{color:var(--muted);font-size:13.5px}
+.member-role select{height:40px;padding:0 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--white);font:inherit}
+.member-row .text-button{border:0;background:transparent;color:var(--accent-text);font:inherit;font-weight:600;cursor:pointer}
+.danger-zone{margin-top:32px;padding-top:20px;border-top:1px solid var(--line)}
+.banner-button.danger{border-color:#b3261e;background:#b3261e;color:var(--white)}
+@media(max-width:640px){.member-add{grid-template-columns:1fr}.member-row{flex-wrap:wrap}}

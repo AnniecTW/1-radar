@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -23,13 +24,18 @@ from apps.organizations.selectors import list_followed_organizations
 from apps.organizations.services import set_follow_notifications, unfollow_organization
 from apps.rsvps.selectors import list_past_rsvps, list_upcoming_tickets
 
-from .exceptions import EmailAlreadyRegisteredError, InvalidPasswordResetLinkError, InvalidVerificationTokenError
+from .exceptions import AccountDeletionBlockedError, EmailAlreadyRegisteredError, InvalidPasswordResetLinkError, InvalidVerificationTokenError
 from .forms import (
+    DeleteAccountForm,
     FeedPreferencesForm, ForgotPasswordForm, LocationPreferencesForm, LoginForm, ProfileForm, ResetPasswordForm,
     SignupForm,
 )
-from .selectors import NOTIFICATION_UPDATES, get_initials, get_preferences
+from .selectors import NOTIFICATION_UPDATES, get_account_deletion_blockers, get_initials, get_preferences
 from .services import (
+    clear_login_failures,
+    delete_account as delete_user_account,
+    is_login_locked,
+    record_failed_login,
     get_user_for_password_reset,
     request_password_reset as send_password_reset,
     reset_user_password,
@@ -96,13 +102,18 @@ def login_user(request: HttpRequest) -> HttpResponse:
 
     form = LoginForm(request.POST) if request.method == 'POST' else LoginForm()
     if request.method == 'POST' and form.is_valid():
-        user = authenticate(
-            request, username=form.cleaned_data['email'], password=form.cleaned_data['password']
-        )
+        email = form.cleaned_data['email']
+        ip_address = request.META.get('REMOTE_ADDR', '')
+        if is_login_locked(email=email, ip_address=ip_address):
+            form.add_error(None, 'Too many failed sign-in attempts. Try again in 15 minutes.')
+            return render(request, 'accounts/login.html', {'form': form, 'next': next_url}, status=429)
+        user = authenticate(request, username=email, password=form.cleaned_data['password'])
         if user is None:
+            record_failed_login(email=email, ip_address=ip_address)
             # One message for unknown email and wrong password so neither is revealed.
             form.add_error(None, 'Incorrect email or password.')
         else:
+            clear_login_failures(email=email)
             login(request, user)
             if not form.cleaned_data['remember']:
                 request.session.set_expiry(0)
@@ -359,3 +370,25 @@ def remove_from_saved(request: HttpRequest, event_id) -> HttpResponse:
     remove_saved_event(user=request.user, event_id=event_id)
     messages.success(request, 'Removed from your saved events.')
     return redirect(get_safe_next_url(request))
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def delete_account(request: HttpRequest) -> HttpResponse:
+    """FR-69: list every blocker; offer the password confirmation only when none remain."""
+    blockers = get_account_deletion_blockers(request.user)
+    form = DeleteAccountForm(request.POST or None)
+    if request.method == 'POST' and not blockers['has_blockers'] and form.is_valid():
+        try:
+            delete_user_account(user=request.user, password=form.cleaned_data['password'])
+        except ValidationError as error:
+            form.add_error('password', error.messages[0])
+        except AccountDeletionBlockedError:
+            return redirect('delete_account')
+        else:
+            logout(request)
+            messages.success(request, 'Your account was deleted.')
+            return redirect('dashboard')
+    return render(request, 'accounts/delete_account.html', {
+        **get_account_shell_context(request.user), 'active_page': 'profile', 'blockers': blockers, 'form': form,
+    })

@@ -8,3 +8,7 @@ class InvalidVerificationTokenError(Exception):
 
 class InvalidPasswordResetLinkError(Exception):
     """Raised when a password reset link is tampered with, expired, or already used."""
+
+
+class AccountDeletionBlockedError(Exception):
+    """The user still owns organizations, belongs to one, or hosts an upcoming event."""

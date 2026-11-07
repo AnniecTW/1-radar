@@ -1,3 +1,8 @@
+from django.utils import timezone
+
+from apps.events.models import Event
+from apps.organizations.models import OrganizationMembership
+
 from .models import CampusDomain, User
 
 
@@ -54,4 +59,26 @@ def get_preferences(profile) -> dict:
             'default_map_view': 'map',
             **saved.get('location', {}),
         },
+    }
+
+
+def get_account_deletion_blockers(user) -> dict:
+    """FR-69: everything that must be cleared before the account can be deleted."""
+    memberships = list(
+        OrganizationMembership.objects.filter(user=user).select_related('organization').order_by('organization__name')
+    )
+    owned = [m.organization for m in memberships if m.role == OrganizationMembership.Role.OWNER]
+    member_of = [m for m in memberships if m.role != OrganizationMembership.Role.OWNER]
+    # Upcoming or running published events the user hosts as an individual. Organization events belong to
+    # the organization, and the Owner or Admin role is already covered above.
+    events = list(Event.objects.filter(
+        host_user=user, organization__isnull=True, status=Event.Status.PUBLISHED, end_at__gt=timezone.now()
+    ).order_by('start_at'))
+    is_platform_admin = user.is_staff or user.is_superuser
+    return {
+        'owned_organizations': owned,
+        'memberships': member_of,
+        'hosted_events': events,
+        'is_platform_admin': is_platform_admin,
+        'has_blockers': bool(owned or member_of or events or is_platform_admin),
     }

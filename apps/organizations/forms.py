@@ -24,3 +24,19 @@ class OrganizationForm(forms.Form):
 
 class VerificationRequestForm(forms.Form):
     note = forms.CharField(max_length=1000, required=False)
+
+
+class AddMemberForm(forms.Form):
+    email = forms.EmailField(max_length=254)
+    role = forms.ChoiceField(choices=[
+        ('admin', 'Admin'),
+        ('checkin_staff', 'Check-in staff'),
+    ])
+
+
+class MemberRoleForm(forms.Form):
+    role = forms.ChoiceField(choices=[('admin', 'Admin'), ('checkin_staff', 'Check-in staff')])
+
+
+class DeleteOrganizationForm(forms.Form):
+    confirm_name = forms.CharField(max_length=120)

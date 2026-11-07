@@ -100,3 +100,7 @@ class ResetPasswordForm(forms.Form):
         except ValidationError as error:
             self.add_error('password1', error)
         return cleaned_data
+
+
+class DeleteAccountForm(forms.Form):
+    password = forms.CharField(strip=False)

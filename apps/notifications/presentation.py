@@ -37,7 +37,9 @@ def describe_notification(notification: Notification) -> dict:
     elif notification.type == Type.REMINDER:
         headline = f'{title} starts soon'
     elif notification.type == Type.ORG_INVITE:
-        headline = f'{org_name} invited you to join their team'
+        headline = f"You were added to {org_name}"
+        if payload.get('role'):
+            detail = f"Your role is {payload['role']}."
     elif notification.type == Type.FOLLOWED_ORG_NEW_EVENT:
         headline = f'{org_name} posted a new event: {title}'
     else:

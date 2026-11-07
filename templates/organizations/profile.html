@@ -14,7 +14,17 @@
       {% if organization.description %}<p class="banner-bio">{{ organization.description|linebreaksbr }}</p>{% endif %}
     </div>
     {% if can_edit %}
-    <div class="banner-actions"><a class="banner-button solid" href="{% url 'edit_organization_profile' organization.slug %}">Edit profile</a></div>
+    <div class="banner-actions">
+      <a class="banner-button" href="{% url 'manage_organization_members' organization.slug %}">Members</a>
+      <a class="banner-button solid" href="{% url 'edit_organization_profile' organization.slug %}">Edit profile</a>
+    </div>
+    {% elif role %}
+    <div class="banner-actions">
+      <form method="post" action="{% url 'leave_organization' organization.slug %}" onsubmit="return confirm('Leave {{ organization.name|escapejs }}?')">
+        {% csrf_token %}
+        <button class="banner-button" type="submit">Leave organization</button>
+      </form>
+    </div>
     {% elif not role %}
     <div class="banner-actions">{% follow_button organization 'org_page' %}</div>
     {% endif %}

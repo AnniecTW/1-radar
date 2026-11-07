@@ -41,3 +41,17 @@ def list_organization_events(organization, now):
 
 def get_latest_verification_request(organization):
     return OrganizationVerificationRequest.objects.filter(organization=organization).order_by('-created_at').first()
+
+
+def list_organization_members(organization) -> QuerySet[OrganizationMembership]:
+    """Owner first, then Admins, then Check-in Staff, each by name."""
+    from django.db.models import Case, IntegerField, Value, When
+    rank = Case(
+        When(role=OrganizationMembership.Role.OWNER, then=Value(0)),
+        When(role=OrganizationMembership.Role.ADMIN, then=Value(1)),
+        default=Value(2), output_field=IntegerField(),
+    )
+    return (
+        OrganizationMembership.objects.filter(organization=organization)
+        .select_related('user', 'user__profile').annotate(role_rank=rank).order_by('role_rank', 'user__first_name', 'user__email')
+    )

@@ -9,11 +9,17 @@ from django.views.decorators.http import require_http_methods, require_POST
 from apps.accounts.views import get_account_shell_context
 from apps.discovery.selectors import get_campus_timezone
 
-from .forms import OrganizationForm, VerificationRequestForm
-from .models import Organization
-from .permissions import organization_role, user_can_manage_organization
-from .selectors import get_latest_verification_request, list_organization_events, list_user_memberships
-from .services import create_organization, request_organization_verification, update_organization_profile
+from .forms import AddMemberForm, DeleteOrganizationForm, MemberRoleForm, OrganizationForm, VerificationRequestForm
+from .models import Organization, OrganizationMembership
+from .permissions import organization_role, user_can_manage_members, user_can_manage_organization
+from .selectors import (
+    get_latest_verification_request, list_organization_events, list_organization_members, list_user_memberships,
+)
+from .services import (
+    add_member_by_email, change_member_role, create_organization, delete_organization, leave_organization,
+    organization_blocking_events, remove_organization_member, request_organization_verification,
+    transfer_organization_ownership, update_organization_profile,
+)
 
 
 @login_required
@@ -104,3 +110,126 @@ def request_verification(request: HttpRequest, slug: str) -> HttpResponse:
     else:
         messages.success(request, 'Verification requested. A Radar admin will review it.')
     return redirect('show_organization_profile', slug=slug)
+
+
+def _owner_organization_or_none(request: HttpRequest, slug: str):
+    """The organization, or None when the viewer is not its Owner (FR-64)."""
+    organization = get_object_or_404(Organization, slug=slug)
+    return organization if user_can_manage_members(request.user, organization) else None
+
+
+@login_required
+@require_http_methods(['GET'])
+def manage_members(request: HttpRequest, slug: str) -> HttpResponse:
+    organization = _owner_organization_or_none(request, slug)
+    if organization is None:
+        return redirect('show_organization_profile', slug=slug)
+    return render(request, 'organizations/members.html', {
+        **get_account_shell_context(request.user),
+        'organization': organization,
+        'members': list_organization_members(organization),
+        'add_form': AddMemberForm(),
+        'blocking_event_count': organization_blocking_events(organization).count(),
+    })
+
+
+@login_required
+@require_POST
+def add_member(request: HttpRequest, slug: str) -> HttpResponse:
+    organization = _owner_organization_or_none(request, slug)
+    if organization is None:
+        return redirect('show_organization_profile', slug=slug)
+    form = AddMemberForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, 'Enter an email and choose a role.')
+    else:
+        try:
+            membership = add_member_by_email(actor=request.user, organization=organization, **form.cleaned_data)
+        except ValidationError as error:
+            messages.error(request, error.messages[0])
+        else:
+            messages.success(request, f'{membership.user.email} was added as {membership.get_role_display()}.')
+    return redirect('manage_organization_members', slug=slug)
+
+
+@login_required
+@require_POST
+def set_member_role(request: HttpRequest, slug: str, membership_id: int) -> HttpResponse:
+    organization = _owner_organization_or_none(request, slug)
+    if organization is None:
+        return redirect('show_organization_profile', slug=slug)
+    membership = get_object_or_404(OrganizationMembership, pk=membership_id, organization=organization)
+    form = MemberRoleForm(request.POST)
+    if form.is_valid():
+        try:
+            change_member_role(actor=request.user, membership=membership, role=form.cleaned_data['role'])
+        except ValidationError as error:
+            messages.error(request, error.messages[0])
+        else:
+            messages.success(request, f'{membership.user.email} is now {membership.get_role_display()}.')
+    return redirect('manage_organization_members', slug=slug)
+
+
+@login_required
+@require_POST
+def remove_member(request: HttpRequest, slug: str, membership_id: int) -> HttpResponse:
+    organization = _owner_organization_or_none(request, slug)
+    if organization is None:
+        return redirect('show_organization_profile', slug=slug)
+    membership = get_object_or_404(OrganizationMembership, pk=membership_id, organization=organization)
+    try:
+        remove_organization_member(actor=request.user, membership=membership)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    else:
+        messages.success(request, f'{membership.user.email} was removed.')
+    return redirect('manage_organization_members', slug=slug)
+
+
+@login_required
+@require_POST
+def make_owner(request: HttpRequest, slug: str, membership_id: int) -> HttpResponse:
+    organization = _owner_organization_or_none(request, slug)
+    if organization is None:
+        return redirect('show_organization_profile', slug=slug)
+    membership = get_object_or_404(OrganizationMembership, pk=membership_id, organization=organization)
+    try:
+        transfer_organization_ownership(
+            actor=request.user, organization_id=organization.pk, new_owner_id=membership.user_id
+        )
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return redirect('manage_organization_members', slug=slug)
+    messages.success(request, f'{membership.user.email} is now the Owner. You are an Admin.')
+    return redirect('show_organization_profile', slug=slug)
+
+
+@login_required
+@require_POST
+def leave(request: HttpRequest, slug: str) -> HttpResponse:
+    organization = get_object_or_404(Organization, slug=slug)
+    try:
+        leave_organization(user=request.user, organization=organization)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return redirect('show_organization_profile', slug=slug)
+    messages.success(request, f'You left {organization.name}.')
+    return redirect('list_my_organizations')
+
+
+@login_required
+@require_POST
+def delete(request: HttpRequest, slug: str) -> HttpResponse:
+    organization = _owner_organization_or_none(request, slug)
+    if organization is None:
+        return redirect('show_organization_profile', slug=slug)
+    form = DeleteOrganizationForm(request.POST)
+    try:
+        if not form.is_valid():
+            raise ValidationError('Type the organization name to confirm.')
+        delete_organization(actor=request.user, organization=organization, **form.cleaned_data)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return redirect('manage_organization_members', slug=slug)
+    messages.success(request, f'{organization.name} was deleted.')
+    return redirect('list_my_organizations')
