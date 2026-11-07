@@ -174,7 +174,7 @@ def create_organization(*, creator, name, org_type, description='', logo=None, c
         raise PermissionDenied('Only campus members can create an organization.')
     with transaction.atomic():
         # Lock the user row so two simultaneous submits can't both pass the count.
-        type(creator).objects.select_for_update().get(pk=creator.pk)
+        User.objects.select_for_update().get(pk=creator.pk)
         # Count Owner roles, not created_by, so transferring ownership away doesn't free a slot.
         owned = OrganizationMembership.objects.filter(
             user=creator, role=OrganizationMembership.Role.OWNER

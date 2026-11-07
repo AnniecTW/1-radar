@@ -122,8 +122,8 @@ class EventFormTests(HostTestCase):
         Image.new('RGB', (40, 20), 'orange').save(buffer, 'PNG')
         upload = SimpleUploadedFile('cover.png', buffer.getvalue(), content_type='image/png')
         response = self.client.post(reverse('create_event'), {**self.data(end_time='18:00'), 'cover': upload})
-        self.assertContains(response, 'Your new image is kept')
         token = response.context['pending_cover']['token']
+        self.assertContains(response, f'value="{token}"')
         self.client.post(reverse('create_event'), {**self.data(), 'pending_cover': token})
         self.assertIn('event_covers/', Event.objects.get(title='Robot Battle Night').cover_image)
 

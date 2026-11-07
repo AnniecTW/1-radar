@@ -38,8 +38,10 @@
     </label>
     <label class="field">
       <span>Logo <span class="hint">(optional, image up to 2 MB)</span></span>
-      {% if organization.logo %}{% include 'organizations/_logo.html' %}{% endif %}
+      {% if pending_logo %}<img class="org-logo" src="{{ pending_logo.url }}" alt="Your new logo">
+      {% elif organization.logo %}{% include 'organizations/_logo.html' %}{% endif %}
       <input type="file" name="logo" accept="image/*">
+      {% if pending_logo %}<input type="hidden" name="pending_logo" value="{{ pending_logo.token }}">{% endif %}
       {% if organization.logo %}<span class="check"><input type="checkbox" name="clear_logo"> Remove current logo</span>{% endif %}
       {% for error in form.logo.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
     </label>

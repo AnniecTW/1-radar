@@ -86,6 +86,25 @@ class OrganizationPageTests(TestCase):
         self.assertRedirects(response, reverse('show_organization_profile', args=[organization.slug]))
         self.assertTrue(organization.logo.name.startswith('organization_logos/'))
 
+    def test_logo_is_kept_after_a_mistake(self):
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse('create_organization'), {**FORM, 'contact_email': 'bad', 'logo': png()})
+        self.assertEqual(response.status_code, 200)
+        pending = response.context['pending_logo']
+        self.assertIsNotNone(pending)
+        self.assertContains(response, f'value="{pending["token"]}"')
+        self.assertContains(response, 'value="Chess Club"')
+
+        response = self.client.post(reverse('create_organization'), {**FORM, 'pending_logo': pending['token']})
+        organization = Organization.objects.get(name='Chess Club')
+        self.assertRedirects(response, reverse('show_organization_profile', args=[organization.slug]))
+        self.assertTrue(organization.logo.name.startswith('organization_logos/'))
+
+    def test_tampered_pending_logo_is_ignored(self):
+        self.client.force_login(self.owner)
+        self.client.post(reverse('create_organization'), {**FORM, 'pending_logo': 'organization_logos/x.png'})
+        self.assertEqual(Organization.objects.get(name='Chess Club').logo.name, '')
+
     def test_logo_must_be_an_image(self):
         self.client.force_login(self.owner)
         fake = SimpleUploadedFile('x.png', b'not an image', content_type='image/png')

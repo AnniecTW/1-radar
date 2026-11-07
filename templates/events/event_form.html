@@ -97,7 +97,7 @@
             <label class="host-button" for="{{ form.cover.id_for_label }}">{% if event.cover_image %}Replace image{% else %}Upload image{% endif %}</label>
             <input class="visually-hidden" type="file" name="cover" id="{{ form.cover.id_for_label }}" accept="image/jpeg,image/png,image/webp">
             {% if event.cover_image %}<label class="check-row small"><input type="checkbox" name="remove_cover"> Remove the current image</label>{% endif %}
-            {% if pending_cover %}<input type="hidden" name="pending_cover" value="{{ pending_cover.token }}"><p class="field-help kept">Your new image is kept. It's saved with the event when you save again.</p>{% endif %}
+            {% if pending_cover %}<input type="hidden" name="pending_cover" value="{{ pending_cover.token }}">{% endif %}
             <p class="field-help">JPG, PNG or WebP, up to 5 MB. Without one, the card shows your title.</p>
             {% if form.cover.errors %}<p class="field-error">{{ form.cover.errors.0 }}</p>{% endif %}
           </div>

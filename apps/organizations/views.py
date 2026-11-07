@@ -1,3 +1,7 @@
+import logging
+import os
+import uuid
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -21,6 +25,39 @@ from .services import (
     transfer_organization_ownership, update_organization_profile,
 )
 
+logger = logging.getLogger(__name__)
+
+
+def _profile_fields(form):
+    """Form data for the services: a new upload wins, else the logo kept from an earlier try."""
+    data = {key: value for key, value in form.cleaned_data.items() if key != 'pending_logo'}
+    data['logo'] = data.get('logo') or form.cleaned_data.get('pending_logo') or None
+    return data
+
+
+def _pending_logo(form):
+    """After a failed submit, keep the logo the person chose so they don't have to pick it again."""
+    from django.core import signing
+    from django.core.files.storage import default_storage
+
+    from .forms import PENDING_LOGO_SALT
+
+    if not form.is_bound or form.data.get('clear_logo'):
+        return None
+    cleaned = getattr(form, 'cleaned_data', None) or {}
+    name = cleaned.get('pending_logo') or ''
+    upload = cleaned.get('logo')
+    if upload:
+        extension = os.path.splitext(upload.name)[1].lower()[:10] or '.png'
+        try:
+            name = default_storage.save(f'organization_logos/{uuid.uuid4().hex}{extension}', upload)
+        except Exception:
+            logger.exception('Organization logo upload failed')
+            return None
+    if not name:
+        return None
+    return {'url': default_storage.url(name), 'token': signing.dumps(name, salt=PENDING_LOGO_SALT)}
+
 
 @login_required
 @require_http_methods(['GET'])
@@ -39,7 +76,7 @@ def create_organization_profile(request: HttpRequest) -> HttpResponse:
         return redirect('list_my_organizations')
     form = OrganizationForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
-        data = {key: value for key, value in form.cleaned_data.items() if key != 'clear_logo'}
+        data = {key: value for key, value in _profile_fields(form).items() if key != 'clear_logo'}
         try:
             organization = create_organization(creator=request.user, **data)
         except ValidationError as error:
@@ -49,6 +86,7 @@ def create_organization_profile(request: HttpRequest) -> HttpResponse:
             return redirect('show_organization_profile', slug=organization.slug)
     return render(request, 'organizations/form.html', {
         **get_account_shell_context(request.user), 'form': form, 'organization': None,
+        'pending_logo': _pending_logo(form) if request.method == 'POST' else None,
     })
 
 
@@ -86,11 +124,12 @@ def edit_organization_profile(request: HttpRequest, slug: str) -> HttpResponse:
     }
     form = OrganizationForm(request.POST, request.FILES) if request.method == 'POST' else OrganizationForm(initial=initial)
     if request.method == 'POST' and form.is_valid():
-        update_organization_profile(actor=request.user, organization=organization, **form.cleaned_data)
+        update_organization_profile(actor=request.user, organization=organization, **_profile_fields(form))
         messages.success(request, 'Organization profile saved.')
         return redirect('show_organization_profile', slug=organization.slug)
     return render(request, 'organizations/form.html', {
         **get_account_shell_context(request.user), 'form': form, 'organization': organization,
+        'pending_logo': _pending_logo(form) if request.method == 'POST' else None,
     })
 
 
