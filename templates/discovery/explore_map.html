@@ -1,6 +1,6 @@
 {% extends 'accounts/app_base.html' %}{% load static %}
 {% block title %}Explore Map · Radar{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/explore-map.css' %}">{% endblock %}
+{% block extra_head %}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'radar/explore-map.css' %}">{% endblock %}
 {% block content %}
 <main class="explore-page">
   <form class="map-filter-form" method="get">
@@ -14,15 +14,14 @@
       <aside class="map-search-tip"><i data-lucide="map" aria-hidden="true"></i><div><b>Find events on the map</b><small>Search events, places, and interests around campus.</small></div></aside>
     </section>
     <div class="map-filters" aria-label="Event filters">
-      <label class="filter-select date-filter"><i data-lucide="calendar-days" aria-hidden="true"></i><select name="date" aria-label="Date"><option value="today" {% if selected_date == 'today' %}selected{% endif %}>Today</option><option value="weekend" {% if selected_date == 'weekend' %}selected{% endif %}>This weekend</option><option value="week" {% if selected_date == 'week' %}selected{% endif %}>This week</option><option value="all" {% if selected_date == 'all' %}selected{% endif %}>Any upcoming</option></select></label>
+      <label class="filter-select date-filter"><i data-lucide="calendar-days" aria-hidden="true"></i><span class="date-filter-content"><span class="date-select-row"><select name="date" aria-label="Date"><option value="today" data-caption="{{ date_filter_captions.today }}" {% if selected_date == 'today' %}selected{% endif %}>Today</option><option value="weekend" data-caption="{{ date_filter_captions.weekend }}" {% if selected_date == 'weekend' %}selected{% endif %}>This weekend</option><option value="week" data-caption="{{ date_filter_captions.week }}" {% if selected_date == 'week' %}selected{% endif %}>This week</option><option value="all" data-caption="{{ date_filter_captions.all }}" {% if selected_date == 'all' %}selected{% endif %}>Any upcoming</option></select><i data-lucide="chevron-down" aria-hidden="true"></i></span><small>{{ date_filter_caption }}</small></span></label>
       <label class="filter-select"><i data-lucide="grid-2x2" aria-hidden="true"></i><select name="category" aria-label="Category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category.slug }}" {% if selected_category == category.slug %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></label>
       <label class="filter-toggle"><input type="checkbox" name="free" value="1" {% if free_only %}checked{% endif %}><i data-lucide="ticket-check" aria-hidden="true"></i>Free only</label>
-      <button class="quick-filter{% if search_text == 'indoors' %} selected{% endif %}" type="button" data-toggle-param="q" data-toggle-value="indoors" aria-pressed="{% if search_text == 'indoors' %}true{% else %}false{% endif %}"><i data-lucide="building-2" aria-hidden="true"></i>Indoors</button>
+      <button class="quick-filter{% if search_text == 'indoors' %} selected{% endif %}" type="button" data-toggle-param="q" data-toggle-value="indoors" aria-pressed="{% if search_text == 'indoors' %}true{% else %}false{% endif %}"><i data-lucide="house" aria-hidden="true"></i>Indoors</button>
       <button class="quick-filter{% if search_text == 'quiet' %} selected{% endif %}" type="button" data-toggle-param="q" data-toggle-value="quiet" aria-pressed="{% if search_text == 'quiet' %}true{% else %}false{% endif %}"><i data-lucide="headphones" aria-hidden="true"></i>Quiet events</button>
       <button class="quick-filter{% if popular_sort %} selected{% endif %}" type="button" data-toggle-param="sort" data-toggle-value="popular" aria-pressed="{{ popular_sort|yesno:'true,false' }}"><i data-lucide="sparkles" aria-hidden="true"></i>AI Picks</button>
       <details class="more-filter"><summary><i data-lucide="sliders-horizontal" aria-hidden="true"></i>More filters</summary><label class="filter-toggle"><input type="checkbox" name="walk" value="1" {% if walk_only %}checked{% endif %}><i data-lucide="map-pin" aria-hidden="true"></i>15-minute walk</label></details>
       {% if popular_sort %}<input type="hidden" name="sort" value="popular">{% endif %}
-      <button class="apply-filters" type="submit">Update results</button>
     </div>
   </form>
   <div class="explore-layout">

@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
+from datetime import timedelta
 
 from radar.views import dashboard
 
@@ -21,6 +22,33 @@ from .selectors import (
 )
 
 MAX_SEARCH_LENGTH = 100
+
+
+def _map_date_filter_caption(date_filter, now):
+    """Return a compact date range matching the map's existing date filters."""
+    from .selectors import get_campus_timezone, get_weekend_window
+
+    def format_range(start, end):
+        if start.month == end.month and start.year == end.year:
+            return f'{start.strftime("%b")} {start.day}–{end.day}'
+        return f'{start.strftime("%b")} {start.day}–{end.strftime("%b")} {end.day}'
+
+    if date_filter == 'today':
+        date = timezone.localtime(now).date()
+        return f'{date.strftime("%b")} {date.day}'
+    if date_filter == 'weekend':
+        start, end = get_weekend_window(now, get_campus_timezone())
+        last_day = (end - timedelta(days=1)).date()
+        return format_range(start.date(), last_day)
+    if date_filter == 'week':
+        campus_timezone = get_campus_timezone()
+        local_now = now.astimezone(campus_timezone)
+        week_start = (local_now - timedelta(days=local_now.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        friday = (week_start + timedelta(days=4)).date()
+        return format_range(week_start.date(), friday)
+    return ''
 
 
 def _map_events(request, bounds=None):
@@ -63,7 +91,14 @@ def _map_events(request, bounds=None):
         start, end = get_weekend_window(now, get_campus_timezone())
         qs = qs.filter(start_at__gte=start, start_at__lt=end)
     elif date == 'week':
-        qs = qs.filter(start_at__lte=now + timezone.timedelta(days=7))
+        from .selectors import get_campus_timezone
+        campus_timezone = get_campus_timezone()
+        local_now = now.astimezone(campus_timezone)
+        week_start = (local_now - timezone.timedelta(days=local_now.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        week_end = week_start + timezone.timedelta(days=5)
+        qs = qs.filter(start_at__gte=week_start, start_at__lt=week_end)
     if bounds:
         west, south, east, north = bounds
         qs = qs.filter(location__within=f' SRID=4326;POLYGON(({west} {south},{east} {south},{east} {north},{west} {north},{west} {south}))')
@@ -77,6 +112,8 @@ def _map_events(request, bounds=None):
 @require_GET
 def show_explore_map(request):
     from .selectors import get_campus_center, list_category_interests
+    selected_date = request.GET.get('date', 'weekend')
+    now = timezone.now()
     events = list(_map_events(request))
     points = [{'id':str(e.pk),'title':e.title,'slug':e.slug,'lat':e.location.y,'lng':e.location.x,
         'start':e.start_at.isoformat(),'venue':e.venue.name if e.venue else e.location_text,
@@ -85,7 +122,9 @@ def show_explore_map(request):
     return render(request,'discovery/explore_map.html',{
         'events':events,'map_points':points,'map_center':get_campus_center() or (40.102,-88.2272),'active_nav':'explore_map',
         'categories':list_category_interests(),'selected_category':request.GET.get('category',''),
-        'selected_date':request.GET.get('date','weekend'),
+        'selected_date':selected_date,
+        'date_filter_captions':{key:_map_date_filter_caption(key, now) for key in ('today','weekend','week','all')},
+        'date_filter_caption':_map_date_filter_caption(selected_date, now),
         'search_text':request.GET.get('q','')[:MAX_SEARCH_LENGTH], 'free_only':request.GET.get('free') == '1',
         'walk_only':request.GET.get('walk') == '1', 'popular_sort':request.GET.get('sort') == 'popular',
         'maptiler_key':__import__('django.conf').conf.settings.MAPTILER_API_KEY,

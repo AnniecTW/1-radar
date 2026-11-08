@@ -1,11 +1,19 @@
 (() => {
  const filterForm=document.querySelector('.map-filter-form');
  if(filterForm){
+  document.addEventListener('keydown',event=>{if(event.key==='Tab')document.body.classList.add('keyboard-focus-mode');});
+  document.addEventListener('pointerdown',()=>document.body.classList.remove('keyboard-focus-mode'));
   filterForm.querySelectorAll('[data-toggle-param]').forEach(button=>button.addEventListener('click',()=>{
    const url=new URL(location.href),param=button.dataset.toggleParam,value=button.dataset.toggleValue;
    if(url.searchParams.get(param)===value)url.searchParams.delete(param);else url.searchParams.set(param,value);
    location.assign(url);
   }));
+  const dateSelect=filterForm.querySelector('select[name="date"]');
+  const dateCaption=dateSelect?.closest('.date-filter-content')?.querySelector('small');
+  const syncDateCaption=()=>{if(dateCaption&&dateSelect?.selectedOptions[0])dateCaption.textContent=dateSelect.selectedOptions[0].dataset.caption||'';};
+  syncDateCaption();
+  dateSelect?.addEventListener('change',()=>{syncDateCaption();filterForm.requestSubmit();});
+  filterForm.querySelector('select[name="category"]')?.addEventListener('change',()=>filterForm.requestSubmit());
   filterForm.querySelectorAll('input[type="checkbox"][name="free"],input[type="checkbox"][name="walk"]').forEach(input=>input.addEventListener('change',()=>filterForm.requestSubmit()));
  }
  const el=document.getElementById('explore-map'); if(!el||!window.maplibregl)return;

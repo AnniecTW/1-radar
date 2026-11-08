@@ -16,8 +16,6 @@
 .map-filters select{min-width:155px;height:42px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;padding:0 13px;color:#18293d;font:500 13px 'DM Sans',sans-serif;box-shadow:0 2px 7px #28221a08}
 .filter-select{display:flex!important;align-items:center;gap:8px!important;grid-template-columns:auto auto}.filter-select>i{width:16px;height:16px;color:#c2410c}.filter-toggle{display:inline-flex!important;align-items:center;gap:8px!important;min-height:42px;padding:0 14px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;color:#18293d!important;font-size:13px!important;cursor:pointer}.filter-toggle input{accent-color:#c2410c}.filter-toggle i{width:15px;height:15px;color:#c2410c}
 .map-filters select:focus{outline:2px solid #c6502440;border-color:#c65024}
-.map-filters .apply-filters{height:42px;padding:0 18px;border:0;border-radius:22px;background:#102a4c;color:white;font:600 13px 'DM Sans',sans-serif;cursor:pointer;transition:background .15s,transform .15s}
-.map-filters .apply-filters:hover{background:#1d3b63;transform:translateY(-1px)}
 .map-filters .quick-filter{height:42px;padding:0 14px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;color:#18293d;font:500 12px 'DM Sans',sans-serif;cursor:pointer}.map-filters .quick-filter:hover,.map-filters .quick-filter.selected{border-color:#e9a689;background:#fbf0e9;color:#c2410c}
 .more-filter{position:relative}.more-filter summary{display:flex;align-items:center;height:42px;padding:0 13px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;color:#18293d;font-size:12px;cursor:pointer;list-style:none;white-space:nowrap}.more-filter summary::-webkit-details-marker{display:none}.more-filter[open] .filter-toggle{position:absolute;z-index:5;top:48px;right:0;box-shadow:0 8px 24px #18293d20;white-space:nowrap}
 .explore-layout{display:grid;grid-template-columns:minmax(0,1.68fr) minmax(340px,1fr);gap:16px;height:calc(100vh - 230px);min-height:470px;max-height:850px}
@@ -45,8 +43,8 @@
 .marker-active{filter:drop-shadow(0 0 7px #c2410c);transform:scale(1.35)}
 .map-popup{min-width:180px;color:#18293d;font:13px 'DM Sans',sans-serif}.map-popup p{margin:6px 0;color:#596577}.map-popup a{color:#c2410c;font-weight:600}
 @media(max-width:1050px){.main:has(.explore-page){padding-right:16px}.explore-layout{grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:12px}.map-event{grid-template-columns:78px minmax(0,1fr);gap:9px}.map-event-image{width:78px;height:72px}}
-@media(max-width:760px){.main:has(.explore-page){padding:14px}.explore-page{padding:0}.explore-heading{align-items:flex-start}.map-search-tip{display:none}.explore-layout{height:auto;max-height:none;min-height:0;grid-template-columns:minmax(0,1fr)}.map-panel{height:min(56vh,540px);min-height:360px}.event-results{max-height:58vh;min-height:230px}.map-filters{gap:8px}.map-filters label{flex:1;min-width:140px}.map-filters select{width:100%;min-width:0}.map-filters .apply-filters{flex:none}.results-heading{padding:13px 14px 11px}}
-@media(max-width:420px){.explore-heading h1{font-size:27px}.explore-heading>p:last-child{font-size:13px}.map-filters label{min-width:calc(50% - 5px)}.map-filters .apply-filters{width:100%}.map-panel{min-height:330px}.map-event{grid-template-columns:76px minmax(0,1fr);padding:7px}.map-event-image{width:76px;height:70px}}
+@media(max-width:760px){.main:has(.explore-page){padding:14px}.explore-page{padding:0}.explore-heading{align-items:flex-start}.map-search-tip{display:none}.explore-layout{height:auto;max-height:none;min-height:0;grid-template-columns:minmax(0,1fr)}.map-panel{height:min(56vh,540px);min-height:360px}.event-results{max-height:58vh;min-height:230px}.map-filters{gap:8px}.map-filters label{flex:1;min-width:140px}.map-filters select{width:100%;min-width:0}.results-heading{padding:13px 14px 11px}}
+@media(max-width:420px){.explore-heading h1{font-size:27px}.explore-heading>p:last-child{font-size:13px}.map-filters label{min-width:calc(50% - 5px)}.map-panel{min-height:330px}.map-event{grid-template-columns:76px minmax(0,1fr);padding:7px}.map-event-image{width:76px;height:70px}}
 
 /* Short, state-based feedback; no perpetual decorative motion. */
 .map-search-box:focus-within{border-color:#c2410c;box-shadow:0 0 0 3px #c2410c22}
@@ -80,14 +78,14 @@ body:has(.explore-page){background:#f4eee8}
 .map-filter-form{margin:0 0 14px}
 .explore-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(245px,310px);gap:28px;align-items:center;padding:20px 22px;margin:0 0 12px;border:1px solid #eee6dc;border-radius:20px;background:linear-gradient(115deg,#fff 0%,#fff 72%,#fdfaf7 100%);box-shadow:0 4px 16px #28221a08}
 .hero-copy{min-width:0}.explore-hero .eyebrow{margin:0 0 3px;color:#c2410c;font-size:10px;font-weight:700;letter-spacing:.14em}
-.explore-hero h1{margin:0;color:#102a4c;font:700 clamp(29px,2.7vw,40px)/1.08 'Outfit',sans-serif;letter-spacing:-.03em}
+.explore-hero h1{margin:0;color:#102a4c;font:700 clamp(29px,2.7vw,40px)/1.08 'Playfair Display',serif;letter-spacing:-.03em}
 .hero-description{margin:5px 0 13px;color:#5a6070;font-size:14px}
 .map-search-box{width:min(100%,760px);height:48px;padding:0 7px 0 15px;border-color:#e8ddd2;border-radius:15px;background:#fff;box-shadow:0 2px 9px #28221a0b}
 .map-search-box>i{color:#c2410c}.map-search-box input{font-size:14px}.map-search-box button{width:48px;height:38px;border-radius:12px;background:#c2410c}.map-search-box button:hover{background:#a3360a}
 .map-search-tip{min-height:80px;max-width:none;padding:17px 18px;border:1px solid #eee6dc;border-radius:16px;background:#fbf8f3;color:#102a4c}
 .map-search-tip>i{width:30px;height:30px;flex:none;padding:6px;border-radius:50%;background:#f7e4d8;color:#c2410c}
 .map-search-tip b{font-size:13px}.map-search-tip small{font-size:11px;line-height:1.4}
-.map-filters{display:flex;flex-wrap:nowrap;gap:8px;margin:0 0 14px;overflow-x:auto;padding:1px 1px 5px;scrollbar-width:thin}
+.map-filters{display:flex;flex-wrap:nowrap;gap:8px;margin:0 0 14px;overflow:visible;padding:1px 1px 5px}
 .map-filters>*{flex:none}
 .map-filters select,.filter-toggle,.map-filters .quick-filter,.more-filter summary{height:42px;min-height:42px;border-color:#e8ddd2;border-radius:13px;background:#fff;color:#3d4354;box-shadow:0 2px 7px #28221a06}
 .filter-select{gap:7px!important;padding:0 10px;border:1px solid #e8ddd2;border-radius:13px;background:#fff;box-shadow:0 2px 7px #28221a06}
@@ -97,15 +95,13 @@ body:has(.explore-page){background:#f4eee8}
 .filter-toggle:has(input:checked),.quick-filter.selected{border-color:#e9b9a1!important;background:#fbf0e9!important;color:#a3360a!important}
 .filter-toggle:has(input:checked) i,.quick-filter.selected i{color:#a3360a}
 .map-filters .quick-filter{padding:0 12px}
-.map-filters .apply-filters{height:42px;padding:0 15px;border-radius:13px;background:#c2410c;white-space:nowrap}
-.map-filters .apply-filters:hover{background:#a3360a}
 @media(max-width:1050px){.explore-hero{grid-template-columns:minmax(0,1fr) 245px;gap:18px;padding:18px}.map-filters{flex-wrap:wrap;overflow:visible}.map-filters>*{flex:none}}
-@media(max-width:760px){.main:has(.explore-page) .topbar{gap:8px}.main:has(.explore-page) .topbar .profile-menu .who{display:none}.explore-hero{grid-template-columns:1fr;padding:17px;gap:13px}.map-search-tip{display:flex;min-height:0;padding:11px 13px}.map-search-tip>i{width:27px;height:27px}.map-filters{flex-wrap:nowrap;overflow-x:auto;margin-right:-14px;padding-right:14px}.map-filters>*{flex:none}.map-filters .apply-filters{width:auto}}
+@media(max-width:760px){.main:has(.explore-page) .topbar{gap:8px}.main:has(.explore-page) .topbar .profile-menu .who{display:none}.explore-hero{grid-template-columns:1fr;padding:17px;gap:13px}.map-search-tip{display:flex;min-height:0;padding:11px 13px}.map-search-tip>i{width:27px;height:27px}.map-filters{flex-wrap:nowrap;overflow-x:auto;margin-right:-14px;padding-right:14px}.map-filters>*{flex:none}.more-filter[open] .filter-toggle{position:static;display:flex!important;margin-top:6px;box-shadow:0 5px 14px #18293d18}}
 @media(max-width:480px){.main:has(.explore-page) .topbar .search{padding:0 10px}.main:has(.explore-page) .topbar .icon-button{width:36px}.main:has(.explore-page) .topbar .avatar{width:32px;height:32px}.explore-hero h1{font-size:28px}.hero-description{font-size:13px}}
 
 /* Primary actions use official Illinois blue. */
-.map-search-box button,.map-filters .apply-filters{background:#13294b}
-.map-search-box button:hover,.map-filters .apply-filters:hover{background:#1d3b63}
+.map-search-box button{background:#13294b}
+.map-search-box button:hover{background:#1d3b63}
 /* Filter affordances: blue selected state, quiet mouse focus, visible keyboard focus. */
 .map-filters select:focus{outline:none;border-color:#d7c9bc;box-shadow:0 0 0 2px #102a4c12}
 .map-filters select:focus-visible{outline:2px solid #13294b;outline-offset:2px;border-radius:9px;box-shadow:0 0 0 3px #13294b12}
@@ -116,7 +112,67 @@ body:has(.explore-page){background:#f4eee8}
 .map-filters .filter-toggle{padding-inline:17px;font-size:13px!important}
 .map-filters .filter-select select{font-size:13.5px}
 .map-filters .filter-select{padding-inline:12px}
-.map-filters .apply-filters{padding-inline:18px;font-size:13px}
 .hero-description{font-size:15px}
 .map-filters select:focus:not(:focus-visible){outline:none;box-shadow:none}
 .map-event p{font-size:12px}.map-event small{font-size:11px}
+/* Native checkboxes inherit the filter's Illinois blue; focus stays keyboard-visible. */
+.map-filters .filter-toggle input[type="checkbox"]{accent-color:#13294b}
+.map-filters .filter-toggle:focus-within{outline:none;box-shadow:none}
+.map-filters .filter-toggle:has(input[type="checkbox"]:focus-visible){outline:2px solid #13294b;outline-offset:2px;box-shadow:0 0 0 3px #13294b12}
+/* Put select focus on the pill, not the browser's nested select rectangle. */
+.map-filters .filter-select select:focus,.map-filters .filter-select select:focus-visible{outline:none;box-shadow:none}
+body.keyboard-focus-mode .map-filters .filter-select:has(select:focus-visible){outline:2px solid #13294b;outline-offset:2px;border-radius:13px;box-shadow:0 0 0 3px #13294b12}
+
+/* Normalize filter sizing and keep the final control at the right edge. */
+.map-filters{align-items:center;gap:10px;}
+.map-filters .filter-select,
+.map-filters>.filter-toggle,
+.map-filters>.quick-filter,
+.map-filters>.more-filter>summary{box-sizing:border-box;height:46px;min-height:46px;border-radius:13px;}
+.map-filters .filter-select{padding:0 14px;gap:9px!important;}
+.map-filters .filter-select select{height:44px;padding:0 3px;}
+.map-filters .filter-select.date-filter select{min-width:136px;}
+.map-filters .filter-select:not(.date-filter) select{min-width:140px;}
+.map-filters>.filter-toggle,
+.map-filters>.quick-filter,
+.map-filters>.more-filter>summary{padding:0 16px;}
+.map-filters>.filter-toggle,.map-filters>.quick-filter,.map-filters>.more-filter>summary{gap:9px;}
+.map-filters>.more-filter{margin-left:auto;}
+.map-filters>.more-filter>summary{justify-content:center;}
+.more-filter[open] .filter-toggle{top:51px;}
+
+/* Keep the map and results aligned while using the full content width. */
+.explore-layout{width:100%;grid-template-columns:minmax(0,1.68fr) minmax(360px,1fr);align-items:stretch;}
+
+/* Use Illinois blue for keyboard focus without a persistent mouse outline. */
+.map-filters select:focus-visible,
+.map-filters button:focus-visible,
+.more-filter summary:focus-visible,
+.map-filters .filter-toggle:has(input:focus-visible){outline:2px solid #13294b;outline-offset:2px;box-shadow:0 0 0 3px #13294b12;}
+.map-filters .filter-toggle:focus-within{outline:none;box-shadow:none;}
+.map-filters .filter-select select:focus,.map-filters .filter-select select:focus-visible{outline:none;box-shadow:none;}
+.map-filters .filter-select.date-filter{height:56px;min-height:56px;padding-block:4px;}
+.map-filters .date-filter>i{align-self:center;}
+.map-filters .filter-select{padding-left:18px;padding-right:14px;}
+.date-filter-content{display:flex;min-width:0;flex-direction:column;justify-content:center;line-height:1.1;transform:translateY(-3px);}
+.map-filters .date-filter select{width:100%;height:27px;min-width:0;padding:0 20px 0 0;font-size:13.5px;line-height:1.1;}
+.date-filter-content small{display:block;margin-top:3px;padding:0;color:#717989;font-size:11px;font-weight:500;line-height:11px;text-align:left;white-space:nowrap;}
+.date-select-row{position:relative;display:block;min-width:0;height:27px;line-height:27px;}
+.date-select-row select{display:block;width:100%;height:27px;appearance:none;-webkit-appearance:none;padding:0 18px 0 0!important;text-align:left;}
+.date-select-row>i,.date-select-row>svg{position:absolute;top:50%;right:1px;width:13px;height:13px;pointer-events:none;transform:translateY(-50%);color:#596577;}
+.map-filters .filter-select,.map-filters>.filter-toggle,.map-filters>.quick-filter,.map-filters>.more-filter>summary{height:56px;min-height:56px;}
+.map-filters .filter-select select{height:54px;}
+.map-filters .date-filter select{height:27px;}
+.map-filters>.filter-toggle,.map-filters>.quick-filter,.map-filters>.more-filter>summary{padding-inline:18px;font-size:13.5px;}
+.map-filters .quick-filter{gap:9px;font-size:13.5px;}
+.map-filters .quick-filter i,.map-filters .filter-toggle i,.map-filters .more-filter summary i{width:17px;height:17px;}
+.map-filters .filter-select.date-filter select:focus,.map-filters .filter-select.date-filter select:focus-visible{height:27px;}
+@media(max-width:760px){.map-filters .date-filter{min-width:190px;}}
+
+@media(max-width:1050px){
+  .explore-layout{grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);}
+  .map-filters>.more-filter{margin-left:0;}
+}
+@media(max-width:760px){
+  .map-filters>.more-filter{margin-left:0;}
+}
