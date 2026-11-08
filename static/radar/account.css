@@ -13,7 +13,8 @@ svg{display:block}
 .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* Layout */
-.shell{display:flex;min-height:100vh;max-width:1600px;margin:auto}
+/* Full width on every page, so the sidebar always sits at the left edge (as on Explore Map). */
+.shell{display:flex;min-height:100vh}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:20px;padding:20px 22px 60px 0}
 .stack-large{display:flex;flex-direction:column;gap:28px;min-width:0}
 .two-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 44px;align-items:start}
@@ -25,11 +26,31 @@ svg{display:block}
 
 /* Top bar */
 .topbar{display:flex;align-items:center;gap:14px}
-.search{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:44px;border-bottom:1.5px solid var(--line);color:var(--muted)}
+.search{position:relative;flex:1;min-width:0;max-width:760px;display:flex;align-items:center;gap:10px;min-height:46px;padding:0 8px 0 16px;border:1px solid var(--line);border-radius:24px;background:var(--white);color:var(--muted);box-shadow:0 3px 12px rgba(40,34,26,.04)}
+.search:focus-within{border-color:#b9a99a;box-shadow:0 4px 16px rgba(40,34,26,.08)}
 .search svg,.icon-button svg,.chevron,.bell-button svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.search svg{width:19px;height:19px;flex:none}
-.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;color:var(--ink)}
+.search>svg{width:19px;height:19px;flex:none}
+.search input[type=search]{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--ink)}
 .search input::placeholder{color:var(--muted)}
+/* AI (semantic) search switch inside the search bar. */
+.search-ai{position:relative;display:inline-flex;align-items:center;gap:6px;flex:none;padding:6px;border-radius:16px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer}
+.search-ai input{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0;opacity:0}
+.search-ai-track{position:relative;width:34px;height:20px;border-radius:12px;background:#d8d4ce;transition:background .18s}
+.search-ai-track:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(40,34,26,.25);transition:transform .18s}
+.search-ai input:checked+.search-ai-track{background:#c65024}
+.search-ai input:checked+.search-ai-track:after{transform:translateX(14px)}
+.search-ai input:focus-visible+.search-ai-track{outline:2px solid #c65024;outline-offset:2px}
+.search-ai-tip,.search-hint{position:absolute;z-index:40;top:calc(100% + 10px);padding:10px 13px;border-radius:12px;
+  background:rgba(255,250,244,.8);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(198,80,36,.2);
+  color:var(--ink);font-size:12.5px;font-weight:500;line-height:1.45;box-shadow:0 12px 30px rgba(16,41,66,.16);
+  opacity:0;visibility:hidden;transform:translateY(-3px);transition:opacity .16s,transform .16s,visibility .16s;pointer-events:none}
+.search-ai-tip{right:0;width:220px}
+.search-ai:hover .search-ai-tip,.search-ai:focus-within .search-ai-tip{opacity:1;visibility:visible;transform:none}
+/* The privacy reminder appears while typing. */
+.search-hint{left:16px}
+.search:has(input[type=search]:focus) .search-hint{opacity:1;visibility:visible;transform:none}
+.search:has(.search-ai:hover) .search-hint{opacity:0;visibility:hidden}
+.topbar>.search+.bell-link{margin-left:auto}
 .icon-button{display:flex;flex:none;width:44px;height:44px;align-items:center;justify-content:center;border:0;background:transparent;color:var(--ink);cursor:pointer}
 .icon-button svg{width:22px;height:22px}
 .profile-menu{position:relative;flex:none}
@@ -220,6 +241,20 @@ select{height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:1
 .guest-bar{gap:18px}
 .guest-brand{font-weight:700;letter-spacing:.2em;color:var(--navy)}
 .guest-spacer{flex:1}
+/* Top bar for guests on sidebar pages, and the brand that stands in for the sidebar on phones. */
+.topbar-spacer{flex:1}
+.topbar-brand{display:none;font-weight:700;letter-spacing:.2em;color:var(--navy)}
+.guest-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex:none}
+.guest-signin{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:22px;font-weight:600;color:var(--ink)}
+.guest-signin:hover{background:var(--white)}
+.guest-actions .banner-button{min-height:42px}
+.mobile-menu-button{display:none}
+@media(max-width:620px){
+  .topbar-brand{display:block}.mobile-menu-button{display:flex;margin-left:-10px}
+  /* Keep the bar on one line at phone width: avatar only, and tighter account buttons. */
+  .topbar{gap:8px}.profile-menu .who{display:none}.profile-menu{margin-left:auto}
+  .guest-actions{gap:2px}.guest-signin{padding:0 10px}.guest-actions .banner-button{padding:0 14px;min-height:40px}
+}
 .banner-button.navy{border-color:var(--navy);background:var(--navy);color:var(--white)}
 .verify-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px;border-radius:16px;background:#f7e4d8;color:#5c2408}
 .verify-banner .banner-button.solid{border-color:var(--navy);background:var(--navy);color:var(--white)}

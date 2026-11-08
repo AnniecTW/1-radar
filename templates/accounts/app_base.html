@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'radar/sidebar.css' %}">
-  <link rel="stylesheet" href="{% static 'radar/account.css' %}">
+  <link rel="stylesheet" href="{% static 'radar/sidebar.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'radar/account.css' %}?v=5">
   <link rel="stylesheet" href="{% static 'radar/rsvp.css' %}">
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   {% block extra_head %}{% endblock %}
@@ -22,14 +22,29 @@
     {% elif request.path|slice:':15' == '/organizations/' %}{% include '_sidebar.html' with active_nav='organizations' %}
     {% elif request.path|slice:':10' == '/accounts/' %}{% include '_sidebar.html' with active_nav='profile' %}
     {% else %}{% include '_sidebar.html' %}{% endif %}
+    {% comment %}On phones the sidebar becomes a drawer opened from the top bar's menu button (account.js).{% endcomment %}
+    <div class="sidebar-backdrop" data-sidebar-close hidden></div>
 
     <div class="main">
       <header class="topbar">
-        <label class="search">
+        <button class="icon-button mobile-menu-button" type="button" aria-label="Open menu" aria-expanded="false" data-sidebar-toggle><i data-lucide="menu" aria-hidden="true"></i></button>
+        <a class="topbar-brand" href="{% url 'dashboard' %}" aria-label="RADAR home">RADAR</a>
+        {% block topbar_search %}
+        {% comment %}One search for the whole app. Results show on the home page; topbar_search is filled in there to keep the query and filters.{% endcomment %}
+        <form class="search" action="{% url 'dashboard' %}#browse" method="get" role="search">
           <i data-lucide="search" aria-hidden="true"></i>
-          <span class="visually-hidden">Search</span>
-          <input type="search" placeholder="Search events, places, people, or keywords…">
-        </label>
+          <label class="visually-hidden" for="topbar-q">Search events</label>
+          <input id="topbar-q" type="search" name="q" value="{{ topbar_search.q }}" maxlength="100" placeholder="Search events, places, people, or keywords…" aria-describedby="search-privacy-hint">
+          <label class="search-ai">
+            <input type="checkbox" name="semantic" value="1"{% if topbar_search.semantic %} checked{% endif %} aria-label="Use natural language search" aria-describedby="search-ai-tip">
+            <span class="search-ai-track" aria-hidden="true"></span><span class="search-ai-label">AI</span>
+            <span class="search-ai-tip" id="search-ai-tip" role="tooltip">Search by meaning, such as “a relaxed event this weekend.”</span>
+          </label>
+          {% if topbar_search.category %}<input type="hidden" name="category" value="{{ topbar_search.category }}">{% endif %}
+          <span class="search-hint" id="search-privacy-hint">Please don’t include personal or sensitive information in your search.</span>
+        </form>
+        {% endblock %}
+        {% if user.is_authenticated %}
         <a class="icon-button bell-link" href="{% url 'list_notifications' %}" aria-label="Notifications{% if unread_notification_count %}, {{ unread_notification_count }} unread{% endif %}">
           <i data-lucide="bell" aria-hidden="true"></i>
           {% if unread_notification_count %}<span class="bell-badge" aria-hidden="true">{% if unread_notification_count > 9 %}9+{% else %}{{ unread_notification_count }}{% endif %}</span>{% endif %}
@@ -47,6 +62,12 @@
             <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
           </div>
         </details>
+        {% else %}
+        <nav class="guest-actions" aria-label="Account">
+          <a class="guest-signin" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">Sign in</a>
+          <a class="banner-button solid navy" href="{% url 'signup' %}?next={{ request.get_full_path|urlencode }}">Create account</a>
+        </nav>
+        {% endif %}
       </header>
 
       {% if messages %}
@@ -58,7 +79,7 @@
       {% block content %}{% endblock %}
     </div>
   </div>
-  <script src="{% static 'radar/account.js' %}"></script>
+  <script src="{% static 'radar/account.js' %}?v=2"></script>
   <script src="{% static 'radar/engagement.js' %}" defer></script>
   <script>window.addEventListener('DOMContentLoaded',()=>window.lucide?.createIcons());</script>
 </body>
