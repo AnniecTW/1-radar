@@ -31,20 +31,12 @@
 .results-heading h2{margin:0;color:#102a4c;font:600 18px 'Outfit',sans-serif}
 .results-heading span{color:#687181;font-size:12px;white-space:nowrap}
 #event-list{min-height:0;overflow:auto;padding:10px}
-.map-event{display:grid;grid-template-columns:94px minmax(0,1fr);gap:12px;align-items:center;padding:9px;margin:0 0 8px;border:1px solid transparent;border-radius:14px;color:inherit;text-decoration:none;transition:background .15s,border-color .15s,box-shadow .15s}
-.map-event:last-child{margin-bottom:0}.map-event.active,.map-event:hover{border-color:#e9c6b5;background:#fff8f2;box-shadow:0 3px 10px #28221a0a}
-.map-event:focus-visible{outline:2px solid #c65024;outline-offset:1px}
-.map-event-image{width:94px;height:82px;overflow:hidden;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,#eee6dc,#e3d7cb);color:#a3360a;font:700 24px 'Outfit',sans-serif}
-.map-event-image img{width:100%;height:100%;object-fit:cover}
-.map-event h3{margin:0 0 5px;overflow:hidden;color:#18293d;font:600 14px/1.3 'DM Sans',sans-serif;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.map-event p{margin:3px 0;color:#596577;font-size:11.5px;line-height:1.35}
-.map-event small{display:block;margin-top:6px;overflow:hidden;color:#a3360a;font-size:10.5px;text-overflow:ellipsis;white-space:nowrap}
 .empty-results{padding:30px 15px;text-align:center;color:#687181}
 .marker-active{filter:drop-shadow(0 0 7px #c2410c);transform:scale(1.35)}
 .map-popup{min-width:180px;color:#18293d;font:13px 'DM Sans',sans-serif}.map-popup p{margin:6px 0;color:#596577}.map-popup a{color:#c2410c;font-weight:600}
-@media(max-width:1050px){.main:has(.explore-page){padding-right:16px}.explore-layout{grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:12px}.map-event{grid-template-columns:78px minmax(0,1fr);gap:9px}.map-event-image{width:78px;height:72px}}
+@media(max-width:1050px){.main:has(.explore-page){padding-right:16px}.explore-layout{grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:12px}}
 @media(max-width:760px){.main:has(.explore-page){padding:14px}.explore-page{padding:0}.explore-heading{align-items:flex-start}.map-search-tip{display:none}.explore-layout{height:auto;max-height:none;min-height:0;grid-template-columns:minmax(0,1fr)}.map-panel{height:min(56vh,540px);min-height:360px}.event-results{max-height:58vh;min-height:230px}.map-filters{gap:8px}.map-filters label{flex:1;min-width:140px}.map-filters select{width:100%;min-width:0}.results-heading{padding:13px 14px 11px}}
-@media(max-width:420px){.explore-heading h1{font-size:27px}.explore-heading>p:last-child{font-size:13px}.map-filters label{min-width:calc(50% - 5px)}.map-panel{min-height:330px}.map-event{grid-template-columns:76px minmax(0,1fr);padding:7px}.map-event-image{width:76px;height:70px}}
+@media(max-width:420px){.explore-heading h1{font-size:27px}.explore-heading>p:last-child{font-size:13px}.map-filters label{min-width:calc(50% - 5px)}.map-panel{min-height:330px}}
 
 /* Short, state-based feedback; no perpetual decorative motion. */
 .map-search-box:focus-within{border-color:#c2410c;box-shadow:0 0 0 3px #c2410c22}
@@ -55,7 +47,6 @@
 .map-filters .quick-filter{display:inline-flex;align-items:center;gap:7px;transition:background .18s,border-color .18s,color .18s,transform .18s}
 .map-filters .quick-filter i{width:15px;height:15px}.map-filters .quick-filter:hover{transform:translateY(-1px)}.map-filters .quick-filter:active{transform:scale(.98)}
 .search-area:not([hidden]){animation:search-area-in .2s ease-out both}.search-area:focus-visible{outline:3px solid #e9a689;outline-offset:3px}.search-area.is-loading i{animation:soft-pulse .9s ease-in-out infinite alternate}
-.map-event{transition:background .18s,border-color .18s,box-shadow .18s,transform .18s}.map-event.active,.map-event:hover{transform:translateY(-2px);box-shadow:0 6px 15px #28221a12}
 .maplibregl-marker{cursor:pointer;transition:filter .18s}.maplibregl-marker.marker-enter{animation:marker-in .2s ease-out both;animation-delay:var(--marker-delay,0ms)}
 .maplibregl-marker.marker-active{filter:drop-shadow(0 0 5px #c2410c);z-index:5!important}.maplibregl-marker.marker-active svg{transform:scale(1.12);transform-origin:center}.maplibregl-marker:focus-visible{outline:3px solid #c2410c;outline-offset:3px;border-radius:50%}
 .event-skeletons{display:grid;gap:10px;padding:2px}.event-skeleton{display:grid;grid-template-columns:94px 1fr;gap:12px;padding:9px;border:1px solid #eee6dc;border-radius:14px}.event-skeleton i,.event-skeleton b{display:block;border-radius:8px;background:linear-gradient(90deg,#eee9e3 25%,#f8f5f0 40%,#eee9e3 65%);background-size:300% 100%;animation:skeleton-shimmer 1.2s ease-in-out infinite}.event-skeleton i{height:82px}.event-skeleton span{display:grid;align-content:center;gap:9px}.event-skeleton b{height:10px}.event-skeleton b:first-child{width:75%}.event-skeleton b:last-child{width:55%}
@@ -114,7 +105,6 @@ body:has(.explore-page){background:#f4eee8}
 .map-filters .filter-select{padding-inline:12px}
 .hero-description{font-size:15px}
 .map-filters select:focus:not(:focus-visible){outline:none;box-shadow:none}
-.map-event p{font-size:12px}.map-event small{font-size:11px}
 /* Native checkboxes inherit the filter's Illinois blue; focus stays keyboard-visible. */
 .map-filters .filter-toggle input[type="checkbox"]{accent-color:#13294b}
 .map-filters .filter-toggle:focus-within{outline:none;box-shadow:none}
@@ -176,3 +166,107 @@ body.keyboard-focus-mode .map-filters .filter-select:has(select:focus-visible){o
 @media(max-width:760px){
   .map-filters>.more-filter{margin-left:0;}
 }
+
+/* ---- Redesign to match the prototype (category pins, heatmap legend, map/satellite, shared cards) ---- */
+/* The button's display rule used to override [hidden], so it showed before the map had moved. */
+.search-area[hidden]{display:none}
+
+/* Hero tip card. */
+.map-search-tip .tip-icon{width:46px;height:46px;flex:none;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,#f7e4d8,#fbefe6);color:#c65024;box-shadow:inset 0 0 0 1px #f0d6c6}
+.map-search-tip .tip-icon svg{width:22px;height:22px}
+
+/* Filters stay on one line on laptop screens, with More filters pushed to the right. */
+@media(min-width:1101px){.map-filters{flex-wrap:nowrap}.map-filters .more-filter{margin-left:auto}}
+.map-filters .quick-filter{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.map-filters .quick-filter svg,.more-filter summary svg{width:16px;height:16px;color:#c2410c}
+.more-filter summary{gap:7px;white-space:nowrap}
+
+/* Category pins: round badge in the category colour, sized by popularity (--pin-size). */
+.map-pin{display:block;width:var(--pin-size,34px);height:var(--pin-size,34px);padding:0;border:0;background:none;cursor:pointer}
+.map-pin .pin-face{width:100%;height:100%;display:grid;place-items:center;border:3px solid #fff;border-radius:50%;background:var(--tone,#c65024);color:#fff;box-shadow:0 4px 12px rgba(16,41,66,.28);transition:transform .16s ease,box-shadow .16s ease}
+.map-pin .pin-face svg{width:52%;height:52%;stroke-width:2.2}
+.map-pin:hover .pin-face,.map-pin.marker-active .pin-face{transform:scale(1.18);box-shadow:0 6px 18px rgba(16,41,66,.35)}
+.maplibregl-marker.map-pin.marker-active{filter:none;z-index:5!important}
+.maplibregl-marker.map-pin.marker-active svg{transform:none}
+.map-pin:focus-visible{outline:none}
+.map-pin:focus-visible .pin-face{outline:3px solid #102942;outline-offset:2px}
+.you-are-here{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#2f6fb0;box-shadow:0 0 0 6px rgba(47,111,176,.25),0 2px 6px rgba(16,41,66,.3)}
+
+/* Pin popups. */
+.maplibregl-popup-content{padding:10px 13px;border-radius:12px;box-shadow:0 10px 26px rgba(16,41,66,.2)}
+.map-popup{display:flex;flex-direction:column;gap:2px;min-width:170px;color:#18293d;font:12px/1.4 'DM Sans',sans-serif;text-decoration:none}
+.map-popup b{font-size:13px}
+.map-popup small{color:#596577}
+.map-popup:hover b{color:#c65024}
+
+/* Map / Satellite switch (top left). */
+.map-style-toggle{position:absolute;z-index:2;top:14px;left:14px;display:flex;padding:3px;border:1px solid #e8e0d7;border-radius:12px;background:rgba(255,253,249,.92);backdrop-filter:blur(8px);box-shadow:0 3px 12px rgba(16,41,66,.12)}
+.map-style-toggle button{padding:7px 14px;border:0;border-radius:9px;background:transparent;color:#596577;font:600 12px 'DM Sans',sans-serif;cursor:pointer}
+.map-style-toggle button[aria-pressed="true"]{background:#fff;color:#18293d;box-shadow:0 1px 4px rgba(16,41,66,.15)}
+
+/* Popularity legend + heatmap switch (bottom left). */
+.map-legend{position:absolute;z-index:2;left:14px;bottom:14px;width:210px;padding:12px 14px;border:1px solid #e8e0d7;border-radius:14px;background:rgba(255,253,249,.92);backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(16,41,66,.14);color:#18293d;font:12px 'DM Sans',sans-serif}
+.map-legend b{display:block;margin-bottom:8px;font-size:13px}
+.legend-bar{display:block;height:8px;border-radius:5px;background:linear-gradient(90deg,rgba(150,190,230,.9),rgba(244,210,110,.95),rgba(240,140,75,.95),#c65024)}
+.legend-scale{display:flex;justify-content:space-between;margin:5px 0 10px;color:#687181;font-size:11px}
+.legend-switch{display:flex;align-items:center;gap:9px;font-weight:600;cursor:pointer}
+.legend-switch input{position:absolute;width:1px;height:1px;opacity:0}
+.legend-switch-track{position:relative;width:34px;height:20px;flex:none;border-radius:12px;background:#d8d4ce;transition:background .18s}
+.legend-switch-track:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(40,34,26,.25);transition:transform .18s}
+.legend-switch input:checked+.legend-switch-track{background:#c65024}
+.legend-switch input:checked+.legend-switch-track:after{transform:translateX(14px)}
+.legend-switch input:focus-visible+.legend-switch-track{outline:2px solid #c65024;outline-offset:2px}
+/* The status message sits above the legend instead of on top of it. */
+.map-status{bottom:auto;top:62px;left:14px}
+
+/* Results: "N events match your search" with the sort menu, and the shared compact cards. */
+.results-heading{align-items:center}
+.results-heading h2{display:flex;align-items:baseline;gap:5px;font:600 16px 'DM Sans',sans-serif}
+.results-heading h2 b{font-weight:700}
+.results-sort{position:relative;display:inline-flex!important;align-items:center;gap:4px;color:#687181;font-size:12px;font-weight:600;cursor:pointer}
+.results-sort select{appearance:none;border:0;background:transparent;padding:0 16px 0 0;color:#c65024;font:600 12px 'DM Sans',sans-serif;cursor:pointer}
+.results-sort svg{position:absolute;right:0;width:14px;height:14px;color:#c65024;pointer-events:none}
+#event-list{padding:10px 12px 14px}
+#event-list .compact-card{margin:0 0 10px}
+#event-list .compact-card.active{border-color:#e9c6b5;background:#fff8f2;transform:translateY(-2px);box-shadow:0 10px 24px rgba(40,34,26,.1)}
+@media(max-width:760px){.map-legend{width:auto;right:70px;padding:9px 11px}.map-legend b{display:none}}
+/* Leave room for MapLibre's attribution badge in the bottom-right corner. */
+.map-controls{bottom:40px}
+/* Free only / 15-minute walk look like the other quick-filter chips: the checkbox stays for the form and
+   screen readers but is hidden; the chip's highlighted state shows when it is on. */
+.filter-toggle input[type="checkbox"]{position:absolute;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+
+/* Narrower results panel: the map gets the extra width. */
+.explore-layout{grid-template-columns:minmax(0,1fr) clamp(340px,27vw,400px)}
+@media(max-width:1050px){.explore-layout{grid-template-columns:minmax(0,1fr) clamp(300px,32vw,340px)}}
+@media(max-width:760px){.explore-layout{grid-template-columns:minmax(0,1fr)}}
+
+/* Larger, easier-to-read text across the map page. */
+.explore-page .explore-hero .eyebrow{font-size:11.5px}
+.explore-page .hero-description{font-size:16px}
+.explore-page .map-search-tip b{font-size:14.5px}
+.explore-page .map-search-tip small{font-size:12.5px;line-height:1.45}
+.explore-page .map-filters .filter-select select,.explore-page .map-filters .date-filter select{font-size:14.5px}
+.explore-page .map-filters>.filter-toggle,.explore-page .map-filters>.quick-filter,.explore-page .map-filters>.more-filter>summary,.explore-page .more-filter .filter-toggle{font-size:14.5px!important}
+.explore-page .date-filter-content small{font-size:12px}
+.explore-page .results-heading h2{font-size:18px}
+.explore-page .results-sort,.explore-page .results-sort select{font-size:13.5px}
+.explore-page .search-area{font-size:14px}
+.explore-page .map-status{font-size:13px}
+.explore-page .map-style-toggle button{font-size:13.5px}
+.explore-page .map-legend{font-size:13px}
+.explore-page .map-legend b{font-size:14px}
+.explore-page .legend-scale{font-size:12px}
+.explore-page .empty-results p{font-size:13.5px}
+.map-popup{font-size:13px}
+.map-popup b{font-size:14.5px}
+/* Result cards: same layout as the home page, a size up for this list. */
+.explore-page #event-list .compact-body h3{font-size:15.5px}
+.explore-page #event-list .compact-body .event-meta{font-size:12.5px}
+.explore-page #event-list .compact-body .event-meta svg{width:15px;height:15px}
+.explore-page #event-list .tag{font-size:12px}
+.explore-page #event-list .compact-body .going{font-size:12.5px}
+.explore-page #event-list .compact-footer .rsvp{font-size:12px;padding:5px 11px}
+/* Room for the tip card's title on one line now that the text is larger. */
+@media(min-width:761px){.explore-hero{grid-template-columns:minmax(0,1fr) minmax(330px,380px)}}
+.explore-page .map-search-tip b{white-space:nowrap}
