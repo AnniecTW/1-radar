@@ -1,0 +1,11 @@
+{% comment %}Guest sign-in prompt (FR-52), opened by any [data-gate] button via radar/signin-gate.js.{% endcomment %}
+<dialog id="signin-dialog" class="signin-dialog" aria-labelledby="signin-message">
+  <form method="dialog" class="dialog-close"><button aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button></form>
+  <div class="eyebrow">JOIN RADAR</div>
+  <h2 id="signin-message">Sign in to continue</h2>
+  <p>It only takes a moment, and you’ll come right back to this page.</p>
+  <div class="dialog-actions">
+    <a class="primary-button" id="signin-link" href="{% url 'login' %}">Sign in</a>
+    <a class="secondary-button" id="signup-link" href="{% url 'signup' %}">Create account</a>
+  </div>
+</dialog>

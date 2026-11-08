@@ -1,0 +1,17 @@
+{% load discovery_tags %}
+<article class="compact-card" data-event-id="{{ event.pk }}">
+  <div class="compact-image">
+    <a href="{% url 'event_detail' event.slug %}" tabindex="-1" aria-hidden="true">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="" loading="lazy">{% else %}<div class="cover-fallback">{{ event.title|slice:":1" }}</div>{% endif %}</a>
+    {% include 'discovery/_save_heart.html' %}
+  </div>
+  <div class="compact-body">
+    <h3><a href="{% url 'event_detail' event.slug %}">{{ event.title }}</a></h3>
+    <p class="event-meta"><i data-lucide="calendar" aria-hidden="true"></i><span>{{ event.start_at|date:"D, M j" }} · {{ event.start_at|date:"g:i A" }}</span></p>
+    <p class="event-meta"><i data-lucide="map-pin" aria-hidden="true"></i><span>{% if event.venue %}{{ event.venue.name }}{% else %}{{ event.location_text }}{% endif %}</span></p>
+    <div class="tags">{% for interest in event.interests.all|slice:":2" %}<span class="tag tone-{{ interest.slug|category_tone }}">{{ interest.name }}</span>{% endfor %}</div>
+    <div class="compact-footer">
+      <span class="going"><i data-lucide="users-round" aria-hidden="true"></i>{% if not event.is_free %}Paid{% elif event.rsvp_required %}{{ event.going_count }} going{% else %}{{ event.interested_count }} interested{% endif %}</span>
+      {% include 'discovery/_event_action.html' %}
+    </div>
+  </div>
+</article>

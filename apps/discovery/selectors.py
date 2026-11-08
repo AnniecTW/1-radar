@@ -5,14 +5,23 @@ from django.conf import settings
 from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 
-from apps.accounts.models import CampusDomain
+from apps.accounts.models import CampusDomain, User
+from apps.engagement.models import EventSave
 from apps.events.models import Event
 from apps.events.selectors import filter_discoverable_events
 from apps.interests.models import Interest
 from apps.organizations.models import Organization
 from apps.rsvps.models import RSVP
 
+from .constants import (
+    CATEGORY_CHIP_COUNT,
+    MIN_SIGNUPS_TO_SHOW,
+    SIGNUP_WINDOW_DAYS,
+    WEEKEND_SUMMARY_ROWS,
+)
+
 CAROUSEL_SIZE = 10
+HERO_SLIDE_COUNT = 5
 BROWSE_GRID_SIZE = 12
 FEATURED_ORGANIZATION_COUNT = 6
 TRENDING_WINDOW_DAYS = 14
@@ -88,6 +97,19 @@ def get_trending_events(now: datetime) -> list[Event]:
     return list(events[:CAROUSEL_SIZE])
 
 
+def list_recommended_events(user, now: datetime) -> list[Event]:
+    """Upcoming events in the user's interests, most popular first. Empty when they picked none."""
+    interest_ids = user.interests.values_list('interest_id', flat=True)
+    events = list_upcoming_events(now).filter(interests__in=interest_ids).distinct()
+    return list(events.order_by('-popularity_score', 'start_at')[:CAROUSEL_SIZE])
+
+
+def list_saved_event_ids(user, events: list[Event]) -> set:
+    """Which of these events the user saved, in one query for every card on the page."""
+    event_ids = {event.pk for event in events}
+    return set(EventSave.objects.filter(user=user, event_id__in=event_ids).values_list('event_id', flat=True))
+
+
 def list_category_interests() -> list[Interest]:
     return list(Interest.objects.filter(is_active=True).order_by('name'))
 
@@ -157,13 +179,82 @@ def list_featured_organizations(now: datetime) -> list[Organization]:
 
 
 def get_map_points(now: datetime) -> list[dict]:
-    """Event positions weighted by popularity for the heat map preview."""
+    """Event positions weighted by popularity for the heat map preview, with what its popup shows."""
     rows = (
         filter_discoverable_events(Event.objects.filter(end_at__gt=now, location__isnull=False))
         .order_by('start_at')
-        .values_list('title', 'location', 'popularity_score')[:MAP_POINT_LIMIT]
+        .values_list('title', 'slug', 'location', 'popularity_score', 'start_at', 'venue__name', 'location_text')[
+            :MAP_POINT_LIMIT
+        ]
     )
     return [
-        {'title': title, 'lat': point.y, 'lng': point.x, 'weight': 1 + score}
-        for title, point, score in rows
+        {
+            'title': title, 'slug': slug, 'lat': point.y, 'lng': point.x, 'weight': 1 + score,
+            'start': start_at.isoformat(), 'place': venue_name or location_text or '',
+        }
+        for title, slug, point, score, start_at, venue_name, location_text in rows
     ]
+
+
+def split_category_chips(categories: list[Interest], now: datetime) -> tuple[list[Interest], list[Interest]]:
+    """The busiest categories become chips; the rest go in the "More" menu. Both keep the given objects."""
+    upcoming = filter_discoverable_events(Event.objects.filter(end_at__gt=now))
+    counts = dict(
+        Interest.objects.filter(pk__in=[category.pk for category in categories])
+        .annotate(upcoming_count=Count('events', filter=Q(events__in=upcoming), distinct=True))
+        .values_list('pk', 'upcoming_count')
+    )
+    ordered = sorted(categories, key=lambda category: (-counts.get(category.pk, 0), category.name))
+    return ordered[:CATEGORY_CHIP_COUNT], ordered[CATEGORY_CHIP_COUNT:]
+
+
+def get_weekend_summary(now: datetime, campus_timezone: ZoneInfo) -> dict:
+    """How many events this weekend, overall and per category, for the side panel."""
+    weekend_start, weekend_end = get_weekend_window(now, campus_timezone)
+    weekend_events = filter_discoverable_events(
+        Event.objects.filter(end_at__gt=now, start_at__gte=weekend_start, start_at__lt=weekend_end)
+    )
+    rows = (
+        weekend_events.filter(interests__isnull=False)
+        .values('interests__slug', 'interests__name')
+        .annotate(event_count=Count('id', distinct=True))
+        .order_by('-event_count', 'interests__name')[:WEEKEND_SUMMARY_ROWS]
+    )
+    return {
+        'start': weekend_start,
+        'last_day': weekend_end - timedelta(days=1),
+        'total': weekend_events.count(),
+        'categories': [
+            {'slug': row['interests__slug'], 'name': row['interests__name'], 'count': row['event_count']}
+            for row in rows
+        ],
+    }
+
+
+def count_recent_signups(now: datetime) -> int | None:
+    """New accounts in the last 30 days, or None when too few to be worth showing."""
+    count = User.objects.filter(is_active=True, date_joined__gte=now - timedelta(days=SIGNUP_WINDOW_DAYS)).count()
+    return count if count >= MIN_SIGNUPS_TO_SHOW else None
+
+
+def get_card_highlight(event: Event, now: datetime, interest_ids: set, trending_ids: set) -> str:
+    """One true sentence about why an event is worth a look, shown on its card. Empty when none applies."""
+    if event.start_at <= now < event.end_at:
+        return 'Happening right now'
+    matching = [interest.name for interest in event.interests.all() if interest.pk in interest_ids]
+    if matching:
+        return f'Matches your interest in {matching[0]}'
+    spots_left = (event.capacity - event.going_count) if event.capacity else None
+    if spots_left is not None and 0 < spots_left <= max(3, event.capacity // 5):
+        return f'Filling up: {spots_left} spot{"s" if spots_left != 1 else ""} left'
+    if event.pk in trending_ids:
+        return 'Trending on campus'
+    if event.organization:
+        return f'Hosted by {event.organization.name}'
+    return ''
+
+
+def label_card_highlights(event_lists: list[list[Event]], now: datetime, interest_ids: set, trending_ids: set) -> None:
+    for events in event_lists:
+        for event in events:
+            event.highlight = get_card_highlight(event, now, interest_ids, trending_ids)

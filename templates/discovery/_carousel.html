@@ -1,19 +1,19 @@
-{% comment %}Needs: section_id, eyebrow, heading, subheading, events.{% endcomment %}
+{% comment %}A scrolling row of event cards. Needs: section_id, icon, heading, subheading, events. Optional: see_all_url, compact.{% endcomment %}
 {% if events %}
 <section class="section" id="{{ section_id }}" aria-labelledby="{{ section_id }}-title">
   <div class="section-heading">
     <div>
-      <div class="eyebrow">{{ eyebrow }}</div>
-      <h2 id="{{ section_id }}-title">{{ heading }}</h2>
+      <h2 id="{{ section_id }}-title"><i data-lucide="{{ icon }}" aria-hidden="true"></i>{{ heading }}</h2>
       <p>{{ subheading }}</p>
     </div>
-    <div class="carousel-buttons">
-      <button type="button" class="round-button" data-scroll="-1" aria-label="Scroll {{ heading }} left">←</button>
-      <button type="button" class="round-button" data-scroll="1" aria-label="Scroll {{ heading }} right">→</button>
+    <div class="section-actions">
+      {% if see_all_url %}<a class="see-all" href="{{ see_all_url }}">See all <i data-lucide="arrow-right" aria-hidden="true"></i></a>{% endif %}
+      <button type="button" class="round-button" data-scroll="-1" aria-label="Scroll {{ heading }} left"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+      <button type="button" class="round-button" data-scroll="1" aria-label="Scroll {{ heading }} right"><i data-lucide="chevron-right" aria-hidden="true"></i></button>
     </div>
   </div>
-  <div class="card-row" data-row>
-    {% for event in events %}{% include 'discovery/_event_card.html' %}{% endfor %}
+  <div class="card-row{% if compact %} compact-row{% endif %}" data-row>
+    {% for event in events %}{% if compact %}{% include 'discovery/_event_card_compact.html' %}{% else %}{% include 'discovery/_event_card.html' %}{% endif %}{% endfor %}
   </div>
 </section>
 {% endif %}
