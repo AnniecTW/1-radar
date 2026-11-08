@@ -45,6 +45,7 @@
         {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
         <button class="primary-button" type="submit">Search <span aria-hidden="true">→</span></button>
       </form>
+      <p class="search-privacy-note">Please don’t include personal or sensitive information in your search.</p>
     </section>
 
     {% include 'discovery/_carousel.html' with section_id='today' eyebrow='LIVE & NEXT UP' heading='Happening today' subheading='Starting today or already underway' events=happening_today %}

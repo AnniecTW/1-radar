@@ -23,7 +23,7 @@ def _refresh(event_id, force=False):
     event = Event.objects.filter(pk=event_id).first()
     if not event: return
     try: save_event_embedding(event, force=force)
-    except EmbeddingError: logger.info("Event embedding deferred for event %s", event_id)
+    except EmbeddingError: logger.warning("Event embedding deferred; retry with rebuild_event_embeddings (event_id=%s)", event_id)
 
 @receiver(post_save, sender=Event)
 def embed_event_after_save(sender, instance, raw=False, created=False, **kwargs):
