@@ -148,9 +148,12 @@ python manage.py migrate
 python manage.py seed_mock_data --confirm
 python manage.py seed_profile_demo --confirm
 python manage.py seed_host_demo --confirm
+python manage.py seed_map_demo --confirm
 ```
 
 The seed commands write demo users, organizations, events and activity, so they need `--confirm`. Don't run them against a production database. Each one is safe to re-run, but `seed_host_demo` replaces its earlier data, including any changes you made to its events. To delete that data, run `python manage.py seed_host_demo --confirm --remove`.
+
+`seed_map_demo` dates its events from the day you run it, so after about a week they are in the past and Explore Map looks nearly empty. Re-run it to refresh them.
 
 When you change a model, pull first so two people don't create conflicting migrations, then run `makemigrations`, commit the migration file, and run `migrate`.
 
@@ -162,12 +165,13 @@ python manage.py runserver
 
 Open http://127.0.0.1:8000/. If port 8000 is taken, run `python manage.py runserver 8001` and use that port instead.
 
-**Demo accounts** (development only; password `RadarDemo-Only-2026!`):
+**Demo accounts** (development only; password `RadarDemo-Only-2026!`). The shared database already has them. On your own database, run the seed commands above first.
 
 | Email | Use it to see |
 |---|---|
 | `alex.chen@demo.example.edu` | A filled-in Profile, plus My Dashboard and analytics as the owner of a demo club |
 | `profile-demo-host@demo.example.edu` | Another host, useful for testing as a visitor to Alex's events |
+| `owner@`, `admin@`, `checkin@`, `attendee1@`, `attendee2@demo.example.edu` | Club roles: owner, admin, check-in staff and attendees. They start at interest onboarding |
 
 Open **My Dashboard → Analytics** on *Halloween Hack Night* to see an event with full data.
 
@@ -196,9 +200,9 @@ Radar's AI feature is **AI search**, which finds events by meaning instead of ex
 
 **To use it:**
 
-1. Open the home page **signed out**. The signed-in home page doesn't have this search yet.
-2. Turn on the **AI search** switch next to the search box.
-3. Type a phrase such as `a relaxed event this weekend` and search. Results appear under the browse section.
+1. Use the search box in the top bar, signed in or signed out. It appears on every page except Explore Map, whose top bar searches the map by keyword only.
+2. Turn on the **AI** switch next to the search box. Hover over it for a tip.
+3. Type a phrase such as `a relaxed event this weekend` and search. You land on the home page, and the results appear in its browse section.
 
 New and edited events get embeddings automatically when their searchable text changes. If Cloudflare is unavailable or the keys are missing, the page says "AI search is temporarily unavailable" and shows keyword matches instead, and saving events still works. Each AI search makes one call to Cloudflare, which has usage limits.
 
