@@ -229,3 +229,7 @@ CLAUDE.md
 # User uploads
 media/
 scripts/
+# Model weights
+*.bin
+*.safetensors
+*.pt

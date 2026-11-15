@@ -36,7 +36,7 @@ class NotificationCenterTests(TestCase):
         self.make(Notification.Type.EVENT_CANCELLED, payload={'reason': 'Snow day'})
         self.make(Notification.Type.RSVP_CONFIRMED, user=self.other)
         response = self.client.get(reverse('list_notifications'))
-        self.assertContains(response, "You're going to Chess Night", count=1)
+        self.assertContains(response, "You&#x27;re going to Chess Night", count=1)
         self.assertContains(response, 'Your position is 4.')
         self.assertContains(response, 'Snow day')
         self.assertEqual(len(response.context['rows']), 3)

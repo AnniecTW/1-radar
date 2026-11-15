@@ -25,7 +25,7 @@ PASSWORD = 'Strong-Pass-123'
 
 def make_user(name):
     return User.objects.create_user(
-        username=name, email=f'{name}@example.edu', password=PASSWORD, first_name=name, is_campus_verified=True
+        username=name, email=f'{name}@example.edu', password=PASSWORD, first_name=name, is_campus_verified=True, is_email_verified=True
     )
 
 
