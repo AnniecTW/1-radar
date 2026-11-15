@@ -108,14 +108,14 @@ html{scroll-behavior:smooth}
 .home .rail-link{display:inline-flex;align-items:center;gap:6px;margin-top:10px;color:var(--terra);font-weight:600;font-size:13px}
 .home .rail-link svg{width:15px;height:15px}
 .home .rail-link:hover{color:var(--navy)}
-/* isolation keeps Leaflet's own z-indexes (400-1000) inside the map, so menus above can cover it. */
+/* isolation keeps the map's own z-indexes inside it, so menus above can cover it. */
 .home .map-preview{isolation:isolate;height:250px;border-radius:14px;overflow:hidden;border:1px solid var(--edge);background:#e9dfd3}
 .home .map-preview svg{display:inline}
-.home .map-popup{display:flex;flex-direction:column;gap:2px;color:var(--ink);font:12px/1.35 'DM Sans',sans-serif}
+.home .map-dot{width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#c65024;box-shadow:0 1px 4px rgba(16,41,66,.35);cursor:pointer}
+.home .map-popup{display:flex;flex-direction:column;gap:2px;color:var(--ink);font:12px/1.35 'DM Sans',sans-serif;text-decoration:none}
 .home .map-popup b{font-size:13px}
 .home .map-popup small{color:var(--muted)}
-.home .leaflet-popup-content{margin:9px 12px}
-.home .leaflet-popup-content-wrapper{border-radius:12px}
+.home .maplibregl-popup-content{padding:9px 12px;border-radius:12px}
 .home .weekend-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
 .home .weekend-list a{display:flex;align-items:center;gap:10px;padding:6px;border-radius:10px;color:#414a52;font-size:13px}
 .home .weekend-list a:hover{background:var(--cream);color:var(--ink)}

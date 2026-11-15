@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -245,6 +246,7 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
         'featured_organizations': list_featured_organizations(now),
         'map_points': get_map_points(now),
         'map_center': get_campus_center(),
+        'maptiler_key': settings.MAPTILER_API_KEY,
         'weekend_summary': get_weekend_summary(now, campus_timezone),
         'recent_signups': count_recent_signups(now),
     }

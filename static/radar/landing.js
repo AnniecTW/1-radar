@@ -107,34 +107,73 @@ document.querySelectorAll('[data-scroll]').forEach((button) => {
 });
 
 const mapElement = document.getElementById('map-preview');
-if (mapElement && window.L) {
+if (mapElement && window.maplibregl && mapElement.dataset.maptilerKey) {
   const points = JSON.parse(document.getElementById('map-points').textContent);
   const center = JSON.parse(document.getElementById('map-center').textContent) || [40.102, -88.2272];
-  const map = L.map(mapElement, { scrollWheelZoom: false }).setView(center, 15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors',
-  }).addTo(map);
-  if (points.length && L.heatLayer) {
-    const maxWeight = Math.max(...points.map((point) => point.weight));
-    L.heatLayer(points.map((point) => [point.lat, point.lng, point.weight / maxWeight]), {
-      radius: 32,
-      blur: 24,
-    }).addTo(map);
-  }
-  const escapeHtml = (text) => text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const popupHtml = (point) => {
-    const when = new Date(point.start).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-    return `<a class="map-popup" href="/events/${encodeURIComponent(point.slug)}/"><b>${escapeHtml(point.title)}</b>`
-      + `<small>${escapeHtml(point.place)}</small><small>${escapeHtml(when)}</small></a>`;
+  // Same MapTiler style as the Explore Map.
+  const map = new maplibregl.Map({
+    container: mapElement,
+    style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${encodeURIComponent(mapElement.dataset.maptilerKey)}`,
+    center: [center[1], center[0]],
+    zoom: 14.5,
+    scrollZoom: false,
+    attributionControl: { compact: true },
+  });
+  new ResizeObserver(() => map.resize()).observe(mapElement);
+
+  // Popularity heatmap, styled like the Explore Map's.
+  const maxWeight = Math.max(1, ...points.map((point) => point.weight));
+  map.on('load', () => {
+    map.addSource('event-heat', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: points.map((point) => ({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [point.lng, point.lat] },
+          properties: { weight: 0.4 + 0.6 * (point.weight / maxWeight) },
+        })),
+      },
+    });
+    map.addLayer({
+      id: 'event-heat',
+      type: 'heatmap',
+      source: 'event-heat',
+      paint: {
+        'heatmap-weight': ['get', 'weight'],
+        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 10, 1.6, 16, 3],
+        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 10, 30, 13, 55, 16, 90],
+        'heatmap-opacity': 0.75,
+        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+          0, 'rgba(255,253,249,0)', 0.08, 'rgba(150,190,230,0.5)', 0.3, 'rgba(244,210,110,0.72)',
+          0.55, 'rgba(240,140,75,0.82)', 0.85, 'rgba(198,80,36,0.9)'],
+      },
+    });
+  });
+
+  const popupContent = (point) => {
+    const popup = document.createElement('a');
+    popup.className = 'map-popup';
+    popup.href = `/events/${encodeURIComponent(point.slug)}/`;
+    const title = document.createElement('b');
+    title.textContent = point.title;
+    const where = document.createElement('small');
+    where.textContent = point.place;
+    const when = document.createElement('small');
+    when.textContent = new Date(point.start).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    popup.append(title, where, when);
+    return popup;
   };
   let busiest = null;
   points.forEach((point) => {
-    const marker = L.circleMarker([point.lat, point.lng], { radius: 6, color: '#fff', weight: 2, fillColor: '#c65024', fillOpacity: 1 })
-      .bindPopup(popupHtml(point), { closeButton: false, offset: [0, -4] })
+    const dot = document.createElement('div');
+    dot.className = 'map-dot';
+    const marker = new maplibregl.Marker({ element: dot })
+      .setLngLat([point.lng, point.lat])
+      .setPopup(new maplibregl.Popup({ offset: 10, closeButton: false }).setDOMContent(popupContent(point)))
       .addTo(map);
     if (!busiest || point.weight > busiest.point.weight) busiest = { point, marker };
   });
   // Show the most popular event straight away, like a preview of what the full map offers.
-  if (busiest) busiest.marker.openPopup();
+  if (busiest) map.once('load', () => busiest.marker.togglePopup());
 }

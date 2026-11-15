@@ -2,9 +2,9 @@
 {% block title %}Discover what’s happening{% endblock %}
 {% block extra_head %}
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css">
   <link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4">
-  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=11">
+  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
@@ -100,7 +100,7 @@
     <aside class="home-rail" aria-label="Around campus">
       <section class="rail-card" id="map" aria-labelledby="map-title">
         <h2 class="rail-heading" id="map-title"><i data-lucide="map-pin" aria-hidden="true"></i>Events near you</h2>
-        <div id="map-preview" class="map-preview" role="img" aria-label="Heat map of upcoming campus events"></div>
+        <div id="map-preview" class="map-preview" data-maptiler-key="{{ maptiler_key }}" role="img" aria-label="Heat map of upcoming campus events"></div>
         <p class="rail-note">Brighter spots have more likes, saves and RSVPs.</p>
         <a class="rail-link" href="{% url 'explore_map' %}">View full map <i data-lucide="arrow-right" aria-hidden="true"></i></a>
         {{ map_points|json_script:"map-points" }}
@@ -161,8 +161,7 @@
   {% endif %}
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"></script>
 <script src="{% static 'radar/signin-gate.js' %}?v=1"></script>
-<script src="{% static 'radar/landing.js' %}?v=6"></script>
+<script src="{% static 'radar/landing.js' %}?v=7"></script>
 {% endblock %}

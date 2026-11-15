@@ -17,7 +17,6 @@ DEFAULT_MODEL = '@cf/baai/bge-small-en-v1.5'
 class EmbeddingError(Exception):
     pass
 
-
 def model_id():
     return getattr(settings, 'CLOUDFLARE_EMBEDDING_MODEL', DEFAULT_MODEL)
 
