@@ -6,6 +6,7 @@ from django.utils.text import slugify
 from apps.organizations.models import OrganizationMembership
 from apps.organizations.permissions import user_can_manage_events
 from apps.notifications.models import Notification
+from apps.notifications.services import notify, notify_followers_of_new_event
 from apps.rsvps.models import RSVP, Ticket
 
 from .models import Event, EventCheckInStaff, EventReport
@@ -106,12 +107,7 @@ def cancel_event(*, actor, event_id, reason=''):
         event=event,
         status__in=[RSVP.Status.GOING, RSVP.Status.WAITLISTED, RSVP.Status.INTERESTED],
     ).select_related('user'):
-        Notification.objects.create(
-            user=rsvp.user,
-            event=event,
-            type=Notification.Type.EVENT_CANCELLED,
-            payload={'reason': reason},
-        )
+        notify(user=rsvp.user, event=event, type=Notification.Type.EVENT_CANCELLED, payload={'reason': reason})
         Ticket.objects.filter(rsvp=rsvp).update(status=Ticket.Status.VOID, used_at=None)
     return event
 
@@ -157,6 +153,7 @@ def publish_event(*, actor, event_id):
         event.published_at = timezone.now()
         event.full_clean()
         event.save(update_fields=['slug', 'status', 'published_at', 'updated_at'])
+        notify_followers_of_new_event(event=event, actor=actor)
         return event
 
 
@@ -203,7 +200,7 @@ def save_event_from_form(*, actor, event=None, organization=None, fields, capaci
     if changed:
         for rsvp in RSVP.objects.filter(
             event=event, status__in=[RSVP.Status.GOING, RSVP.Status.WAITLISTED, RSVP.Status.INTERESTED]
-        ):
-            Notification.objects.create(user_id=rsvp.user_id, event=event, type=Notification.Type.EVENT_UPDATED,
-                                        payload={'changed': 'time or place'})
+        ).select_related('user__profile'):
+            notify(user=rsvp.user, event=event, type=Notification.Type.EVENT_UPDATED,
+                   payload={'changed': 'time or place'})
     return event

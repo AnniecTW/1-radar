@@ -41,7 +41,7 @@ EVENTS = [
     ('pickup-volleyball', 'Pickup Volleyball', 12, 2, 'ARC Court 3', False, 'drop_in',
      {'interested': 18, 'views': 140, 'likes': 15, 'saves': 9}),
     ('halloween-hack-night', 'Halloween Hack Night', -7, 4, 'Siebel Center, Rm 2405', True, 'rsvp',
-     {'capacity': 70, 'going': 58, 'waitlisted': 0, 'checked_in': 44, 'views': 520, 'likes': 66, 'saves': 48}),
+     {'capacity': 70, 'going': 58, 'waitlisted': 0, 'checked_in': 51, 'views': 520, 'likes': 66, 'saves': 48}),
     ('fall-kickoff-social', 'Fall Kickoff Social', -24, 2, 'Main Quad', True, 'rsvp',
      {'capacity': None, 'going': 40, 'waitlisted': 0, 'checked_in': 27, 'views': 310, 'likes': 35, 'saves': 22}),
     ('engineering-gala', 'Engineering Gala', -14, 3, 'Illini Union Ballroom', True, 'paid',

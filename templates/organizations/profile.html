@@ -65,13 +65,13 @@
   <section>
     <div class="heading-row"><h2>Upcoming events</h2></div>
     {% for event in upcoming_events %}
-      <a class="org-row" href="#"><span class="org-row-info"><b>{{ event.title }}</b><small>{{ event.start_at|date:"D, M j · g:i A" }} · {{ event.location_text }}</small></span></a>
+      <a class="org-row" href="{% url 'event_detail' event.slug %}"><span class="org-row-info"><b>{{ event.title }}</b><small>{{ event.start_at|date:"D, M j · g:i A" }} · {{ event.location_text }}</small></span></a>
     {% empty %}<p class="empty">No upcoming events.</p>{% endfor %}
   </section>
   <section>
     <div class="heading-row"><h2>Past events</h2></div>
     {% for event in past_events %}
-      <a class="org-row" href="#"><span class="org-row-info"><b>{{ event.title }}</b><small>{{ event.start_at|date:"M j, Y" }}</small></span></a>
+      <a class="org-row" href="{% url 'event_detail' event.slug %}"><span class="org-row-info"><b>{{ event.title }}</b><small>{{ event.start_at|date:"M j, Y" }}</small></span></a>
     {% empty %}<p class="empty">No past events.</p>{% endfor %}
   </section>
 </main>

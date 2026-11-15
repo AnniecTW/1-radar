@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from apps.events.models import Event
 from apps.notifications.models import Notification
+from apps.notifications.services import notify
 from apps.events.permissions import user_can_edit_event
 
 from .models import RSVP, Ticket, TrafficSource
@@ -31,12 +32,8 @@ def _cutoff_at(event):
 
 
 def _notify(user, event, notification_type, **payload):
-    return Notification.objects.create(
-        user=user,
-        event=event,
-        type=notification_type,
-        payload=payload,
-    )
+    # Skipped when the user turned this kind of update off in Preferences.
+    return notify(user=user, event=event, type=notification_type, payload=payload)
 
 
 def _going_count(event):
