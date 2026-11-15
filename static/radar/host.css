@@ -203,3 +203,17 @@
 .row-photo img{width:100%;height:100%;object-fit:cover;display:block}
 .row-photo .cover-letter{font-size:28px}
 .row-photo.faded img{filter:grayscale(1)}
+
+/* Hover tips on the analytics charts (chart-tips.js) */
+.chart-tip{position:fixed;z-index:60;left:0;top:0;max-width:280px;padding:8px 12px;border-radius:10px;background:var(--navy);color:#fff;font-size:13.5px;line-height:1.35;box-shadow:0 10px 26px rgba(16,42,76,.28);pointer-events:none;opacity:0;transform:translate(-50%,calc(-100% - 14px));transition:opacity .12s}
+.chart-tip.below{transform:translate(-50%,22px)}
+.chart-tip.show{opacity:1}
+[data-tip]:focus{outline:none}
+[data-tip]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.funnel-row[data-tip]:hover .funnel-track span,.funnel-row[data-tip]:focus-visible .funnel-track span{filter:brightness(1.15)}
+.bars span[data-tip]:hover,.bars span[data-tip]:focus-visible{filter:brightness(1.15)}
+.source-row[data-tip]:hover .source-track span,.source-row[data-tip]:focus-visible .source-track span{background:#3a5a82}
+.line-chart .pt rect{fill:transparent}
+.line-chart .pt line{stroke:var(--line);stroke-width:1.5;stroke-dasharray:4 4;opacity:0}
+.line-chart .pt circle{fill:#fff;stroke:var(--navy);stroke-width:3;opacity:0}
+.line-chart .pt:hover line,.line-chart .pt:focus line,.line-chart .pt:hover circle,.line-chart .pt:focus circle{opacity:1}

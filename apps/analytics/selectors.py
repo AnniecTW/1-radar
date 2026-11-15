@@ -43,6 +43,21 @@ def _nice_ceiling(value):
     return math.ceil(value)
 
 
+# How each funnel step reads in its hover tip: "69 people liked or saved".
+FUNNEL_VERBS = {
+    'Liked or saved': 'liked or saved', 'Saved': 'saved', 'RSVP': 'RSVP’d', 'Checked in': 'checked in',
+    'Interested': 'tapped Interested', 'Ticket clicks': 'clicked the ticket link',
+}
+
+
+def _funnel_tip(index, label, count, views, share):
+    if index == 0:
+        return f'{count} view{"s" if count != 1 else ""} of the event page'
+    who = 'person' if count == 1 else 'people'
+    verb = FUNNEL_VERBS.get(label, label.lower())
+    return f'{count} {who} {verb}' + (f' · {share}% of the {views} views' if share is not None else '')
+
+
 def build_funnel(steps):
     """Bars on a square-root scale so small steps stay visible next to views."""
     top = max((count for _, count in steps), default=0)
@@ -57,22 +72,26 @@ def build_funnel(steps):
             'share': _percent(count, views) if index and views else None,
             'step': index,
         })
+        funnel[-1]['tip'] = _funnel_tip(index, label, count, views, funnel[-1]['share'])
     return funnel
 
 
-def build_running_total(timestamps, start_day, end_day, tz):
-    """A running daily total as SVG polyline points, plus the axis labels."""
+def build_running_total(timestamps, start_day, end_day, tz, unit='so far'):
+    """A running daily total as SVG polyline points, hover points per day, plus the axis labels."""
     if end_day < start_day:
         end_day = start_day
     days = (end_day - start_day).days + 1
     per_day = Counter(timezone.localtime(ts, tz).date() for ts in timestamps)
     before = sum(n for day, n in per_day.items() if day < start_day)
-    totals, running = [], before
+    totals, added, day_list, running = [], [], [], before
     for offset in range(days):
-        running += per_day.get(start_day + timedelta(days=offset), 0)
+        day = start_day + timedelta(days=offset)
+        running += per_day.get(day, 0)
         totals.append(running)
+        added.append(per_day.get(day, 0))
+        day_list.append(day)
     if len(totals) == 1:
-        totals = totals * 2
+        totals, added, day_list = totals * 2, added * 2, day_list * 2
     y_max = _nice_ceiling(max(totals))
     span = len(totals) - 1
     points = ' '.join(
@@ -80,8 +99,20 @@ def build_running_total(timestamps, start_day, end_day, tz):
         f'{CHART_BOTTOM - total / y_max * (CHART_BOTTOM - CHART_TOP):.1f}'
         for i, total in enumerate(totals)
     )
+    step = (CHART_RIGHT - CHART_LEFT) / span
+    dots = [{
+        'x': f'{CHART_LEFT + i * step:.1f}',
+        'y': f'{CHART_BOTTOM - total / y_max * (CHART_BOTTOM - CHART_TOP):.1f}',
+        # Invisible hover band around each day, clipped to the plot.
+        'band_x': f'{max(CHART_LEFT, CHART_LEFT + (i - 0.5) * step):.1f}',
+        'band_w': f'{min(CHART_RIGHT, CHART_LEFT + (i + 0.5) * step) - max(CHART_LEFT, CHART_LEFT + (i - 0.5) * step):.1f}',
+        'tip': f'{day:%b} {day.day} · {total} {unit}' + (f' (+{new} that day)' if new else ''),
+    } for i, (day, total, new) in enumerate(zip(day_list, totals, added))]
+    if len(set(day_list)) == 1:
+        dots = dots[-1:]
     return {
         'points': points,
+        'dots': dots,
         'total': totals[-1],
         'y_max': y_max,
         'y_half': y_max // 2 if y_max % 2 == 0 else y_max / 2,
@@ -105,6 +136,7 @@ def build_checkin_buckets(event: Event, checkin_times):
     peak = max(totals)
     buckets = [{
         'start': event.start_at + timedelta(minutes=i * size),
+        'end': event.start_at + timedelta(minutes=(i + 1) * size),
         'count': n,
         'height': round(n / peak * 160) if peak else 0,
     } for i, n in enumerate(totals)]
@@ -200,11 +232,11 @@ def get_event_analytics_page(event: Event, now, tz) -> dict:
              'note': 'Going but no check-in' if ended else 'Shows after the event', 'tone': 'accent'},
         ]
         funnel = build_funnel([('Views', views), ('Liked or saved', engaged), ('RSVP', going), ('Checked in', checkins)])
-        line_title, line_times = 'RSVPs over time', RSVP.objects.filter(event=event, status=RSVP.Status.GOING).values_list('created_at', flat=True)
+        line_title, line_unit, line_times = 'RSVPs over time', 'RSVPs so far', RSVP.objects.filter(event=event, status=RSVP.Status.GOING).values_list('created_at', flat=True)
     elif kind == 'drop_in':
         kpis.append({'label': 'Interested taps', 'value': interested, 'note': 'Drop-in, no RSVP'})
         funnel = build_funnel([('Views', views), ('Liked or saved', engaged), ('Interested', interested)])
-        line_title, line_times = 'Interested taps over time', RSVP.objects.filter(event=event, status=RSVP.Status.INTERESTED).values_list('created_at', flat=True)
+        line_title, line_unit, line_times = 'Interested taps over time', 'Interested taps so far', RSVP.objects.filter(event=event, status=RSVP.Status.INTERESTED).values_list('created_at', flat=True)
     else:
         ticket_clicks = clicks.get(EventOutboundClick.Kind.TICKETS_LINK, 0)
         kpis += [
@@ -212,13 +244,14 @@ def get_event_analytics_page(event: Event, now, tz) -> dict:
             {'label': 'Contact host clicks', 'value': clicks.get(EventOutboundClick.Kind.CONTACT, 0)},
         ]
         funnel = build_funnel([('Views', views), ('Liked or saved', engaged), ('Ticket clicks', ticket_clicks)])
-        line_title, line_times = 'Ticket link clicks over time', EventOutboundClick.objects.filter(
+        line_title, line_unit, line_times = 'Ticket link clicks over time', 'ticket link clicks so far', EventOutboundClick.objects.filter(
             event=event, kind=EventOutboundClick.Kind.TICKETS_LINK).values_list('created_at', flat=True)
 
     published = event.published_at or event.created_at
     last_day = min(now, event.start_at) if event.start_at else now
     line = build_running_total(
-        list(line_times), timezone.localtime(published, tz).date(), timezone.localtime(last_day, tz).date(), tz
+        list(line_times), timezone.localtime(published, tz).date(), timezone.localtime(last_day, tz).date(), tz,
+        unit=line_unit,
     )
 
     return {

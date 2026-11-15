@@ -1,6 +1,6 @@
 {% extends 'accounts/app_base.html' %}{% load static %}
 {% block title %}{{ event.title }} analytics{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/host.css' %}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/host.css' %}?v=2">{% endblock %}
 {% block content %}
 <nav class="crumbs" aria-label="Breadcrumb"><a href="{% url 'my_events' %}">My Events</a><span aria-hidden="true">›</span><span>{{ event.title }}</span></nav>
 
@@ -33,7 +33,7 @@
   {% if not views_tracked %}<p class="section-note">Views and likes aren't being recorded yet, so the first steps read 0 for now.</p>{% endif %}
   <div class="funnel">
     {% for step in funnel %}
-      <div class="funnel-row">
+      <div class="funnel-row" data-tip="{{ step.tip }}" tabindex="0">
         <span class="funnel-label">{{ step.label }}</span>
         <div class="funnel-track" aria-hidden="true"><span class="step-{{ step.step }}" style="width: {{ step.width }}%"></span></div>
         <span class="funnel-value"><b>{{ step.count }}</b>{% if step.share is not None %} <span class="muted">{{ step.share }}%</span>{% endif %}</span>
@@ -51,6 +51,7 @@
       <g class="axis"><text x="30" y="24" text-anchor="end">{{ line.y_max }}</text><text x="30" y="109" text-anchor="end">{{ line.y_half }}</text><text x="30" y="194" text-anchor="end">0</text>
         <text x="40" y="214">{{ line.start_day|date:"M j" }}</text><text x="315" y="214" text-anchor="middle">{{ line.middle_day|date:"M j" }}</text><text x="590" y="214" text-anchor="end">{{ line.end_day|date:"M j" }}</text></g>
       <polyline points="{{ line.points }}"></polyline>
+      {% for dot in line.dots %}<g class="pt" data-tip="{{ dot.tip }}" tabindex="0" aria-label="{{ dot.tip }}"><rect x="{{ dot.band_x }}" y="20" width="{{ dot.band_w }}" height="170"></rect><line x1="{{ dot.x }}" y1="20" x2="{{ dot.x }}" y2="190"></line><circle cx="{{ dot.x }}" cy="{{ dot.y }}" r="5"></circle></g>{% endfor %}
     </svg>
   </section>
 
@@ -59,7 +60,7 @@
     {% if checkins %}
       <p class="section-note">Every {{ checkins.size }} minutes, {{ event.start_at|date:"g:i A" }} – {{ event.end_at|date:"g:i A" }}.{% if checkins.busiest %} Busiest at {{ checkins.busiest.start|date:"g:i A" }} with {{ checkins.busiest.count }}.{% endif %}</p>
       <div class="bars" role="img" aria-label="{% if checkins.busiest %}Check-ins per {{ checkins.size }} minutes, busiest at {{ checkins.busiest.start|date:'g:i A' }} with {{ checkins.busiest.count }}{% else %}No check-ins yet{% endif %}">
-        {% for bucket in checkins.buckets %}<span title="{{ bucket.start|date:'g:i A' }} · {{ bucket.count }} check-in{{ bucket.count|pluralize }}" style="height: {{ bucket.height }}px"></span>{% endfor %}
+        {% for bucket in checkins.buckets %}<span data-tip="{{ bucket.start|date:'g:i' }} – {{ bucket.end|date:'g:i A' }} · {{ bucket.count }} check-in{{ bucket.count|pluralize }}" tabindex="0" aria-label="{{ bucket.start|date:'g:i' }} – {{ bucket.end|date:'g:i A' }}, {{ bucket.count }} check-in{{ bucket.count|pluralize }}" style="height: {{ bucket.height }}px"></span>{% endfor %}
       </div>
       <div class="bar-axis"><span>{{ event.start_at|date:"g:i" }}</span><span>{{ checkins.middle|date:"g:i" }}</span><span>{{ event.end_at|date:"g:i A" }}</span></div>
       {% if not checkins.busiest %}<p class="section-note">{% if started %}No one has checked in yet.{% else %}Check-ins show up here once the event starts.{% endif %}</p>{% endif %}
@@ -73,7 +74,7 @@
   <section class="host-section" aria-labelledby="sources-heading">
     <h2 id="sources-heading">Where views came from</h2>
     {% for source in sources %}
-      <div class="source-row"><span>{{ source.label }}</span><div class="source-track" aria-hidden="true"><span style="width: {{ source.percent }}%"></span></div><span>{{ source.percent }}%</span></div>
+      <div class="source-row" data-tip="{{ source.label }} · {{ source.count }} view{{ source.count|pluralize }} ({{ source.percent }}%)" tabindex="0"><span>{{ source.label }}</span><div class="source-track" aria-hidden="true"><span style="width: {{ source.percent }}%"></span></div><span>{{ source.percent }}%</span></div>
     {% empty %}
       <p class="section-note">No views recorded yet.</p>
     {% endfor %}
@@ -92,4 +93,5 @@
     </section>
   {% endif %}
 </div>
+<script src="{% static 'radar/chart-tips.js' %}" defer></script>
 {% endblock %}

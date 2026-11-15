@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.accounts.models import Profile
-from apps.analytics.selectors import build_checkin_buckets, build_funnel
+from apps.analytics.selectors import build_checkin_buckets, build_funnel, build_running_total
 from apps.attendance.models import CheckIn
 from apps.engagement.models import EventSave, EventView
 from apps.events.models import Event
@@ -36,6 +36,14 @@ class EventAnalyticsPageTests(HostTestCase):
         self.assertEqual(kpis['No-show rate'], '—')
         self.assertContains(response, 'Export attendee CSV')
         self.assertEqual([s['label'] for s in response.context['sources']], ['Map'])
+
+    def test_page_shows_hover_tips_on_every_chart(self):
+        response = self.page()
+        self.assertContains(response, 'data-tip="1 person checked in · 100% of the 1 views"')
+        self.assertContains(response, 'RSVPs so far')
+        self.assertContains(response, 'data-tip="Map · 1 view (100%)"')
+        self.assertContains(response, 'check-in" tabindex="0"')
+        self.assertContains(response, 'radar/chart-tips.js')
 
     def test_others_get_not_found(self):
         self.client.force_login(self.alice)
@@ -86,3 +94,18 @@ class ChartMathTests(HostTestCase):
         counts = [b['count'] for b in chart['buckets']]
         self.assertEqual(len(counts), 8)
         self.assertEqual((counts[0], counts[1], counts[-1]), (1, 1, 1))
+
+    def test_funnel_rows_have_hover_text(self):
+        funnel = build_funnel([('Views', 520), ('Liked or saved', 69), ('RSVP', 58), ('Checked in', 1)])
+        self.assertEqual(funnel[0]['tip'], '520 views of the event page')
+        self.assertEqual(funnel[1]['tip'], '69 people liked or saved · 13% of the 520 views')
+        self.assertEqual(funnel[3]['tip'], '1 person checked in · 0% of the 520 views')
+
+    def test_running_total_has_a_hover_point_per_day(self):
+        tz = timezone.get_current_timezone()
+        start = timezone.localdate()
+        stamps = [timezone.now(), timezone.now()]
+        line = build_running_total(stamps, start - timedelta(days=2), start, tz, unit='RSVPs so far')
+        self.assertEqual(len(line['dots']), 3)
+        self.assertTrue(line['dots'][0]['tip'].endswith('· 0 RSVPs so far'))
+        self.assertTrue(line['dots'][-1]['tip'].endswith('· 2 RSVPs so far (+2 that day)'))
