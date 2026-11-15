@@ -1,0 +1,41 @@
+{% extends 'accounts/app_base.html' %}{% load static %}
+{% block title %}Snap a flyer{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/host.css' %}">{% endblock %}
+{% block content %}
+<nav class="crumbs" aria-label="Breadcrumb"><a href="{% url 'my_events' %}">My Events</a><span aria-hidden="true">›</span><a href="{% url 'create_event' %}">Create event</a><span aria-hidden="true">›</span><span>Snap a flyer</span></nav>
+<header class="host-header">
+  <div>
+    <h1>Snap a flyer</h1>
+    {% if not needs_campus %}<p class="host-lede">Upload a photo of your flyer and Radar fills in the event form. You check every field before anything is published.</p>{% endif %}
+  </div>
+</header>
+
+{% if needs_campus %}
+  <section class="gate">
+    <h2>Verify your campus email to host events</h2>
+    <p>Hosting is open to verified students and staff, so attendees know events come from real campus members.</p>
+    <a class="host-button solid" href="{% url 'account_preferences' %}">Add a campus email</a>
+  </section>
+{% else %}
+  {% if error %}<div class="form-alert" role="alert">{{ error }}</div>{% endif %}
+  <form class="flyer-upload" method="post" enctype="multipart/form-data" action="{% url 'upload_flyer' %}" data-flyer-form>
+    {% csrf_token %}
+    <label class="flyer-drop" for="flyer-input">
+      <img class="flyer-thumb" alt="" hidden data-flyer-thumb>
+      <span class="flyer-drop-text" data-flyer-text>
+        <i data-lucide="camera" aria-hidden="true"></i>
+        <b>Take a photo or choose an image</b>
+        <small>JPG, PNG or WebP, up to 10 MB. A straight, well-lit photo reads best.</small>
+      </span>
+    </label>
+    <input class="visually-hidden" type="file" id="flyer-input" name="flyer" accept="image/jpeg,image/png,image/webp" capture="environment" required>
+    <p class="field-help">Flyer reads left today: {{ uploads_left }} of {{ daily_limit }}. Please don't upload flyers with personal phone numbers or other private details.</p>
+    <div class="action-buttons">
+      <a class="host-button" href="{% url 'create_event' %}">Use the form instead</a>
+      <button class="host-button solid" type="submit" data-flyer-submit {% if not uploads_left %}disabled{% endif %}>Read flyer</button>
+    </div>
+    <p class="flyer-status" role="status" aria-live="polite" data-flyer-status></p>
+  </form>
+  <script src="{% static 'radar/flyer-upload.js' %}" defer></script>
+{% endif %}
+{% endblock %}

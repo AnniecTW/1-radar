@@ -217,3 +217,23 @@
 .line-chart .pt line{stroke:var(--line);stroke-width:1.5;stroke-dasharray:4 4;opacity:0}
 .line-chart .pt circle{fill:#fff;stroke:var(--navy);stroke-width:3;opacity:0}
 .line-chart .pt:hover line,.line-chart .pt:focus line,.line-chart .pt:hover circle,.line-chart .pt:focus circle{opacity:1}
+
+/* Snap a flyer */
+.snap-card{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 20px;padding:16px 20px;border:1px solid var(--line);border-radius:16px;background:var(--white)}
+.snap-card p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.flyer-upload{display:flex;flex-direction:column;gap:14px;max-width:560px}
+.flyer-drop{display:flex;align-items:center;justify-content:center;min-height:260px;padding:20px;border:2px dashed #cdbfb2;border-radius:18px;background:var(--white);text-align:center;cursor:pointer}
+.flyer-drop:hover,.flyer-upload:focus-within .flyer-drop{border-color:var(--accent)}
+.flyer-drop-text{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--body)}
+.flyer-drop-text small{color:var(--muted)}
+.flyer-thumb{max-width:100%;max-height:420px;border-radius:12px}
+.flyer-status{min-height:1.4em;margin:0;color:var(--muted);font-size:14px}
+.flyer-original img{display:block;width:100%;border:1px solid var(--line);border-radius:12px}
+.flyer-original p{margin:8px 0 0;color:var(--muted);font-size:13px}
+.field.review-check input,.field.review-check select,.field.review-check textarea{border-color:#c58a00;background:#fffaf0}
+.field.review-missing input,.field.review-missing select,.field.review-missing textarea{border-color:var(--error)}
+fieldset.review-check,fieldset.review-missing{padding:10px 12px;border-radius:12px;background:#fffaf0}
+.review-note{color:#8a5a00}
+.review-missing .review-note{color:var(--error)}
+.message.warning{background:#fdf0dc;color:#7a4a00}
+.field-row:has(.review-note){align-items:flex-start}

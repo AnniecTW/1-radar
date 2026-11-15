@@ -171,6 +171,11 @@ CLOUDFLARE_API_TOKEN = os.environ.get('CLOUDFLARE_API_TOKEN', '')
 CLOUDFLARE_EMBEDDING_MODEL = os.environ.get('CLOUDFLARE_EMBEDDING_MODEL', '@cf/baai/bge-small-en-v1.5')
 CLOUDFLARE_TIMEOUT = float(os.environ.get('CLOUDFLARE_TIMEOUT', '5'))
 CLOUDFLARE_SEMANTIC_MIN_SIMILARITY = float(os.environ.get('CLOUDFLARE_SEMANTIC_MIN_SIMILARITY', '0.58'))
+# Snap-a-Flyer: vision model that reads event flyers (same Cloudflare account and token).
+CLOUDFLARE_VISION_MODEL = os.environ.get('CLOUDFLARE_VISION_MODEL', '@cf/moondream/moondream3.1-9B-A2B')
+FLYER_TIMEOUT = float(os.environ.get('FLYER_TIMEOUT', '25'))
+FLYER_DAILY_LIMIT = int(os.environ.get('FLYER_DAILY_LIMIT', '10'))
+FLYER_MAX_BYTES = 10 * 1024 * 1024
 
 # User uploads (organization logos, event covers).
 # With the SUPABASE_S3_* keys in .env they go to the shared Supabase Storage bucket, so everyone

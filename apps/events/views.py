@@ -272,6 +272,43 @@ def _pending_cover(form):
     return {'url': url, 'token': signing.dumps(url, salt=PENDING_COVER_SALT)}
 
 
+def _review_flyer(request, event):
+    """Snap-a-Flyer: the host's flyer being turned into this new event, if any."""
+    if event is not None:
+        return None
+    from apps.flyers.services import get_flyer_for_review
+
+    flyer_id = request.POST.get('flyer') if request.method == 'POST' else request.GET.get('flyer')
+    return get_flyer_for_review(request.user, flyer_id) if flyer_id else None
+
+
+def _link_flyer(flyer, event, form):
+    from apps.flyers.services import link_flyer_to_event
+
+    try:
+        link_flyer_to_event(flyer=flyer, event=event, cleaned_data=form.cleaned_data)
+    except Exception:
+        # The event is saved either way; only the flyer bookkeeping is lost.
+        logger.exception('Linking flyer %s to event %s failed', flyer.pk, event.pk)
+
+
+def _flyer_cover(flyer):
+    """Attach the flyer photo as the cover image until the host picks another."""
+    from django.core import signing
+
+    from .forms import PENDING_COVER_SALT
+
+    if not flyer or not flyer.image:
+        return None
+    return {'url': flyer.image, 'token': signing.dumps(flyer.image, salt=PENDING_COVER_SALT)}
+
+
+def _flyer_review(flyer):
+    if not flyer or flyer.status != flyer.Status.SUCCEEDED:
+        return None
+    return (flyer.extracted_data or {}).get('review') or {}
+
+
 def _event_form_page(request, event):
     """Shared by Create Event and Edit Event (FR-17, FR-22)."""
     from apps.accounts.views import get_account_shell_context
@@ -290,6 +327,7 @@ def _event_form_page(request, event):
     action = request.POST.get('action', 'save')
     is_published = bool(event and event.status == Event.Status.PUBLISHED)
     form_kwargs = {'host_choices': choices, 'tz': tz}
+    flyer = _review_flyer(request, event)
 
     if request.method == 'POST':
         publishing = action == 'publish' or is_published
@@ -299,6 +337,8 @@ def _event_form_page(request, event):
             form.fields['host'].initial = 'me' if not event.organization_id else event.organization.slug
         if form.is_valid():
             saved = _save(request, form, event, organizations)
+            if saved and flyer:
+                _link_flyer(flyer, saved, form)
             if saved and is_published:
                 messages.success(request, f'Changes to {saved.title} are saved.')
                 return redirect('my_events')
@@ -321,6 +361,9 @@ def _event_form_page(request, event):
                 draft.fields['host'].initial = form.fields['host'].initial
             if draft.is_valid():
                 saved = _save(request, draft, event, organizations)
+                if saved and flyer:
+                    _link_flyer(flyer, saved, draft)
+                    flyer = None
                 if saved:
                     event = saved
                     context['event'] = saved
@@ -329,6 +372,10 @@ def _event_form_page(request, event):
         initial = EventForm.initial_from_event(event, tz) if event else {}
         if not event and request.GET.get('host') in dict(choices):
             initial['host'] = request.GET['host']
+        if flyer:
+            from apps.flyers.services import form_initial
+
+            initial.update(form_initial(flyer, choices))
         form = EventForm(initial=initial, **form_kwargs)
         if event:
             form.fields['host'].disabled = True
@@ -336,7 +383,9 @@ def _event_form_page(request, event):
     center = get_campus_center()
     context.update({
         'form': form,
-        'pending_cover': _pending_cover(form) if request.method == 'POST' else None,
+        'pending_cover': _pending_cover(form) if request.method == 'POST' else _flyer_cover(flyer),
+        'flyer': flyer,
+        'flyer_review': _flyer_review(flyer) if request.method == 'GET' else None,
         'is_published': is_published,
         'organizations': organizations,
         'verified_slugs': [org.slug for org in organizations if org.is_verified],

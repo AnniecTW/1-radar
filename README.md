@@ -46,6 +46,7 @@
 **For hosts**
 
 - Create Event: a manual form with draft and publish, map pin, cover image, and RSVP, drop-in or paid options
+- **Snap a flyer (AI):** upload a photo of a flyer and the Create Event form fills itself in, with uncertain fields highlighted for review
 - My Dashboard: upcoming events, drafts, past events and check-in assignments, plus edit, publish and cancel
 - Event analytics: views, likes, saves, RSVPs, attendance rate, a funnel, charts, traffic sources and audience breakdown, plus attendee CSV export
 - Organization profiles with Owner, Admin and Check-in Staff roles, and a verified badge that Radar admins approve
@@ -206,6 +207,29 @@ Radar's AI feature is **AI search**, which finds events by meaning instead of ex
 
 New and edited events get embeddings automatically when their searchable text changes. If Cloudflare is unavailable or the keys are missing, the page says "AI search is temporarily unavailable" and shows keyword matches instead, and saving events still works. Each AI search makes one call to Cloudflare, which has usage limits.
 
+### Snap a flyer
+
+Snap a flyer reads an event flyer with a vision model (`@cf/moondream/moondream3.1-9B-A2B` on Cloudflare Workers AI) and fills in the Create Event form. It uses the same `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` as AI search.
+
+1. Load the campus buildings once, so flyer locations like "SDRP", "ECEB" or "Smith Music Hall" land on the right building. This looks up about 25 addresses with MapTiler (`MAPTILER_API_KEY`) and is safe to run again:
+
+   ```sh
+   python manage.py seed_campus_buildings --dry-run
+   python manage.py seed_campus_buildings
+   ```
+
+2. Check the connection with a flyer photo. This makes one Cloudflare call per image and saves nothing:
+
+   ```sh
+   python manage.py extract_flyer path/to/flyer.jpg
+   ```
+
+3. Sign in as a campus-verified user, open **Create Event**, and select **Snap a flyer**.
+4. Upload a JPG, PNG or WebP photo (up to 10 MB). After a few seconds you land on the Create Event form, filled in from the flyer, with the flyer beside it. Red fields weren't on the flyer; amber fields need a check.
+5. Fix anything that's wrong, then save a draft or publish. Nothing is published until you select Publish.
+
+Each user can read 10 flyers per 24 hours (`FLYER_DAILY_LIMIT`). If Cloudflare is unavailable or the model can't read the flyer, the form opens empty with the flyer attached as the cover image. See [README_AI.md](README_AI.md) for how it works.
+
 **On a deployed server:** add both Cloudflare values as server secrets, reload the app, and make sure the server can reach `api.cloudflare.com` over HTTPS.
 
 ## Run the tests
@@ -218,4 +242,10 @@ Tests create a temporary database, so your `DATABASE_URL` user needs permission 
 
 ```sh
 python manage.py test apps.events.tests.test_semantic_search
+```
+
+To run only the Snap a flyer tests (the model call is mocked, so no Cloudflare keys are needed):
+
+```sh
+python manage.py test apps.flyers
 ```

@@ -31,6 +31,7 @@ urlpatterns = [
     path('accounts/', include('apps.accounts.urls')),
     path('onboarding/', include('apps.interests.urls')),
     path('', include('apps.rsvps.urls')),
+    path('', include('apps.flyers.urls')),
     path('', include('apps.events.urls')),
     path('', include('apps.analytics.urls')),
     path('', include('apps.engagement.urls')),

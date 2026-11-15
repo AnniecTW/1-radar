@@ -26,8 +26,17 @@
 {% if form.non_field_errors %}<div class="form-alert" role="alert">{% for error in form.non_field_errors %}{{ error }} {% endfor %}</div>
 {% elif form.errors and not saved_as_draft %}<div class="form-alert" role="alert">Some fields need a look. They're highlighted below.</div>{% endif %}
 
+{% if flyer and flyer_review is not None %}<div class="form-alert warn" role="status">We filled this in from your flyer. {% if flyer_review %}Check the highlighted fields{% else %}Check it against the flyer{% endif %}, then save a draft or publish.</div>
+{% elif not event and not flyer %}
+<section class="snap-card">
+  <div><b>Have a flyer already?</b><p>Snap a photo and Radar fills in this form for you.</p></div>
+  <a class="host-button" href="{% url 'upload_flyer' %}"><i data-lucide="camera" aria-hidden="true"></i> Snap a flyer</a>
+</section>
+{% endif %}
+
 <form class="event-form" method="post" enctype="multipart/form-data" action="{% if event %}{% url 'edit_event' event.pk %}{% else %}{% url 'create_event' %}{% endif %}" novalidate>
   {% csrf_token %}
+  {% if flyer %}<input type="hidden" name="flyer" value="{{ flyer.pk }}">{% endif %}
   <div class="event-form-grid">
     <div class="event-fields">
 
@@ -141,6 +150,13 @@
     </div>
 
     <aside class="event-rail">
+      {% if flyer %}
+        <section class="flyer-original">
+          <h2>Your flyer</h2>
+          <a href="{{ flyer.image }}" target="_blank" rel="noopener"><img src="{{ flyer.image }}" alt="The flyer you uploaded"></a>
+          <p>Compare the form with your flyer. Nothing is published until you select Publish.</p>
+        </section>
+      {% endif %}
       <section>
         <h2>How it will look</h2>
         <article class="preview-card" aria-live="off">
@@ -186,5 +202,6 @@
 {{ venue_points|json_script:"venue-points" }}
 {{ map_center|json_script:"map-center" }}
 <script src="{% static 'radar/event-form.js' %}" defer></script>
+{% if flyer_review %}{{ flyer_review|json_script:"flyer-review" }}<script src="{% static 'radar/flyer-review.js' %}" defer></script>{% endif %}
 {% endif %}
 {% endblock %}
