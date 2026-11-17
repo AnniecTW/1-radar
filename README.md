@@ -11,9 +11,21 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-PostGIS%20%2B%20pgvector-102A4C?logo=postgresql&logoColor=white)
 ![AI](https://img.shields.io/badge/AI%20search-Cloudflare%20Workers%20AI-C65024?logo=cloudflare&logoColor=white)
 
-[About](#about-radar) | [Features](#main-features) | [Why Radar](#why-radar) | [Install](#installation) | [Environment](#configure-environment-variables) | [Database](#set-up-the-database) | [Run](#run-the-application) | [AI Search](#use-the-ai-functionality)
+[P2-A3 Guide](#p2-a3-submission-guide) | [About](#about-radar) | [Features](#main-features) | [Why Radar](#why-radar) | [Install](#installation) | [Environment](#configure-environment-variables) | [Database](#set-up-the-database) | [Run](#run-the-application) | [AI Search](#use-the-ai-functionality)
 
 </div>
+
+## P2-A3 Submission Guide
+
+| Requirement | Where to find it |
+|---|---|
+| 1. Updated Product Scope | [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md) |
+| 2. Functional Django Foundation | Django project in [radar/](radar/), apps and models in [apps/](apps/), templates in [templates/](templates/). Try the workflow below |
+| 3. Initial AI Implementation | [README_AI.md](README_AI.md) for the plan and test results, and [Use the AI functionality](#use-the-ai-functionality) to try it |
+| 4. Development Progress and Roadmap | [ROADMAP.md](ROADMAP.md) |
+| 5. GitHub Submission | This README: [Install](#installation), [Database](#set-up-the-database), [Run](#run-the-application) |
+
+**Database-backed workflow to try:** sign in as `alex.chen@demo.example.edu` → **Create Event** → fill in the form and select **Publish** → the event appears on the home page. Then sign in as `profile-demo-host@demo.example.edu`, open the event and **RSVP**. The RSVP shows up on that user's Profile and in Alex's **My Dashboard → Analytics**.
 
 ## About Radar
 
@@ -139,6 +151,8 @@ The server reads `.env` only when it starts, so restart it after any change.
 ## Set up the database
 
 Radar needs PostgreSQL with the PostGIS and pgvector extensions, and a connection that supports SSL. Choose one option.
+
+> **For the instructor:** we can send a ready-to-use `.env` privately (by email or Canvas message) on request. It connects to the shared demo database, which already has the demo data and AI search, so Option A needs no extra setup. Without it, Option B works with any free Supabase project.
 
 **Option A: use the team's shared database.** Ask a teammate for the `DATABASE_URL` and add it to `.env`. Its tables and demo data already exist, and everyone sees the same data. After pulling new code, run `python manage.py migrate` to apply any new migrations.
 
