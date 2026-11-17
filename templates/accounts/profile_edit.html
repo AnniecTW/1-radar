@@ -1,0 +1,44 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}Edit profile{% endblock %}
+{% block content %}
+<section class="banner slim">
+  <div class="banner-copy">
+    <a class="back-link" href="{% url 'profile' %}">‹ Back to Profile</a>
+    <h1>Edit profile</h1>
+  </div>
+  <div class="banner-actions">
+    <a class="banner-button" href="{% url 'profile' %}">Cancel</a>
+    <button class="banner-button solid" type="submit" form="profile-form">Save changes</button>
+  </div>
+</section>
+
+<main class="narrow">
+  <p class="section-note">Your display name appears on events you host. When you RSVP, that event's host can see your name and email. Your bio and major aren't shown to other people.</p>
+  <form class="stack" id="profile-form" method="post" novalidate>
+    {% csrf_token %}
+    <label class="field">
+      <span>Display name</span>
+      <input type="text" name="display_name" value="{{ form.display_name.value|default_if_none:'' }}" maxlength="80" required>
+      {% for error in form.display_name.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    </label>
+    <label class="field">
+      <span>Bio <span class="hint">(optional)</span></span>
+      <textarea name="bio" rows="4" maxlength="500" data-counter="bio-count" placeholder="What are you into on campus?">{{ form.bio.value|default_if_none:'' }}</textarea>
+      <small class="hint" id="bio-count" aria-live="polite">Up to 500 characters</small>
+      {% for error in form.bio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+    </label>
+    <div class="field-row">
+      <label class="field">
+        <span>Major <span class="hint">(optional)</span></span>
+        <input type="text" name="major" value="{{ form.major.value|default_if_none:'' }}" maxlength="120" placeholder="e.g. Computer Science">
+        {% for error in form.major.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      </label>
+      <label class="field">
+        <span>Graduation year <span class="hint">(optional)</span></span>
+        <input type="text" name="graduation_year" value="{{ form.graduation_year.value|default_if_none:'' }}" inputmode="numeric" maxlength="4" placeholder="e.g. 2028">
+        {% for error in form.graduation_year.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      </label>
+    </div>
+  </form>
+</main>
+{% endblock %}

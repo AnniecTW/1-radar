@@ -1,0 +1,24 @@
+{% for follow in rows %}
+  <div class="follow-row">
+    <div class="follow-copy">
+      <b>{{ follow.organization.name }}</b>
+      <small>{{ follow.organization.follower_count }} follower{{ follow.organization.follower_count|pluralize }} · {% if follow.notify %}{{ follow.upcoming_count }} upcoming{% else %}muted{% endif %}</small>
+    </div>
+    <form class="follow-actions" method="post" action="{% url 'update_followed_organization' follow.organization.slug %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      {% if follow.notify %}
+        <button class="bell-button" type="submit" name="action" value="mute" aria-label="Mute {{ follow.organization.name }}" title="Notifications on. Select to mute.">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+        </button>
+      {% else %}
+        <button class="bell-button off" type="submit" name="action" value="unmute" aria-label="Unmute {{ follow.organization.name }}" title="Muted. Select to turn notifications on.">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4M4 4l16 16"/></svg>
+        </button>
+      {% endif %}
+      {% if not compact %}<button class="text-button" type="submit" name="action" value="unfollow" aria-label="Unfollow {{ follow.organization.name }}">Unfollow</button>{% endif %}
+    </form>
+  </div>
+{% empty %}
+  <p class="empty">You're not following any organizations yet.</p>
+{% endfor %}

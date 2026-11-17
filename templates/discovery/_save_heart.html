@@ -1,0 +1,11 @@
+{% comment %}Heart toggle on a card's photo. Guests get the sign-in prompt (FR-52); signed-in users save in place (engagement.js). Needs event, saved_event_ids.{% endcomment %}
+{% if user.is_authenticated %}
+<form class="card-save-form" method="post" action="{% url 'save_event' event.pk %}" data-engage>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <input type="hidden" name="saved" value="{% if event.pk in saved_event_ids %}0{% else %}1{% endif %}" data-engage-value>
+  <button class="save" type="submit" aria-pressed="{% if event.pk in saved_event_ids %}true{% else %}false{% endif %}" aria-label="Save {{ event.title }}"><i data-lucide="heart" aria-hidden="true"></i></button>
+</form>
+{% else %}
+<button class="save" type="button" data-gate data-prompt="Sign in to save {{ event.title }}" aria-label="Save {{ event.title }}"><i data-lucide="heart" aria-hidden="true"></i></button>
+{% endif %}

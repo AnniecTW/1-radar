@@ -1,0 +1,272 @@
+/* Explore Map uses the full content area beside the shared sidebar. */
+.shell:has(.explore-page){width:100%;max-width:none;margin:0}
+.main:has(.explore-page){min-width:0;padding:18px 24px 32px 0;gap:14px}
+.explore-page{width:100%;max-width:none;margin:0;padding:0 8px 24px 0;color:#18293d}
+.explore-heading{margin:0 0 14px}
+.explore-heading{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.explore-heading .eyebrow{margin:0 0 4px;color:#a3360a;font-size:11px;font-weight:700;letter-spacing:.14em}
+.explore-heading h1{margin:0;font:700 clamp(28px,2.6vw,38px)/1.12 'Outfit',sans-serif;letter-spacing:-.025em;color:#102a4c}
+.explore-heading>p:last-child{margin:6px 0 0;color:#596577;font-size:14px}
+.map-search-tip{display:flex;align-items:center;gap:12px;max-width:290px;padding:13px 17px;border-radius:15px;background:#fbf8f3;color:#102a4c}
+.map-search-tip>i{width:24px;height:24px;color:#c2410c}.map-search-tip b,.map-search-tip small{display:block}.map-search-tip b{font-size:12px}.map-search-tip small{margin-top:3px;color:#596577;font-size:11px}
+.map-filter-form{margin:0 0 14px}.map-search-box{display:flex;align-items:center;gap:12px;width:min(680px,100%);height:48px;padding:0 7px 0 15px;border:1px solid #e8ddd2;border-radius:15px;background:#fffdf9;box-shadow:0 3px 12px #28221a0a}
+.map-search-box>i{width:18px;height:18px;color:#596577}.map-search-box input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#18293d;font:500 14px 'DM Sans',sans-serif}.map-search-box input::placeholder{color:#778091}.map-search-box button{display:grid;place-items:center;width:38px;height:38px;border:0;border-radius:12px;background:#c2410c;color:#fff;cursor:pointer}.map-search-box button i{width:18px;height:18px}
+.map-filters{display:flex;align-items:center;gap:9px;margin:10px 0 0;flex-wrap:wrap}
+.map-filters label{display:grid;gap:5px;color:#596577;font-size:12px;font-weight:600}
+.map-filters select{min-width:155px;height:42px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;padding:0 13px;color:#18293d;font:500 13px 'DM Sans',sans-serif;box-shadow:0 2px 7px #28221a08}
+.filter-select{display:flex!important;align-items:center;gap:8px!important;grid-template-columns:auto auto}.filter-select>i{width:16px;height:16px;color:#c2410c}.filter-toggle{display:inline-flex!important;align-items:center;gap:8px!important;min-height:42px;padding:0 14px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;color:#18293d!important;font-size:13px!important;cursor:pointer}.filter-toggle input{accent-color:#c2410c}.filter-toggle i{width:15px;height:15px;color:#c2410c}
+.map-filters select:focus{outline:2px solid #c6502440;border-color:#c65024}
+.map-filters .quick-filter{height:42px;padding:0 14px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;color:#18293d;font:500 12px 'DM Sans',sans-serif;cursor:pointer}.map-filters .quick-filter:hover,.map-filters .quick-filter.selected{border-color:#e9a689;background:#fbf0e9;color:#c2410c}
+.more-filter{position:relative}.more-filter summary{display:flex;align-items:center;height:42px;padding:0 13px;border:1px solid #e5ded5;border-radius:12px;background:#fffdf9;color:#18293d;font-size:12px;cursor:pointer;list-style:none;white-space:nowrap}.more-filter summary::-webkit-details-marker{display:none}.more-filter[open] .filter-toggle{position:absolute;z-index:5;top:48px;right:0;box-shadow:0 8px 24px #18293d20;white-space:nowrap}
+.explore-layout{display:grid;grid-template-columns:minmax(0,1.68fr) minmax(340px,1fr);gap:16px;height:calc(100vh - 230px);min-height:470px;max-height:850px}
+.map-panel{position:relative;min-width:0;min-height:0;overflow:hidden;border:1px solid #e8e0d7;border-radius:19px;background:#e9dfd3;box-shadow:0 5px 18px #28221a10}
+#explore-map{position:absolute;inset:0;width:100%;height:100%}
+.map-panel .maplibregl-ctrl-group{overflow:hidden;border-radius:11px;box-shadow:0 2px 10px #18293d25}
+.search-area{position:absolute;z-index:2;top:15px;left:50%;transform:translateX(-50%);border:1px solid #ffffff80;border-radius:24px;background:#102a4c;color:#fff;padding:11px 19px;font:600 13px 'DM Sans',sans-serif;box-shadow:0 4px 14px #102a4c35;cursor:pointer;white-space:nowrap}
+.search-area:hover{background:#1d3b63}.search-area:disabled{opacity:.75;cursor:wait}
+.search-area{display:inline-flex;align-items:center;gap:8px}.search-area i{width:15px;height:15px}.map-controls{position:absolute;right:14px;bottom:22px;z-index:2;display:flex;flex-direction:column;overflow:hidden;border:1px solid #e8e0d7;border-radius:12px;background:#fffdf9;box-shadow:0 3px 12px #18293d20}.map-controls button{display:grid;place-items:center;width:42px;height:42px;border:0;background:transparent;color:#102a4c;cursor:pointer}.map-controls button+button{border-top:1px solid #eee6dc}.map-controls button:hover{background:#fbf0e9;color:#c2410c}.map-controls i{width:17px;height:17px}
+.map-status{position:absolute;z-index:2;left:14px;bottom:14px;max-width:calc(100% - 28px);padding:10px 13px;border:1px solid #eee6dc;border-radius:11px;background:#fffdf9;color:#596577;font-size:12px;box-shadow:0 3px 12px #18293d18}
+.event-results{display:flex;min-width:0;min-height:0;flex-direction:column;overflow:hidden;border:1px solid #eee6dc;border-radius:19px;background:#fffdf9;box-shadow:0 5px 18px #28221a0c}
+.results-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 17px 13px;border-bottom:1px solid #eee6dc}
+.results-heading h2{margin:0;color:#102a4c;font:600 18px 'Outfit',sans-serif}
+.results-heading span{color:#687181;font-size:12px;white-space:nowrap}
+#event-list{min-height:0;overflow:auto;padding:10px}
+.empty-results{padding:30px 15px;text-align:center;color:#687181}
+.marker-active{filter:drop-shadow(0 0 7px #c2410c);transform:scale(1.35)}
+.map-popup{min-width:180px;color:#18293d;font:13px 'DM Sans',sans-serif}.map-popup p{margin:6px 0;color:#596577}.map-popup a{color:#c2410c;font-weight:600}
+@media(max-width:1050px){.main:has(.explore-page){padding-right:16px}.explore-layout{grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:12px}}
+@media(max-width:760px){.main:has(.explore-page){padding:14px}.explore-page{padding:0}.explore-heading{align-items:flex-start}.map-search-tip{display:none}.explore-layout{height:auto;max-height:none;min-height:0;grid-template-columns:minmax(0,1fr)}.map-panel{height:min(56vh,540px);min-height:360px}.event-results{max-height:58vh;min-height:230px}.map-filters{gap:8px}.map-filters label{flex:1;min-width:140px}.map-filters select{width:100%;min-width:0}.results-heading{padding:13px 14px 11px}}
+@media(max-width:420px){.explore-heading h1{font-size:27px}.explore-heading>p:last-child{font-size:13px}.map-filters label{min-width:calc(50% - 5px)}.map-panel{min-height:330px}}
+
+/* Short, state-based feedback; no perpetual decorative motion. */
+.map-search-box:focus-within{border-color:#c2410c;box-shadow:0 0 0 3px #c2410c22}
+.map-search-box button,.map-controls button{transition:background .18s,transform .18s,color .18s}
+.map-search-box button:hover{background:#a3360a;transform:translateY(-1px)}
+.map-search-box button:active,.map-filters button:active{transform:scale(.97)}
+.map-filters select:focus-visible,.map-filters button:focus-visible,.filter-toggle:focus-within,.more-filter summary:focus-visible{outline:2px solid #c2410c;outline-offset:2px;box-shadow:0 0 0 3px #c2410c1a}.filter-toggle:has(input:checked){border-color:#e9a689;background:#fbf0e9;color:#c2410c!important}
+.map-filters .quick-filter{display:inline-flex;align-items:center;gap:7px;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.map-filters .quick-filter i{width:15px;height:15px}.map-filters .quick-filter:hover{transform:translateY(-1px)}.map-filters .quick-filter:active{transform:scale(.98)}
+.search-area:not([hidden]){animation:search-area-in .2s ease-out both}.search-area:focus-visible{outline:3px solid #e9a689;outline-offset:3px}.search-area.is-loading i{animation:soft-pulse .9s ease-in-out infinite alternate}
+.maplibregl-marker{cursor:pointer;transition:filter .18s}.maplibregl-marker.marker-enter{animation:marker-in .2s ease-out both;animation-delay:var(--marker-delay,0ms)}
+.maplibregl-marker.marker-active{filter:drop-shadow(0 0 5px #c2410c);z-index:5!important}.maplibregl-marker.marker-active svg{transform:scale(1.12);transform-origin:center}.maplibregl-marker:focus-visible{outline:3px solid #c2410c;outline-offset:3px;border-radius:50%}
+.event-skeletons{display:grid;gap:10px;padding:2px}.event-skeleton{display:grid;grid-template-columns:94px 1fr;gap:12px;padding:9px;border:1px solid #eee6dc;border-radius:14px}.event-skeleton i,.event-skeleton b{display:block;border-radius:8px;background:linear-gradient(90deg,#eee9e3 25%,#f8f5f0 40%,#eee9e3 65%);background-size:300% 100%;animation:skeleton-shimmer 1.2s ease-in-out infinite}.event-skeleton i{height:82px}.event-skeleton span{display:grid;align-content:center;gap:9px}.event-skeleton b{height:10px}.event-skeleton b:first-child{width:75%}.event-skeleton b:last-child{width:55%}
+.empty-results{display:grid;justify-items:center;gap:8px;padding:40px 18px;text-align:center;color:#687181}.empty-results i{width:28px;height:28px;color:#c2410c}.empty-results b{color:#102a4c}.empty-results p{margin:0;font-size:12px}.empty-results a{margin-top:4px;color:#c2410c;font-size:13px;font-weight:600}
+@keyframes search-area-in{from{opacity:0;translate:0 5px}to{opacity:1;translate:0 0}}@keyframes marker-in{from{opacity:0}to{opacity:1}}@keyframes skeleton-shimmer{to{background-position:-150% 0}}@keyframes soft-pulse{to{opacity:.45}}
+@media(prefers-reduced-motion:reduce){.explore-page *, .explore-page *::before,.explore-page *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Match the reference's hierarchy: global search, unified hero, then filters. */
+body:has(.explore-page){background:#f4eee8}
+.main:has(.explore-page){padding-top:14px;gap:14px}
+.main:has(.explore-page) .topbar{gap:16px;min-height:52px;margin-bottom:2px}
+.main:has(.explore-page) .topbar .search{min-height:46px;padding:0 15px;border:1px solid #e8ddd2;border-radius:15px;background:#fff;color:#5a6070;box-shadow:0 2px 8px #28221a08}
+.main:has(.explore-page) .topbar .search:focus-within{border-color:#d99a7b;box-shadow:0 0 0 3px #c2410c1a}
+.main:has(.explore-page) .topbar .search input::placeholder{color:#737887}
+.main:has(.explore-page) .topbar .icon-button{border-radius:13px;transition:background .18s,color .18s}
+.main:has(.explore-page) .topbar .icon-button:hover{background:#f7e4d8;color:#c2410c}
+.main:has(.explore-page) .topbar .profile-menu summary{padding:0 8px;border-radius:14px}
+.main:has(.explore-page) .topbar .profile-menu summary:hover{background:#fff}
+.explore-page{padding:0 8px 24px 0}
+.map-filter-form{margin:0 0 14px}
+.explore-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(245px,310px);gap:28px;align-items:center;padding:20px 22px;margin:0 0 12px;border:1px solid #eee6dc;border-radius:20px;background:linear-gradient(115deg,#fff 0%,#fff 72%,#fdfaf7 100%);box-shadow:0 4px 16px #28221a08}
+.hero-copy{min-width:0}.explore-hero .eyebrow{margin:0 0 3px;color:#c2410c;font-size:10px;font-weight:700;letter-spacing:.14em}
+.explore-hero h1{margin:0;color:#102a4c;font:700 clamp(29px,2.7vw,40px)/1.08 'Playfair Display',serif;letter-spacing:-.03em}
+.hero-description{margin:5px 0 13px;color:#5a6070;font-size:14px}
+.map-search-box{width:min(100%,760px);height:48px;padding:0 7px 0 15px;border-color:#e8ddd2;border-radius:15px;background:#fff;box-shadow:0 2px 9px #28221a0b}
+.map-search-box>i{color:#c2410c}.map-search-box input{font-size:14px}.map-search-box button{width:48px;height:38px;border-radius:12px;background:#c2410c}.map-search-box button:hover{background:#a3360a}
+.map-search-tip{min-height:80px;max-width:none;padding:17px 18px;border:1px solid #eee6dc;border-radius:16px;background:#fbf8f3;color:#102a4c}
+.map-search-tip>i{width:30px;height:30px;flex:none;padding:6px;border-radius:50%;background:#f7e4d8;color:#c2410c}
+.map-search-tip b{font-size:13px}.map-search-tip small{font-size:11px;line-height:1.4}
+.map-filters{display:flex;flex-wrap:nowrap;gap:8px;margin:0 0 14px;overflow:visible;padding:1px 1px 5px}
+.map-filters>*{flex:none}
+.map-filters select,.filter-toggle,.map-filters .quick-filter,.more-filter summary{height:42px;min-height:42px;border-color:#e8ddd2;border-radius:13px;background:#fff;color:#3d4354;box-shadow:0 2px 7px #28221a06}
+.filter-select{gap:7px!important;padding:0 10px;border:1px solid #e8ddd2;border-radius:13px;background:#fff;box-shadow:0 2px 7px #28221a06}
+.filter-select select{min-width:0;height:40px;border:0;background:transparent;padding:0 4px;box-shadow:none;color:#3d4354}
+.filter-select.date-filter select{min-width:120px}
+.filter-select>i,.filter-toggle i,.quick-filter i,.more-filter summary i{color:#596577}
+.filter-toggle:has(input:checked),.quick-filter.selected{border-color:#e9b9a1!important;background:#fbf0e9!important;color:#a3360a!important}
+.filter-toggle:has(input:checked) i,.quick-filter.selected i{color:#a3360a}
+.map-filters .quick-filter{padding:0 12px}
+@media(max-width:1050px){.explore-hero{grid-template-columns:minmax(0,1fr) 245px;gap:18px;padding:18px}.map-filters{flex-wrap:wrap;overflow:visible}.map-filters>*{flex:none}}
+@media(max-width:760px){.main:has(.explore-page) .topbar{gap:8px}.main:has(.explore-page) .topbar .profile-menu .who{display:none}.explore-hero{grid-template-columns:1fr;padding:17px;gap:13px}.map-search-tip{display:flex;min-height:0;padding:11px 13px}.map-search-tip>i{width:27px;height:27px}.map-filters{flex-wrap:nowrap;overflow-x:auto;margin-right:-14px;padding-right:14px}.map-filters>*{flex:none}.more-filter[open] .filter-toggle{position:static;display:flex!important;margin-top:6px;box-shadow:0 5px 14px #18293d18}}
+@media(max-width:480px){.main:has(.explore-page) .topbar .search{padding:0 10px}.main:has(.explore-page) .topbar .icon-button{width:36px}.main:has(.explore-page) .topbar .avatar{width:32px;height:32px}.explore-hero h1{font-size:28px}.hero-description{font-size:13px}}
+
+/* Primary actions use official Illinois blue. */
+.map-search-box button{background:#13294b}
+.map-search-box button:hover{background:#1d3b63}
+/* Filter affordances: blue selected state, quiet mouse focus, visible keyboard focus. */
+.map-filters select:focus{outline:none;border-color:#d7c9bc;box-shadow:0 0 0 2px #102a4c12}
+.map-filters select:focus-visible{outline:2px solid #13294b;outline-offset:2px;border-radius:9px;box-shadow:0 0 0 3px #13294b12}
+.filter-toggle:has(input:checked),.map-filters .quick-filter.selected{border-color:#9aabc3!important;background:#edf2f8!important;color:#13294b!important}
+.filter-toggle:has(input:checked) i,.map-filters .quick-filter.selected i{color:#13294b!important}
+.map-filters .quick-filter:not(.selected):hover{border-color:#d7c9bc;background:#fbf8f3;color:#102a4c}
+.map-filters .quick-filter{padding-inline:17px;font-size:13px}
+.map-filters .filter-toggle{padding-inline:17px;font-size:13px!important}
+.map-filters .filter-select select{font-size:13.5px}
+.map-filters .filter-select{padding-inline:12px}
+.hero-description{font-size:15px}
+.map-filters select:focus:not(:focus-visible){outline:none;box-shadow:none}
+/* Native checkboxes inherit the filter's Illinois blue; focus stays keyboard-visible. */
+.map-filters .filter-toggle input[type="checkbox"]{accent-color:#13294b}
+.map-filters .filter-toggle:focus-within{outline:none;box-shadow:none}
+.map-filters .filter-toggle:has(input[type="checkbox"]:focus-visible){outline:2px solid #13294b;outline-offset:2px;box-shadow:0 0 0 3px #13294b12}
+/* Put select focus on the pill, not the browser's nested select rectangle. */
+.map-filters .filter-select select:focus,.map-filters .filter-select select:focus-visible{outline:none;box-shadow:none}
+body.keyboard-focus-mode .map-filters .filter-select:has(select:focus-visible){outline:2px solid #13294b;outline-offset:2px;border-radius:13px;box-shadow:0 0 0 3px #13294b12}
+
+/* Normalize filter sizing and keep the final control at the right edge. */
+.map-filters{align-items:center;gap:10px;}
+.map-filters .filter-select,
+.map-filters>.filter-toggle,
+.map-filters>.quick-filter,
+.map-filters>.more-filter>summary{box-sizing:border-box;height:46px;min-height:46px;border-radius:13px;}
+.map-filters .filter-select{padding:0 14px;gap:9px!important;}
+.map-filters .filter-select select{height:44px;padding:0 3px;}
+.map-filters .filter-select.date-filter select{min-width:136px;}
+.map-filters .filter-select:not(.date-filter) select{min-width:140px;}
+.map-filters>.filter-toggle,
+.map-filters>.quick-filter,
+.map-filters>.more-filter>summary{padding:0 16px;}
+.map-filters>.filter-toggle,.map-filters>.quick-filter,.map-filters>.more-filter>summary{gap:9px;}
+.map-filters>.more-filter{margin-left:auto;}
+.map-filters>.more-filter>summary{justify-content:center;}
+.more-filter[open] .filter-toggle{top:51px;}
+
+/* Keep the map and results aligned while using the full content width. */
+.explore-layout{width:100%;grid-template-columns:minmax(0,1.68fr) minmax(360px,1fr);align-items:stretch;}
+
+/* Use Illinois blue for keyboard focus without a persistent mouse outline. */
+.map-filters select:focus-visible,
+.map-filters button:focus-visible,
+.more-filter summary:focus-visible,
+.map-filters .filter-toggle:has(input:focus-visible){outline:2px solid #13294b;outline-offset:2px;box-shadow:0 0 0 3px #13294b12;}
+.map-filters .filter-toggle:focus-within{outline:none;box-shadow:none;}
+.map-filters .filter-select select:focus,.map-filters .filter-select select:focus-visible{outline:none;box-shadow:none;}
+.map-filters .filter-select.date-filter{height:56px;min-height:56px;padding-block:4px;}
+.map-filters .date-filter>i{align-self:center;}
+.map-filters .filter-select{padding-left:18px;padding-right:14px;}
+.date-filter-content{display:flex;min-width:0;flex-direction:column;justify-content:center;line-height:1.1;transform:translateY(-3px);}
+.map-filters .date-filter select{width:100%;height:27px;min-width:0;padding:0 20px 0 0;font-size:13.5px;line-height:1.1;}
+.date-filter-content small{display:block;margin-top:3px;padding:0;color:#717989;font-size:11px;font-weight:500;line-height:11px;text-align:left;white-space:nowrap;}
+.date-select-row{position:relative;display:block;min-width:0;height:27px;line-height:27px;}
+.date-select-row select{display:block;width:100%;height:27px;appearance:none;-webkit-appearance:none;padding:0 18px 0 0!important;text-align:left;}
+.date-select-row>i,.date-select-row>svg{position:absolute;top:50%;right:1px;width:13px;height:13px;pointer-events:none;transform:translateY(-50%);color:#596577;}
+.map-filters .filter-select,.map-filters>.filter-toggle,.map-filters>.quick-filter,.map-filters>.more-filter>summary{height:56px;min-height:56px;}
+.map-filters .filter-select select{height:54px;}
+.map-filters .date-filter select{height:27px;}
+.map-filters>.filter-toggle,.map-filters>.quick-filter,.map-filters>.more-filter>summary{padding-inline:18px;font-size:13.5px;}
+.map-filters .quick-filter{gap:9px;font-size:13.5px;}
+.map-filters .quick-filter i,.map-filters .filter-toggle i,.map-filters .more-filter summary i{width:17px;height:17px;}
+.map-filters .filter-select.date-filter select:focus,.map-filters .filter-select.date-filter select:focus-visible{height:27px;}
+@media(max-width:760px){.map-filters .date-filter{min-width:190px;}}
+
+@media(max-width:1050px){
+  .explore-layout{grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);}
+  .map-filters>.more-filter{margin-left:0;}
+}
+@media(max-width:760px){
+  .map-filters>.more-filter{margin-left:0;}
+}
+
+/* ---- Redesign to match the prototype (category pins, heatmap legend, map/satellite, shared cards) ---- */
+/* The button's display rule used to override [hidden], so it showed before the map had moved. */
+.search-area[hidden]{display:none}
+
+/* Hero tip card. */
+.map-search-tip .tip-icon{width:46px;height:46px;flex:none;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,#f7e4d8,#fbefe6);color:#c65024;box-shadow:inset 0 0 0 1px #f0d6c6}
+.map-search-tip .tip-icon svg{width:22px;height:22px}
+
+/* Filters stay on one line on laptop screens, with More filters pushed to the right. */
+@media(min-width:1101px){.map-filters{flex-wrap:nowrap}.map-filters .more-filter{margin-left:auto}}
+.map-filters .quick-filter{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.map-filters .quick-filter svg,.more-filter summary svg{width:16px;height:16px;color:#c2410c}
+.more-filter summary{gap:7px;white-space:nowrap}
+
+/* Category pins: round badge in the category colour, sized by popularity (--pin-size). */
+.map-pin{display:block;width:var(--pin-size,34px);height:var(--pin-size,34px);padding:0;border:0;background:none;cursor:pointer}
+.map-pin .pin-face{width:100%;height:100%;display:grid;place-items:center;border:3px solid #fff;border-radius:50%;background:var(--tone,#c65024);color:#fff;box-shadow:0 4px 12px rgba(16,41,66,.28);transition:transform .16s ease,box-shadow .16s ease}
+.map-pin .pin-face svg{width:52%;height:52%;stroke-width:2.2}
+.map-pin:hover .pin-face,.map-pin.marker-active .pin-face{transform:scale(1.18);box-shadow:0 6px 18px rgba(16,41,66,.35)}
+.maplibregl-marker.map-pin.marker-active{filter:none;z-index:5!important}
+.maplibregl-marker.map-pin.marker-active svg{transform:none}
+.map-pin:focus-visible{outline:none}
+.map-pin:focus-visible .pin-face{outline:3px solid #102942;outline-offset:2px}
+.you-are-here{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#2f6fb0;box-shadow:0 0 0 6px rgba(47,111,176,.25),0 2px 6px rgba(16,41,66,.3)}
+
+/* Pin popups. */
+.maplibregl-popup-content{padding:10px 13px;border-radius:12px;box-shadow:0 10px 26px rgba(16,41,66,.2)}
+.map-popup{display:flex;flex-direction:column;gap:2px;min-width:170px;color:#18293d;font:12px/1.4 'DM Sans',sans-serif;text-decoration:none}
+.map-popup b{font-size:13px}
+.map-popup small{color:#596577}
+.map-popup:hover b{color:#c65024}
+
+/* Map / Satellite switch (top left). */
+.map-style-toggle{position:absolute;z-index:2;top:14px;left:14px;display:flex;padding:3px;border:1px solid #e8e0d7;border-radius:12px;background:rgba(255,253,249,.92);backdrop-filter:blur(8px);box-shadow:0 3px 12px rgba(16,41,66,.12)}
+.map-style-toggle button{padding:7px 14px;border:0;border-radius:9px;background:transparent;color:#596577;font:600 12px 'DM Sans',sans-serif;cursor:pointer}
+.map-style-toggle button[aria-pressed="true"]{background:#fff;color:#18293d;box-shadow:0 1px 4px rgba(16,41,66,.15)}
+
+/* Popularity legend + heatmap switch (bottom left). */
+.map-legend{position:absolute;z-index:2;left:14px;bottom:14px;width:210px;padding:12px 14px;border:1px solid #e8e0d7;border-radius:14px;background:rgba(255,253,249,.92);backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(16,41,66,.14);color:#18293d;font:12px 'DM Sans',sans-serif}
+.map-legend b{display:block;margin-bottom:8px;font-size:13px}
+.legend-bar{display:block;height:8px;border-radius:5px;background:linear-gradient(90deg,rgba(150,190,230,.9),rgba(244,210,110,.95),rgba(240,140,75,.95),#c65024)}
+.legend-scale{display:flex;justify-content:space-between;margin:5px 0 10px;color:#687181;font-size:11px}
+.legend-switch{display:flex;align-items:center;gap:9px;font-weight:600;cursor:pointer}
+.legend-switch input{position:absolute;width:1px;height:1px;opacity:0}
+.legend-switch-track{position:relative;width:34px;height:20px;flex:none;border-radius:12px;background:#d8d4ce;transition:background .18s}
+.legend-switch-track:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(40,34,26,.25);transition:transform .18s}
+.legend-switch input:checked+.legend-switch-track{background:#c65024}
+.legend-switch input:checked+.legend-switch-track:after{transform:translateX(14px)}
+.legend-switch input:focus-visible+.legend-switch-track{outline:2px solid #c65024;outline-offset:2px}
+/* The status message sits above the legend instead of on top of it. */
+.map-status{bottom:auto;top:62px;left:14px}
+
+/* Results: "N events match your search" with the sort menu, and the shared compact cards. */
+.results-heading{align-items:center}
+.results-heading h2{display:flex;align-items:baseline;gap:5px;font:600 16px 'DM Sans',sans-serif}
+.results-heading h2 b{font-weight:700}
+.results-sort{position:relative;display:inline-flex!important;align-items:center;gap:4px;color:#687181;font-size:12px;font-weight:600;cursor:pointer}
+.results-sort select{appearance:none;border:0;background:transparent;padding:0 16px 0 0;color:#c65024;font:600 12px 'DM Sans',sans-serif;cursor:pointer}
+.results-sort svg{position:absolute;right:0;width:14px;height:14px;color:#c65024;pointer-events:none}
+#event-list{padding:10px 12px 14px}
+#event-list .compact-card{margin:0 0 10px}
+#event-list .compact-card.active{border-color:#e9c6b5;background:#fff8f2;transform:translateY(-2px);box-shadow:0 10px 24px rgba(40,34,26,.1)}
+@media(max-width:760px){.map-legend{width:auto;right:70px;padding:9px 11px}.map-legend b{display:none}}
+/* Leave room for MapLibre's attribution badge in the bottom-right corner. */
+.map-controls{bottom:40px}
+/* Free only / 15-minute walk look like the other quick-filter chips: the checkbox stays for the form and
+   screen readers but is hidden; the chip's highlighted state shows when it is on. */
+.filter-toggle input[type="checkbox"]{position:absolute;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+
+/* Narrower results panel: the map gets the extra width. */
+.explore-layout{grid-template-columns:minmax(0,1fr) clamp(340px,27vw,400px)}
+@media(max-width:1050px){.explore-layout{grid-template-columns:minmax(0,1fr) clamp(300px,32vw,340px)}}
+@media(max-width:760px){.explore-layout{grid-template-columns:minmax(0,1fr)}}
+
+/* Larger, easier-to-read text across the map page. */
+.explore-page .explore-hero .eyebrow{font-size:11.5px}
+.explore-page .hero-description{font-size:16px}
+.explore-page .map-search-tip b{font-size:14.5px}
+.explore-page .map-search-tip small{font-size:12.5px;line-height:1.45}
+.explore-page .map-filters .filter-select select,.explore-page .map-filters .date-filter select{font-size:14.5px}
+.explore-page .map-filters>.filter-toggle,.explore-page .map-filters>.quick-filter,.explore-page .map-filters>.more-filter>summary,.explore-page .more-filter .filter-toggle{font-size:14.5px!important}
+.explore-page .date-filter-content small{font-size:12px}
+.explore-page .results-heading h2{font-size:18px}
+.explore-page .results-sort,.explore-page .results-sort select{font-size:13.5px}
+.explore-page .search-area{font-size:14px}
+.explore-page .map-status{font-size:13px}
+.explore-page .map-style-toggle button{font-size:13.5px}
+.explore-page .map-legend{font-size:13px}
+.explore-page .map-legend b{font-size:14px}
+.explore-page .legend-scale{font-size:12px}
+.explore-page .empty-results p{font-size:13.5px}
+.map-popup{font-size:13px}
+.map-popup b{font-size:14.5px}
+/* Result cards: same layout as the home page, a size up for this list. */
+.explore-page #event-list .compact-body h3{font-size:15.5px}
+.explore-page #event-list .compact-body .event-meta{font-size:12.5px}
+.explore-page #event-list .compact-body .event-meta svg{width:15px;height:15px}
+.explore-page #event-list .tag{font-size:12px}
+.explore-page #event-list .compact-body .going{font-size:12.5px}
+.explore-page #event-list .compact-footer .rsvp{font-size:12px;padding:5px 11px}
+/* Room for the tip card's title on one line now that the text is larger. */
+@media(min-width:761px){.explore-hero{grid-template-columns:minmax(0,1fr) minmax(330px,380px)}}
+.explore-page .map-search-tip b{white-space:nowrap}

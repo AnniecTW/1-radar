@@ -1,0 +1,67 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}Delete account{% endblock %}
+{% block content %}
+<section class="banner slim">
+  <div class="banner-copy">
+    <a class="back-link" href="{% url 'account_preferences' %}">‹ Back to Preferences</a>
+    <h1>Delete account</h1>
+  </div>
+</section>
+
+<main class="narrow">
+  {% if blockers.has_blockers %}
+    <section class="stack">
+      <h2 class="small-title">Before you can delete your account</h2>
+      <p class="section-note">Clear each item below, then come back to this page.</p>
+
+      {% if blockers.owned_organizations %}
+        <h3 class="small-title">Transfer ownership</h3>
+        <p class="section-note">An organization always needs an Owner. Make another member the Owner, or delete the organization.</p>
+        {% for organization in blockers.owned_organizations %}
+          <div class="member-row">
+            <span class="member-info"><b>{{ organization.name }}</b><small>You are the Owner</small></span>
+            <a class="link-strong" href="{% url 'manage_organization_members' organization.slug %}">Manage</a>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if blockers.memberships %}
+        <h3 class="small-title">Leave these organizations</h3>
+        {% for membership in blockers.memberships %}
+          <div class="member-row">
+            <span class="member-info"><b>{{ membership.organization.name }}</b><small>You are {{ membership.get_role_display }}</small></span>
+            <a class="link-strong" href="{% url 'show_organization_profile' membership.organization.slug %}">Open page</a>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if blockers.hosted_events %}
+        <h3 class="small-title">Cancel your upcoming events or wait until they end</h3>
+        {% for event in blockers.hosted_events %}
+          <div class="member-row">
+            <span class="member-info"><b>{{ event.title }}</b><small>{{ event.start_at|date:"M j, Y" }}</small></span>
+            <a class="link-strong" href="{% url 'event_detail' event.slug %}">Open event</a>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if blockers.is_platform_admin %}
+        <h3 class="small-title">Platform admin access</h3>
+        <p class="section-note">Ask another platform admin to remove your staff access in Django admin first.</p>
+      {% endif %}
+    </section>
+  {% else %}
+    <form class="stack" method="post" novalidate onsubmit="return confirm('Delete your account permanently? This cannot be undone.')">
+      {% csrf_token %}
+      <h2 class="small-title">This cannot be undone</h2>
+      <p class="section-note">Your upcoming RSVPs are cancelled and your spots go to the waitlist. Your likes, saves, follows, interests and notifications are removed. Your name, email and profile are erased, and events you hosted in the past show "Deleted user."</p>
+      <label class="field">
+        <span>Confirm with your password</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+        {% for error in form.password.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      </label>
+      <button class="banner-button danger" type="submit">Delete my account</button>
+    </form>
+  {% endif %}
+</main>
+{% endblock %}

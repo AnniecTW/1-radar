@@ -1,0 +1,9 @@
+<form class="engage-form" method="post" action="{% url 'follow_organization' organization.slug %}" data-engage>
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <input type="hidden" name="source" value="{{ source }}">
+  <input type="hidden" name="following" value="{% if active %}0{% else %}1{% endif %}" data-engage-value>
+  <button class="engage-btn follow {{ variant }}" type="submit" aria-pressed="{{ active|yesno:'true,false' }}" data-label-on="Following" data-label-off="Follow"{% if not signed_in %} title="Sign in to follow {{ organization.name }}"{% endif %}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" class="plus"/><path d="M5 12.5l4.5 4.5L19 7.5" class="check"/></svg><span data-engage-label>{% if active %}Following{% else %}Follow{% endif %}</span>
+  </button>
+</form>

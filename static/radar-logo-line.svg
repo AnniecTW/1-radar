@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Cream tile, monoline ink drawing, one coral accent -->
+  <rect width="1024" height="1024" rx="225" fill="#FAF7F2"/>
+  <g fill="none" stroke="#2B2B2B" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="512" cy="512" r="230" stroke-dasharray="1300 145"/>
+    <circle cx="512" cy="512" r="340" stroke-dasharray="1900 236"/>
+    <path d="M0 -120L95 105L0 55L-95 105Z" transform="translate(502 522) rotate(45)"/>
+  </g>
+  <circle cx="831" cy="396" r="28" fill="#FF6B5B"/>
+</svg>

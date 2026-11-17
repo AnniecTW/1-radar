@@ -9,6 +9,8 @@ class EventDailyStats(models.Model):
     unique_views = models.PositiveIntegerField(default=0)
     likes = models.PositiveIntegerField(default=0)
     saves = models.PositiveIntegerField(default=0)
+    interested = models.PositiveIntegerField(default=0)
+    outbound_clicks = models.PositiveIntegerField(default=0)
     rsvps_going = models.PositiveIntegerField(default=0)
     rsvps_waitlisted = models.PositiveIntegerField(default=0)
     rsvps_cancelled = models.PositiveIntegerField(default=0)

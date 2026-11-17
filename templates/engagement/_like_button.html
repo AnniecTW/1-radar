@@ -1,0 +1,8 @@
+<form class="engage-form" method="post" action="{% url 'like_event' event.pk %}" data-engage>
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <input type="hidden" name="liked" value="{% if active %}0{% else %}1{% endif %}" data-engage-value>
+  <button class="engage-btn {{ variant }}" type="submit" aria-pressed="{{ active|yesno:'true,false' }}" aria-label="Like {{ event.title }}"{% if not signed_in %} title="Sign in to like {{ event.title }}"{% endif %}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.5-7 10-7 10z"/></svg><span data-engage-count>{{ count }}</span><span class="visually-hidden"> likes</span>
+  </button>
+</form>

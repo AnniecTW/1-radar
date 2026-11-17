@@ -10,6 +10,8 @@ class EmailOrUsernameBackend(ModelBackend):
             return None
         User = get_user_model()
         field = 'email__iexact' if '@' in username else 'username'
+        if field == 'email__iexact':
+            username = username.strip()
         try:
             user = User.objects.get(**{field: username})
         except User.DoesNotExist:

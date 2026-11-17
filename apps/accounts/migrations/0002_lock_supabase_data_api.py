@@ -3,17 +3,30 @@ from django.db import migrations
 # Supabase exposes the public schema through its Data API (PostgREST) as the `anon` and
 # `authenticated` roles. Radar only talks to the database through Django, so lock that API out:
 # enable RLS with no policies (deny all) and revoke the API roles' privileges, including on
-# tables created later. Django connects as the table owner, which bypasses RLS.
+# tables created later. Only alter tables owned by the current database role: Supabase-owned
+# PostGIS tables such as spatial_ref_sys cannot be changed by the application role.
 LOCK_SQL = """
 DO $$
 DECLARE t record;
 BEGIN
-    FOR t IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP
-        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t.tablename);
-    END LOOP;
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-        REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
-        REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
+        FOR t IN
+            SELECT tablename
+            FROM pg_tables
+            WHERE schemaname = 'public' AND tableowner = current_user
+        LOOP
+            EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t.tablename);
+            EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', t.tablename);
+        END LOOP;
+        FOR t IN
+            SELECT sequencename
+            FROM pg_sequences
+            WHERE schemaname = 'public'
+              AND (SELECT pg_get_userbyid(c.relowner) = current_user
+                   FROM pg_class c WHERE c.relname = sequencename AND c.relnamespace = 'public'::regnamespace)
+        LOOP
+            EXECUTE format('REVOKE ALL ON SEQUENCE public.%I FROM anon, authenticated', t.sequencename);
+        END LOOP;
         ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated;
         ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated;
     END IF;

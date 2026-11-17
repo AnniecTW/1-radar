@@ -1,0 +1,11 @@
+{% comment %}Explore Map result cards. Rendered with the page and again by the "Search this area" API, so both stay identical. Needs events, saved_event_ids.{% endcomment %}
+{% for event in events %}
+  {% include 'discovery/_event_card_compact.html' %}
+{% empty %}
+  <div class="empty-results">
+    <i data-lucide="map-pin-off" aria-hidden="true"></i>
+    <b>No events found here</b>
+    <p>Try moving the map or clearing your filters.</p>
+    <a href="{% url 'explore_map' %}">Clear filters</a>
+  </div>
+{% endfor %}

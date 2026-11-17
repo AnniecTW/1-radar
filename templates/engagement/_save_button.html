@@ -1,0 +1,8 @@
+<form class="engage-form" method="post" action="{% url 'save_event' event.pk %}" data-engage>
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <input type="hidden" name="saved" value="{% if active %}0{% else %}1{% endif %}" data-engage-value>
+  <button class="engage-btn {{ variant }}" type="submit" aria-pressed="{{ active|yesno:'true,false' }}" data-label-on="Saved" data-label-off="Save"{% if not signed_in %} title="Sign in to save {{ event.title }}"{% endif %}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span data-engage-label>{% if active %}Saved{% else %}Save{% endif %}</span>
+  </button>
+</form>

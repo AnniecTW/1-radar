@@ -1,0 +1,21 @@
+{% load rsvp_tags %}
+{% for event in rows %}
+  <article class="row">
+    <div class="thumb" aria-hidden="true">{% if event.cover_image %}<img src="{{ event.cover_image }}" alt="">{% else %}{{ event.title|slice:":1" }}{% endif %}</div>
+    <div class="row-copy">
+      <h3>{% if event.slug %}<a class="row-link" href="{% url 'event_detail' event.slug %}">{{ event.title }}</a>{% else %}{{ event.title }}{% endif %}</h3>
+      <p>{{ event.start_at|date:"D, M j, g:i A" }} · {% include 'accounts/_event_place.html' %}</p>
+      <p class="muted">{{ event.going_count }} going</p>
+    </div>
+    {% rsvp_button event %}
+    <form method="post" action="{% url 'remove_from_saved' event.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="heart-button" type="submit" aria-label="Remove {{ event.title }} from saved" title="Remove from saved">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+      </button>
+    </form>
+  </article>
+{% empty %}
+  <p class="empty">Nothing saved yet. <a href="{% url 'dashboard' %}">Discover events</a></p>
+{% endfor %}

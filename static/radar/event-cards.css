@@ -1,0 +1,98 @@
+/* Event cards, category colours, card buttons and the guest sign-in prompt.
+   Shared by the home page (.home) and Explore Map (.explore-page). */
+.explore-page{--cream:#f5efe7;--paper:#fffdf9;--navy:#102942;--ink:#18293d;--muted:#6d7074;--line:#e9e0d6;--edge:#eee6dc;--terra:#c65024;--shadow:0 10px 30px rgba(40,34,26,.09);--card-shadow:0 4px 14px rgba(40,34,26,.06)}
+:is(.home,.explore-page) svg{flex:none}
+
+/* Category colours: chips, tags and the weekend list share these. */
+.tone-terra{--tone:#c65024;--tone-bg:#f6e3d8}.tone-navy{--tone:#1d3d63;--tone-bg:#e1e8f0}.tone-teal{--tone:#1f7a6d;--tone-bg:#dcefeb}
+.tone-plum{--tone:#7a3e8e;--tone-bg:#efe2f3}.tone-amber{--tone:#a86412;--tone-bg:#f7e9cf}.tone-blue{--tone:#2f6fb0;--tone-bg:#e0ebf7}
+.tone-rose{--tone:#b83f5f;--tone-bg:#f6e0e6}.tone-green{--tone:#4c7a34;--tone-bg:#e4efdc}.tone-slate{--tone:#55606c;--tone-bg:#ebe8e3}
+.tone-free{--tone:#1e5636;--tone-bg:#e2eee6}.tone-paid{--tone:#6d4c1d;--tone-bg:#f3e7d3}
+
+/* Buttons. The app shell tints links on hover, so filled buttons keep their own text colour. */
+:is(.home,.explore-page) .primary-button{background:var(--terra);color:#fff;border:0;border-radius:28px;padding:13px 20px;font:600 14px 'DM Sans',sans-serif;box-shadow:0 8px 15px rgba(198,80,36,.22);display:inline-flex;gap:10px;align-items:center;cursor:pointer;white-space:nowrap}
+:is(.home,.explore-page) .primary-button svg{width:16px;height:16px}
+:is(.home,.explore-page) .secondary-button{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:28px;padding:14px 22px;font:600 14px 'DM Sans',sans-serif;display:inline-flex;justify-content:center}
+:is(.home,.explore-page) .rsvp{display:inline-flex;align-items:center;background:var(--terra);color:#fff;border:1px solid var(--terra);border-radius:10px;padding:8px 15px;font:600 12px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}
+:is(.home,.explore-page) .rsvp.outline{background:#fff;color:var(--terra)}
+:is(.home,.explore-page) .rsvp.small{padding:6px 12px;border-radius:9px}
+:is(.home,.explore-page) .rsvp.outline:hover{color:var(--terra);background:#fff6f0}
+:is(.home,.explore-page) .primary-button:hover,:is(.home,.explore-page) .rsvp:hover{color:#fff}
+
+/* Event card. */
+:is(.home,.explore-page) .event-card{background:var(--paper);border:1px solid var(--edge);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow);display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s}
+:is(.home,.explore-page) .event-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(40,34,26,.1)}
+:is(.home,.explore-page) .event-image{position:relative;height:130px;margin:6px 6px 0;border-radius:13px;overflow:hidden;background:var(--navy)}
+:is(.home,.explore-page) .event-image>a,:is(.home,.explore-page) .compact-image>a{display:block;width:100%;height:100%}
+:is(.home,.explore-page) .event-image img,:is(.home,.explore-page) .compact-image img{width:100%;height:100%;display:block;object-fit:cover}
+:is(.home,.explore-page) .cover-fallback{width:100%;height:100%;display:grid;place-items:center;font:700 48px 'Playfair Display',serif;color:rgba(255,255,255,.85);background:linear-gradient(135deg,var(--navy),#27597f 60%,var(--terra))}
+:is(.home,.explore-page) .day-badge,:is(.home,.explore-page) .campus-badge{position:absolute;bottom:8px;border-radius:14px;padding:5px 10px;font-weight:700;font-size:11px}
+:is(.home,.explore-page) .day-badge{left:8px;background:#dff0e4;color:#1e5636}
+:is(.home,.explore-page) .campus-badge{right:8px;background:var(--navy);color:#fff}
+:is(.home,.explore-page) .card-save-form{position:absolute;top:8px;right:8px;margin:0}
+:is(.home,.explore-page) .save{position:absolute;top:8px;right:8px;width:32px;height:32px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.95);color:var(--ink);cursor:pointer;box-shadow:0 2px 8px rgba(16,41,66,.15)}
+:is(.home,.explore-page) .card-save-form .save{position:static}
+:is(.home,.explore-page) .save svg{width:17px;height:17px;transition:transform .15s}
+:is(.home,.explore-page) .save:hover svg{transform:scale(1.1)}
+:is(.home,.explore-page) .save[aria-pressed="true"]{color:var(--terra)}
+:is(.home,.explore-page) .save[aria-pressed="true"] svg{fill:currentColor}
+:is(.home,.explore-page) .save:disabled{opacity:.6;cursor:wait}
+:is(.home,.explore-page) .event-body{padding:11px 13px 13px;display:flex;flex-direction:column;flex:1}
+:is(.home,.explore-page) .event-body h3,:is(.home,.explore-page) .compact-body h3{margin:0 0 7px;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+:is(.home,.explore-page) .event-body h3 a,:is(.home,.explore-page) .compact-body h3 a{color:var(--ink)}
+:is(.home,.explore-page) .event-body h3 a:hover,:is(.home,.explore-page) .compact-body h3 a:hover{color:var(--terra)}
+:is(.home,.explore-page) .event-meta{display:flex;align-items:center;gap:7px;margin:0 0 4px;color:#414a52;font-size:12px;line-height:1.4;min-width:0}
+:is(.home,.explore-page) .event-meta svg{width:14px;height:14px;color:#80868c}
+:is(.home,.explore-page) .event-meta span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+:is(.home,.explore-page) .tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+:is(.home,.explore-page) .tag{background:var(--tone-bg);color:var(--tone);padding:4px 9px;border-radius:12px;font-size:11px;font-weight:600}
+:is(.home,.explore-page) .description{margin:0 0 9px;color:#4b555d;font-size:12px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+:is(.home,.explore-page) .insight{display:flex;align-items:flex-start;gap:7px;margin:0 0 4px;color:#5d646b;font-size:11.5px;line-height:1.4}
+:is(.home,.explore-page) .insight svg{width:15px;height:15px;color:var(--terra)}
+:is(.home,.explore-page) .card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid #f1e9df;font-size:12px}
+:is(.home,.explore-page) .going{display:inline-flex;align-items:center;gap:6px;color:#4b555d;font-size:12px}
+:is(.home,.explore-page) .going svg{width:16px;height:16px;color:#6b7279}
+
+/* Compact card (Trending): photo on the left. */
+:is(.home,.explore-page) .compact-card{display:flex;gap:12px;align-items:stretch;background:var(--paper);border:1px solid var(--edge);border-radius:16px;padding:8px;box-shadow:var(--card-shadow);transition:transform .18s,box-shadow .18s}
+:is(.home,.explore-page) .compact-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(40,34,26,.1)}
+:is(.home,.explore-page) .compact-image{position:relative;flex:0 0 104px;height:auto;min-height:104px;border-radius:12px;overflow:hidden;background:var(--navy)}
+:is(.home,.explore-page) .compact-image .cover-fallback{font-size:34px}
+:is(.home,.explore-page) .compact-image .save,:is(.home,.explore-page) .compact-image .card-save-form{top:5px;right:5px}
+:is(.home,.explore-page) .compact-image .save{width:26px;height:26px}
+:is(.home,.explore-page) .compact-image .save svg{width:14px;height:14px}
+:is(.home,.explore-page) .compact-body{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:flex-start}
+:is(.home,.explore-page) .compact-body h3{font-size:14px;-webkit-line-clamp:1;margin-bottom:5px}
+:is(.home,.explore-page) .compact-body .event-meta{font-size:11px;margin-bottom:2px}
+:is(.home,.explore-page) .compact-body .tags{margin:5px 0;flex-wrap:nowrap;overflow:hidden;min-height:22px}
+:is(.home,.explore-page) .compact-body .tag{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.home,.explore-page) .compact-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:2px}
+:is(.home,.explore-page) .compact-footer .rsvp{padding:4px 10px;border-radius:8px;font-size:11px}
+:is(.home,.explore-page) .compact-body .going{font-size:11px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.home,.explore-page) .compact-body .going svg{width:14px;height:14px}
+
+/* Sign-in prompt (guests only). */
+.signin-dialog{border:0;border-radius:24px;padding:30px;max-width:420px;width:calc(100% - 32px);background:var(--paper);color:var(--ink);box-shadow:0 24px 60px rgba(16,41,66,.35)}
+.signin-dialog::backdrop{background:rgba(16,41,66,.5)}
+.signin-dialog h2{font-family:'Playfair Display',serif;font-size:26px;margin:0 0 8px;line-height:1.2}
+.signin-dialog p{margin:0 0 22px;color:var(--muted)}
+.dialog-actions{display:flex;flex-direction:column;gap:10px}
+.dialog-actions .primary-button{justify-content:center}
+.dialog-close{position:absolute;top:14px;right:14px;margin:0}
+.dialog-close button{display:grid;place-items:center;border:0;background:#f0e6da;border-radius:50%;width:32px;height:32px;cursor:pointer}
+.dialog-close svg{width:16px;height:16px}
+.signin-dialog .eyebrow{letter-spacing:.32em;font-weight:700;color:#ad674a;font-size:11px;margin-bottom:10px}
+@media(max-width:760px){.signin-dialog{margin:auto 0 0;max-width:none;width:100%;border-radius:24px 24px 0 0}}
+
+/* Narrow cards (about 200px, e.g. three across on a 1280px laptop): drop the people icon and tighten the
+   button so "12 interested" and the action button still fit on one line. */
+:is(.home,.explore-page) .event-card{container-type:inline-size}
+@container (max-width:220px){
+  .card-footer{gap:6px}
+  .card-footer .going svg{display:none}
+  .card-footer .rsvp{padding:7px 11px}
+}
+/* Compact cards: the photo fills the left column without setting its height, so every card in a row is sized by its text and they all match. */
+:is(.home,.explore-page) .compact-card{min-width:0}
+:is(.home,.explore-page) .compact-image>a{position:absolute;inset:0}
+:is(.home,.explore-page) .compact-body .tag:first-child{flex-shrink:0}

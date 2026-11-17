@@ -1,0 +1,41 @@
+{% extends 'accounts/app_base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<section class="banner slim">
+  <div class="banner-copy">
+    <span class="banner-eyebrow">UPDATES</span>
+    <h1>Notifications</h1>
+  </div>
+  {% if unread_notification_count %}
+  <div class="banner-actions">
+    <form method="post" action="{% url 'read_all_notifications' %}">
+      {% csrf_token %}
+      <button class="banner-button solid" type="submit">Mark all as read</button>
+    </form>
+  </div>
+  {% endif %}
+</section>
+
+<nav class="tabs" aria-label="Notification filter">
+  <a href="{% url 'list_notifications' %}"{% if not unread_only %} class="active" aria-current="page"{% endif %}>All</a>
+  <a href="{% url 'list_notifications' %}?filter=unread"{% if unread_only %} class="active" aria-current="page"{% endif %}>Unread{% if unread_notification_count %} ({{ unread_notification_count }}){% endif %}</a>
+</nav>
+
+<main class="narrow">
+  {% for row in rows %}
+    <form method="post" action="{% url 'open_notification' row.notification.pk %}">
+      {% csrf_token %}
+      <button class="notification-row{% if row.is_unread %} unread{% endif %}" type="submit">
+        <span class="notification-dot" aria-hidden="true"></span>
+        <span class="notification-text">
+          <b>{{ row.headline }}</b>
+          {% if row.detail %}<small>{{ row.detail }}</small>{% endif %}
+          <small class="notification-time">{{ row.notification.created_at|date:"M j, g:i A" }}{% if row.is_unread %} · <span class="visually-hidden">Unread</span>New{% endif %}</small>
+        </span>
+      </button>
+    </form>
+  {% empty %}
+    <p class="empty">{% if unread_only %}You're all caught up.{% else %}No notifications yet. RSVP updates, waitlist changes and event changes show up here.{% endif %}</p>
+  {% endfor %}
+</main>
+{% endblock %}

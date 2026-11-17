@@ -1,0 +1,19 @@
+{% comment %}Search and category results, or every upcoming event when nothing is filtered.{% endcomment %}
+<section class="section" id="browse" aria-labelledby="browse-title">
+  <div class="section-heading">
+    <div>
+      <h2 id="browse-title"><i data-lucide="{% if search_text %}search{% else %}layout-grid{% endif %}" aria-hidden="true"></i>{% if search_text %}Results for “{{ search_text }}”{% elif selected_category %}{{ selected_category.name }} events{% else %}All upcoming events{% endif %}</h2>
+      <p>{% if selected_category and search_text %}In {{ selected_category.name }} · {% endif %}Upcoming public and campus-only events</p>
+    </div>
+    {% if search_text or selected_category %}<div class="section-actions"><a class="see-all" href="{% url 'dashboard' %}#browse">Clear filters <i data-lucide="x" aria-hidden="true"></i></a></div>{% endif %}
+  </div>
+  {% if search_error %}<p class="empty" role="alert">{{ search_error }}</p>{% endif %}
+  {% if keyword_fallback %}<p class="notice" role="status">AI search is temporarily unavailable. Showing keyword matches.</p>{% endif %}
+  {% if browse_events %}
+    <div class="event-grid">
+      {% for event in browse_events %}{% include 'discovery/_event_card.html' %}{% endfor %}
+    </div>
+  {% elif not search_error %}
+    <p class="empty">No upcoming events match{% if search_text or selected_category %} your filters{% endif %}.</p>
+  {% endif %}
+</section>

@@ -1,0 +1,7 @@
+{% if event.status == 'draft' %}<span class="status status-draft">Draft</span>
+{% elif event.status == 'cancelled' %}<span class="status status-cancelled">Cancelled</span>
+{% elif event.status == 'completed' or event.end_at <= now %}<span class="status status-ended">Ended</span>
+{% elif staff_view %}<span class="status status-ended">Check-in staff</span>
+{% elif event.start_at <= now %}<span class="status status-live">Happening now</span>
+{% elif event.is_full %}<span class="status status-full">Full</span>
+{% else %}<span class="status status-live">Published</span>{% endif %}

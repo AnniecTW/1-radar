@@ -2,21 +2,22 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db import transaction
 
 
 class Organization(models.Model):
     class OrgType(models.TextChoices):
         RSO = 'rso', 'RSO'
-        DEPARTMENT = 'department'
-        CAMPUS_OFFICE = 'campus_office'
-        OTHER = 'other'
+        DEPARTMENT = 'department', 'Department'
+        CAMPUS_OFFICE = 'campus_office', 'Campus office'
+        OTHER = 'other', 'Other'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, unique=True)
     org_type = models.CharField(max_length=20, choices=OrgType.choices)
     description = models.TextField(blank=True)
-    logo = models.CharField(max_length=255, blank=True)
+    logo = models.ImageField(upload_to='organization_logos/', max_length=255, blank=True)
     contact_email = models.EmailField(max_length=254, blank=True)
     website_url = models.CharField(max_length=255, null=True, blank=True)
     instagram_url = models.CharField(max_length=255, null=True, blank=True)
@@ -30,15 +31,60 @@ class Organization(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        creating = self._state.adding
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if creating:
+                OrganizationMembership.objects.create(
+                    organization=self,
+                    user=self.created_by,
+                    role=OrganizationMembership.Role.OWNER,
+                    invited_by=self.created_by,
+                )
+
     def __str__(self):
         return self.name
+
+
+class OrganizationVerificationRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending'
+        APPROVED = 'approved'
+        REJECTED = 'rejected'
+
+    id = models.BigAutoField(primary_key=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='verification_requests')
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='+'
+    )
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    # What the Owner tells reviewers: which RSO or office this is, and where to confirm it.
+    note = models.TextField(max_length=1000, blank=True)
+    review_note = models.TextField(max_length=1000, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization'],
+                condition=models.Q(status='pending'),
+                name='one_pending_verification_request',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.organization} verification ({self.status})'
 
 
 class OrganizationMembership(models.Model):
     class Role(models.TextChoices):
         OWNER = 'owner'
         ADMIN = 'admin'
-        EDITOR = 'editor'
         CHECKIN_STAFF = 'checkin_staff', 'Check-in staff'
 
     id = models.BigAutoField(primary_key=True)
@@ -53,7 +99,18 @@ class OrganizationMembership(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['organization', 'user'], name='unique_org_membership')]
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'user'], name='unique_org_membership'),
+            models.UniqueConstraint(
+                fields=['organization'],
+                condition=models.Q(role='owner'),
+                name='unique_organization_owner',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(role__in=['owner', 'admin', 'checkin_staff']),
+                name='organization_membership_valid_role',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.user} ({self.role}) @ {self.organization}'

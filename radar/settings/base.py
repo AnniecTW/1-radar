@@ -74,18 +74,23 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# OpenStreetMap tile servers reject requests with no Referer (403). Django's
+# default "same-origin" policy strips it on cross-origin requests.
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 ROOT_URLCONF = 'radar.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.notifications.context_processors.unread_notifications',
             ],
         },
     },
@@ -116,6 +121,9 @@ GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH', '/opt/homebrew/lib/libge
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
+# Password reset links last one hour (FR-67).
+PASSWORD_RESET_TIMEOUT = 60 * 60
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -130,6 +138,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
@@ -153,13 +164,81 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+MAPTILER_API_KEY = os.environ.get('MAPTILER_API_KEY', '')
+CLOUDFLARE_ACCOUNT_ID = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '')
+CLOUDFLARE_API_TOKEN = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+CLOUDFLARE_EMBEDDING_MODEL = os.environ.get('CLOUDFLARE_EMBEDDING_MODEL', '@cf/baai/bge-small-en-v1.5')
+CLOUDFLARE_TIMEOUT = float(os.environ.get('CLOUDFLARE_TIMEOUT', '5'))
+CLOUDFLARE_SEMANTIC_MIN_SIMILARITY = float(os.environ.get('CLOUDFLARE_SEMANTIC_MIN_SIMILARITY', '0.58'))
+# Snap-a-Flyer: vision model that reads event flyers (same Cloudflare account and token).
+CLOUDFLARE_VISION_MODEL = os.environ.get('CLOUDFLARE_VISION_MODEL', '@cf/moondream/moondream3.1-9B-A2B')
+FLYER_TIMEOUT = float(os.environ.get('FLYER_TIMEOUT', '25'))
+FLYER_DAILY_LIMIT = int(os.environ.get('FLYER_DAILY_LIMIT', '10'))
+FLYER_MAX_BYTES = 10 * 1024 * 1024
+
+# User uploads (organization logos, event covers).
+# With the SUPABASE_S3_* keys in .env they go to the shared Supabase Storage bucket, so everyone
+# sees the same images. Without them they stay on this computer in media/.
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+SUPABASE_S3_KEYS = ('ENDPOINT', 'REGION', 'ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'BUCKET')
+SUPABASE_S3 = {key: os.environ.get(f'SUPABASE_S3_{key}', '').strip() for key in SUPABASE_S3_KEYS}
+USE_SUPABASE_STORAGE = all(SUPABASE_S3.values())
+if USE_SUPABASE_STORAGE:
+    # https://<project>.supabase.co/storage/v1/s3 -> <project>.supabase.co/storage/v1/object/public/<bucket>
+    _project_host = SUPABASE_S3['ENDPOINT'].split('://', 1)[-1].split('/', 1)[0]
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                'bucket_name': SUPABASE_S3['BUCKET'],
+                'endpoint_url': SUPABASE_S3['ENDPOINT'],
+                'region_name': SUPABASE_S3['REGION'],
+                'access_key': SUPABASE_S3['ACCESS_KEY_ID'],
+                'secret_key': SUPABASE_S3['SECRET_ACCESS_KEY'],
+                'addressing_style': 'path',
+                'signature_version': 's3v4',
+                # Public bucket: plain links, no expiring signatures.
+                'custom_domain': f"{_project_host}/storage/v1/object/public/{SUPABASE_S3['BUCKET']}",
+                'querystring_auth': False,
+                'file_overwrite': False,
+                'default_acl': None,
+            },
+        },
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
 
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+# Real emails need SMTP credentials in .env (EMAIL_HOST_USER and EMAIL_HOST_PASSWORD).
+# Without them, emails print to the terminal running the server and nothing is delivered.
+# (Django rejects settings named EMAIL_HOST_* when MAILERS is defined, hence the SMTP_ names.)
+SMTP_USER = os.environ.get('EMAIL_HOST_USER', '')
+SMTP_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+if SMTP_USER and SMTP_PASSWORD:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+            'OPTIONS': {
+                'host': os.environ.get('EMAIL_HOST', 'smtp.gmail.com'),
+                'port': int(os.environ.get('EMAIL_PORT', '587')),
+                'use_tls': True,
+                'username': SMTP_USER,
+                'password': SMTP_PASSWORD,
+                'timeout': 10,
+            },
+        },
+    }
+else:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        },
+    }
+
+# SMTP providers such as Gmail only accept the authenticated account as the sender.
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or SMTP_USER or 'RADAR <no-reply@radar.local>'

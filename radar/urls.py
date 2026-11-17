@@ -14,9 +14,31 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+
+from apps.discovery.views import show_landing_page
+from apps.discovery.views import show_explore_map, events_in_map_bounds
+from apps.events.views import show_event_detail
 
 urlpatterns = [
+    path('', show_landing_page, name='dashboard'),
+    path('explore/', show_explore_map, name='explore_map'),
+    path('api/map-events/', events_in_map_bounds, name='map_events'),
+    path('events/<slug:slug>/', show_event_detail, name='event_detail'),
+    path('accounts/', include('apps.accounts.urls')),
+    path('onboarding/', include('apps.interests.urls')),
+    path('', include('apps.rsvps.urls')),
+    path('', include('apps.flyers.urls')),
+    path('', include('apps.events.urls')),
+    path('', include('apps.analytics.urls')),
+    path('', include('apps.engagement.urls')),
+    path('notifications/', include('apps.notifications.urls')),
+    path('organizations/', include('apps.organizations.urls')),
     path('admin/', admin.site.urls),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

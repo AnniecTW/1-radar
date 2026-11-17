@@ -1,0 +1,16 @@
+{% if event.status == 'draft' %}
+  {% if event.missing_fields %}<p><b>Missing:</b> <span class="muted">{{ event.missing_fields|join:", " }}</span></p>
+  {% else %}<p><b>Ready to publish</b></p>{% endif %}
+{% elif event.status == 'cancelled' %}
+  <p><b>{{ event.rsvp_total }}</b> <span class="muted">RSVP{{ event.rsvp_total|pluralize }} notified</span></p>
+{% elif not event.is_free %}
+  <p><b>Paid event</b> <span class="muted">· {{ event.price_text }}</span></p>
+{% elif not event.rsvp_required %}
+  <p><b>{{ event.interested_count }} interested</b> <span class="muted">· Drop-in</span></p>
+{% elif past %}
+  <p><b>{{ event.checkin_count }} of {{ event.going_count }}</b> <span class="muted">checked in</span></p>
+  {% if event.going_count %}<div class="meter" aria-hidden="true"><span style="width: {% widthratio event.checkin_count event.going_count 100 %}%"></span></div>{% endif %}
+{% else %}
+  <p><b>{{ event.going_count }}{% if event.capacity %} / {{ event.capacity }}{% endif %} going</b>{% if event.waitlist_count %} <span class="muted">· {{ event.waitlist_count }} waitlisted</span>{% endif %}</p>
+  {% if event.capacity %}<div class="meter" aria-hidden="true"><span style="width: {{ event.fill_percent|default:0 }}%"></span></div>{% endif %}
+{% endif %}

@@ -3,20 +3,42 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.gis.db import models
+from django.db.models.functions import Lower
 
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(max_length=254, unique=True)
+    email = models.EmailField(max_length=254)
     is_email_verified = models.BooleanField(default=False)
     # True when a verified email matches an active CampusDomain.
     is_campus_verified = models.BooleanField(default=False)
     # Separate campus email for users whose primary email is personal.
-    campus_email = models.EmailField(max_length=254, unique=True, null=True, blank=True)
+    campus_email = models.EmailField(max_length=254, null=True, blank=True)
     onboarding_completed = models.BooleanField(default=False)
     last_active_at = models.DateTimeField(null=True, blank=True)
 
     REQUIRED_FIELDS = ['email']
+
+    def save(self, *args, **kwargs):
+        if not self.username:
+            self.username = f'user_{self.pk.hex}'
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                kwargs['update_fields'] = set(update_fields) | {'username'}
+        self.email = self.email.strip().lower()
+        if self.campus_email:
+            self.campus_email = self.campus_email.strip().lower() or None
+        super().save(*args, **kwargs)
+
+    class Meta(AbstractUser.Meta):
+        constraints = [
+            models.UniqueConstraint(Lower('email'), name='unique_user_email_ci'),
+            models.UniqueConstraint(
+                Lower('campus_email'),
+                condition=~models.Q(campus_email__isnull=True),
+                name='unique_user_campus_email_ci',
+            ),
+        ]
 
     def __str__(self):
         return self.email

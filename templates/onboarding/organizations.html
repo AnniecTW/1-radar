@@ -1,0 +1,32 @@
+{% extends 'accounts/auth_base.html' %}
+{% block title %}Follow organizations{% endblock %}
+{% block form %}
+<div class="auth-heading">
+  <div class="eyebrow">STEP 2 OF 2</div>
+  <h1>Follow some <i>organizations</i></h1>
+  <p>Based on your interests, these groups host events you might like. Following boosts their events in your feed.</p>
+</div>
+
+<form class="auth-form" method="post">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% for organization in organizations %}
+    <label class="org-option">
+      <input type="checkbox" name="organizations" value="{{ organization.pk }}">
+      <span class="org-info">
+        <b>{{ organization.name }}{% if organization.is_verified %} <span class="verified" title="Verified">✓</span>{% endif %}</b>
+        <small>{{ organization.matching_events }} matching event{{ organization.matching_events|pluralize }} · {{ organization.follower_count }} follower{{ organization.follower_count|pluralize }}</small>
+      </span>
+      <span class="org-follow">Follow</span>
+    </label>
+  {% empty %}
+    <p class="hint">No suggestions yet. You can follow organizations any time from their pages.</p>
+  {% endfor %}
+  <button class="auth-submit" type="submit">{% if organizations %}Finish{% else %}Go to my feed{% endif %} <span aria-hidden="true">→</span></button>
+</form>
+<form method="post" action="{% url 'onboarding_skip' %}" class="skip-form">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="skip-button" type="submit">Skip for now</button>
+</form>
+{% endblock %}

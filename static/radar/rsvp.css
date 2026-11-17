@@ -1,0 +1,22 @@
+/* The shared RSVP button (templates/rsvps/_rsvp_button.html). */
+.rsvp-control{display:flex;align-items:center;font-family:inherit}
+.rsvp-control form{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
+.rsvp-primary,.rsvp-outline,.rsvp-dark,.rsvp-disabled,.rsvp-chip{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:22px;font:inherit;font-size:14.5px;font-weight:600;text-decoration:none;white-space:nowrap}
+.rsvp-primary{border:0;background:#c2410c;color:#fff;cursor:pointer}
+.rsvp-primary:hover{background:#a3360a;color:#fff}
+.rsvp-outline{border:1.5px solid #c2410c;background:transparent;color:#a3360a;cursor:pointer}
+.rsvp-outline.navy{border-color:#102a4c;color:#102a4c}
+.rsvp-outline:hover{background:#f7e4d8}
+.rsvp-dark{border:0;background:#102a4c;color:#fff}
+.rsvp-dark:hover{color:#fff;background:#1d3b63}
+.rsvp-disabled{border:0;background:#e3d7cb;color:#5a6070}
+.rsvp-chip{padding:0 14px;border:0}
+.rsvp-chip.going{background:#e2eee6;color:#1e5636}
+.rsvp-chip.waitlisted{background:#f7e4d8;color:#5c2408}
+.rsvp-chip.interested{background:#102a4c;color:#fff;cursor:pointer}
+.rsvp-text{min-height:44px;padding:0 6px;border:0;background:transparent;color:#3d4354;font:inherit;font-size:14px;font-weight:500;text-decoration:underline;cursor:pointer}
+.rsvp-text:hover{color:#a3360a}
+.rsvp-link{display:inline-flex;align-items:center;min-height:44px;font-size:14.5px;font-weight:600;color:#a3360a}
+.rsvp-note{display:inline-flex;align-items:center;min-height:44px;font-size:14.5px;font-weight:500;color:#5a6070}
+.rsvp-note.warn{color:#5c2408}
+.rsvp-note.error{color:#a3260f}

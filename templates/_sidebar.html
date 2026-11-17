@@ -1,0 +1,48 @@
+    <aside class="sidebar">
+      <button class="sidebar-close" type="button" aria-label="Close menu" data-sidebar-close><i data-lucide="x" aria-hidden="true"></i></button>
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 56 64" role="img" aria-label="RADAR logo">
+          <path d="M45.9 16.1A25.5 25.5 0 1 0 52.9 36" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M40 22A17 17 0 1 0 44.9 35" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="m16 33 24-9-11 23-2-11z" transform="translate(28 35) scale(.94) translate(-28 -35)" fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-width="1.4"/>
+          <circle cx="49" cy="26" r="3.6" fill="#f45143"/>
+        </svg>
+        <span>
+          <svg class="brand-wordmark" viewBox="0 0 300 90" role="img" aria-label="RADAR">
+            <g fill="currentColor" fill-rule="evenodd">
+              <path d="M0 4h27c17 0 25 8 25 22 0 11-5 18-15 21l17 9H36L22 49H13v7H0zm13 11v23h14c8 0 12-4 12-12s-4-11-12-11z"/>
+              <path d="m58 56 20-52h15l21 52H99L85.5 19 72 56z"/>
+              <path d="M122 4h22c18 0 30 10 30 26s-12 26-30 26h-22zm13 12v28h9c10 0 16-5 16-14s-6-14-16-14z" transform="translate(-4 0)"/>
+              <path d="m178 56 20-52h15l21 52h-15L205.5 19 192 56z" transform="translate(-4 0)"/>
+              <path d="M240 4h27c17 0 25 8 25 22 0 11-5 18-15 21l17 9h-18l-14-7h-9v7h-13zm13 11v23h14c8 0 12-4 12-12s-4-11-12-11z" transform="translate(-6 0)"/>
+            </g>
+          </svg>
+          <small>Hyper-local ai event<br>radar</small>
+        </span>
+      </div>
+      <nav class="nav" aria-label="Main navigation">
+        <a{% if active_nav == 'discover' %} class="active"{% endif %} href="{% url 'dashboard' %}#discover"><i data-lucide="compass" aria-hidden="true"></i>Discover</a>
+        <a{% if active_nav == 'explore_map' %} class="active" aria-current="page"{% endif %} href="{% url 'explore_map' %}"><i data-lucide="map" aria-hidden="true"></i>Explore Map</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}#recommendations"><i data-lucide="sparkles" aria-hidden="true"></i>Recommendations</a>
+        <a{% if active_nav == 'create_event' %} class="active" aria-current="page"{% endif %} href="{% url 'create_event' %}"><i data-lucide="plus-circle" aria-hidden="true"></i>Create Event</a>
+        {% if user.is_campus_verified %}<a{% if active_nav == 'organizations' %} class="active" aria-current="page"{% endif %} href="{% url 'list_my_organizations' %}"><i data-lucide="building-2" aria-hidden="true"></i>My Organizations</a>{% endif %}
+        <a{% if active_nav == 'my_dashboard' %} class="active" aria-current="page"{% endif %} href="{% url 'my_events' %}"><i data-lucide="layout-dashboard" aria-hidden="true"></i>My Dashboard</a>
+        <a{% if active_nav == 'profile' %} class="active" aria-current="page"{% endif %} href="{% url 'profile' %}"><i data-lucide="user-round" aria-hidden="true"></i>Profile</a>
+        {% else %}
+        {% include '_sidebar_locked_item.html' with icon='sparkles' label='Recommendations' tip='Sign in to get events picked for you.' %}
+        {% include '_sidebar_locked_item.html' with icon='plus-circle' label='Create Event' tip='Sign in to create and host events.' %}
+        {% include '_sidebar_locked_item.html' with icon='building-2' label='My Organizations' tip='Sign in with a campus email to manage organizations.' %}
+        {% include '_sidebar_locked_item.html' with icon='layout-dashboard' label='My Dashboard' tip='Sign in to see your events and analytics.' %}
+        {% include '_sidebar_locked_item.html' with icon='user-round' label='Profile' tip='Sign in to see your tickets, saved events and follows.' %}
+        {% endif %}
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <section class="promo">
+        <div class="mini-mark" aria-hidden="true"><i data-lucide="radio"></i></div>
+        <strong>Events.<br>People.<br>A stronger<br>campus.</strong>
+        <em></em>
+        <svg class="promo-skyline" viewBox="0 0 220 80" aria-hidden="true"><path d="M0 80V60h16v-8h18v8h12V46h10v14h10V40l10-6 10 6v40h6V22h4V12l6-8 6 8v10h4v58h8V50h16v-6h8v6h14v8h14v-6h12v8h16v-6h20v26z"/><circle cx="102" cy="17" r="2.6" class="promo-clock"/></svg>
+      </section>
+      <div class="sidebar-footer"><i class="footer-icon" data-lucide="users-round" aria-hidden="true"></i><span>Good events,<br><b>brighter people.</b></span><i data-lucide="chevron-right" aria-hidden="true"></i></div>
+    </aside>
