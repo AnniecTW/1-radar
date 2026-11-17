@@ -18,7 +18,7 @@
 
 ## Changes since P2-A2
 
-Compared with the P2-A2 product requirements document (PRD v1.1, October 17, 2026):
+Compared with the P2-A2 project proposal:
 
 - **Ticketing:** Radar no longer issues its own QR tickets. Paid events link to the host's ticket page; free events keep RSVP, capacity and the waitlist inside Radar.
 - **Snap-a-Flyer:** a first version is built (Moondream 3.1 on Cloudflare Workers AI). It runs during the upload instead of in a Celery task queue, and opens the normal Create Event form pre-filled for review instead of a separate review screen.
