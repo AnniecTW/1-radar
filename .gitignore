@@ -233,3 +233,7 @@ scripts/
 *.bin
 *.safetensors
 *.pt
+
+# OS and editor files
+.DS_Store
+.Rhistory
