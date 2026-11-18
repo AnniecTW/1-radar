@@ -270,3 +270,19 @@ body.keyboard-focus-mode .map-filters .filter-select:has(select:focus-visible){o
 /* Room for the tip card's title on one line now that the text is larger. */
 @media(min-width:761px){.explore-hero{grid-template-columns:minmax(0,1fr) minmax(330px,380px)}}
 .explore-page .map-search-tip b{white-space:nowrap}
+
+/* Location controls turned off by "Don't use my location" (Account & privacy): greyed out and unusable,
+   with a hint on hover or keyboard focus that says why and where to turn location back on. */
+.map-controls{overflow:visible}
+.map-controls>:first-child{border-radius:11px 11px 0 0}
+.map-controls>:last-child,.map-controls>:last-child button{border-radius:0 0 11px 11px}
+.locked-control{position:relative;display:block}
+.map-controls [aria-disabled="true"],.map-controls [aria-disabled="true"]:hover{color:#b4b9c0;background:transparent;cursor:not-allowed}
+.map-filters .filter-toggle.is-locked,.explore-page .more-filter .filter-toggle.is-locked{color:#a3a9b2!important;cursor:not-allowed}
+.filter-toggle.is-locked i,.filter-toggle.is-locked svg{color:#b4b9c0!important}
+.locked-tip{display:none;position:absolute;z-index:20;width:250px;padding:10px 12px;border-radius:10px;background:#18293d;color:#fff;font:500 12px/1.45 'DM Sans',sans-serif;white-space:normal;text-align:left;box-shadow:0 8px 24px #18293d40;cursor:default}
+.locked-tip a{color:#ffd7c2;font-weight:700;text-decoration:underline}
+.locked-control:hover>.locked-tip,.locked-control:focus-within>.locked-tip,
+.is-locked:hover>.locked-tip,.is-locked:focus-within>.locked-tip{display:block}
+.map-controls .locked-tip{right:100%;bottom:0}
+.filter-toggle.is-locked .locked-tip{top:100%;right:0}

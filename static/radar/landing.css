@@ -93,6 +93,19 @@ html{scroll-behavior:smooth}
 
 .home .empty{background:var(--paper);border:1px dashed var(--line);border-radius:16px;padding:26px;text-align:center;color:var(--muted)}
 .home .empty a{color:var(--terra);font-weight:600}
+/* Location banner above Recommended for you (landing-location.js). */
+.home .location-banner{display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;margin-top:26px;padding:14px 16px;background:var(--paper);border:1px solid var(--edge);border-radius:16px;box-shadow:var(--card-shadow)}
+.home .location-banner[hidden]{display:none}
+.home .location-banner p{flex:1 1 280px;margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.home .location-banner b{color:var(--ink)}
+.home .location-icon{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:#fbe9e0;color:var(--terra)}
+.home .location-icon svg{width:17px;height:17px}
+.home .location-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.home .location-actions[hidden]{display:none}
+.home .location-never{border:0;background:none;padding:6px 4px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;text-decoration:underline;cursor:pointer}
+.home .location-never:hover{color:var(--ink)}
+.home .location-banner .location-status.is-note{color:var(--muted)}
+.home .location-banner .location-status{flex-basis:100%;color:#9c2f12}
 .home .notice{margin:0 0 12px;padding:10px 14px;border-radius:12px;background:#f7e9cf;color:#6d4c1d;font-size:13px}
 
 /* Right rail. */

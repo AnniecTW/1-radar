@@ -1,13 +1,21 @@
+import math
+
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.dateparse import parse_date
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.http import require_http_methods
 from datetime import timedelta
 
+from .recommendations import (
+    LOCATION_COOKIE, discard_replaced_impressions, log_impressions, read_location, recommend_events,
+    remember_location, round_location,
+)
 from .selectors import (
     get_campus_center,
     get_campus_timezone,
@@ -19,7 +27,6 @@ from .selectors import (
     list_browse_events,
     list_category_interests,
     list_featured_organizations,
-    list_recommended_events,
     list_saved_event_ids,
     count_recent_signups,
     get_weekend_summary,
@@ -69,7 +76,7 @@ def _map_events(request, bounds=None):
     from django.contrib.gis.measure import D
     from .selectors import get_campus_center
     walk_center = None
-    if request.GET.get('walk') == '1':
+    if request.GET.get('walk') == '1' and _location_state(request, now)[0]:
         try:
             lat, lng = float(request.GET['lat']), float(request.GET['lng'])
             if not (-90 <= lat <= 90 and -180 <= lng <= 180): raise ValueError
@@ -149,13 +156,14 @@ def show_explore_map(request):
     from .selectors import get_campus_center, list_category_interests
     selected_date = request.GET.get('date', 'weekend')
     now = timezone.now()
+    location_allowed, shared_location = _location_state(request, now)
     events = list(_map_events(request))
     shell = {}
     if request.user.is_authenticated:
         from apps.accounts.views import get_account_shell_context
         shell = get_account_shell_context(request.user)
     with timezone.override(get_campus_timezone()):
-        return render(request,'discovery/explore_map.html',{
+        response = render(request,'discovery/explore_map.html',{
             **shell,
             **_map_results_context(request, events),
             'map_points':[_map_point(event) for event in events],
@@ -166,9 +174,14 @@ def show_explore_map(request):
             'date_filter_caption':_map_date_filter_caption(selected_date, now),
             'search_text':request.GET.get('q','')[:MAX_SEARCH_LENGTH], 'free_only':request.GET.get('free') == '1',
             'indoors_only':request.GET.get('indoors') == '1', 'quiet_only':request.GET.get('quiet') == '1',
-            'walk_only':request.GET.get('walk') == '1', 'popular_sort':request.GET.get('sort') == 'popular',
+            'walk_only':request.GET.get('walk') == '1' and location_allowed,
+            'popular_sort':request.GET.get('sort') == 'popular',
             'maptiler_key':__import__('django.conf').conf.settings.MAPTILER_API_KEY,
+            # "Don't use my location" greys out the crosshair and walk filter; otherwise the map opens on
+            # the approximate location the user shared anywhere in Radar.
+            'location_allowed':location_allowed, 'shared_location':shared_location,
         })
+    return _forget_location_if_off(request, response, location_allowed)
 
 
 @require_GET
@@ -197,15 +210,122 @@ def _read_search_request(request: HttpRequest) -> tuple[str, str]:
 
 def _signed_in_context(request: HttpRequest, now, shown_events: list) -> dict:
     """The extras a signed-in user sees: the top bar's name, picks for them, and which cards they saved."""
+    from apps.accounts.selectors import location_is_allowed
     from apps.accounts.views import get_account_shell_context
 
-    recommended = list_recommended_events(request.user, now)
+    shell = get_account_shell_context(request.user)
+    location_allowed = location_is_allowed(shell['profile'])
+    location = read_location(request, now) if location_allowed else None
+    recommended = recommend_events(request.user, now, location)
+    log_impressions(request.user, recommended, now)
     return {
-        **get_account_shell_context(request.user),
+        **shell,
         'recommended': recommended,
+        'user_location': location,
+        'location_allowed': location_allowed,
         'interest_ids': set(request.user.interests.values_list('interest_id', flat=True)),
         'saved_event_ids': list_saved_event_ids(request.user, shown_events + recommended),
     }
+
+
+def _location_state(request: HttpRequest, now) -> tuple[bool, tuple[float, float] | None]:
+    """(may Radar use location, the approximate location this user shared). Guests can always use the
+    map's own location controls; only signed-in users have a setting and a shared location."""
+    if not request.user.is_authenticated:
+        return True, None
+    from apps.accounts.selectors import location_is_allowed
+    from apps.accounts.services import get_or_create_profile
+
+    if not location_is_allowed(get_or_create_profile(request.user)):
+        return False, None
+    return True, read_location(request, now)
+
+
+def _forget_location_if_off(request: HttpRequest, response: HttpResponse, location_allowed: bool) -> HttpResponse:
+    """Location was turned off after it was shared: remove what this browser still holds."""
+    if not location_allowed and LOCATION_COOKIE in request.COOKIES:
+        response.delete_cookie(LOCATION_COOKIE)
+    return response
+
+
+def _location_off_response() -> JsonResponse:
+    response = JsonResponse({'error': 'location is turned off'}, status=403)
+    response.delete_cookie(LOCATION_COOKIE)
+    return response
+
+
+def _read_coordinates(request: HttpRequest) -> tuple[float, float] | None:
+    try:
+        latitude, longitude = float(request.POST['lat']), float(request.POST['lng'])
+    except (KeyError, ValueError):
+        return None
+    if not (math.isfinite(latitude) and math.isfinite(longitude) and -90 <= latitude <= 90
+            and -180 <= longitude <= 180):
+        return None
+    return latitude, longitude
+
+
+@login_required
+@require_POST
+def share_location(request: HttpRequest) -> JsonResponse:
+    """Share once, used everywhere: the Explore Map's crosshair and walk filter save the same approximate
+    location as the home page's banner, so recommendations use it too."""
+    now = timezone.now()
+    if not _location_state(request, now)[0]:
+        return _location_off_response()
+    coordinates = _read_coordinates(request)
+    if coordinates is None:
+        return JsonResponse({'error': 'valid lat and lng are required'}, status=400)
+    location = round_location(*coordinates)
+    response = JsonResponse({'location': {'lat': location[0], 'lng': location[1]}})
+    remember_location(response, request, location, now)
+    return response
+
+
+@login_required
+@require_POST
+def set_recommendation_location(request: HttpRequest) -> JsonResponse:
+    """The browser shares the user's location for "Recommended for you". It is snapped to a ~500 m grid and
+    kept in a six-hour cookie on the user's device, and the re-ranked row comes back as HTML to swap in place.
+    `replace=1` marks a quiet refresh right after page load, whose new row replaces the impressions that page
+    just logged. Refused when the user chose "Don't use my location"."""
+    now = timezone.now()
+    if not _location_state(request, now)[0]:
+        return _location_off_response()
+    coordinates = _read_coordinates(request)
+    if coordinates is None:
+        return JsonResponse({'error': 'valid lat and lng are required'}, status=400)
+    location = round_location(*coordinates)
+    recommended = recommend_events(request.user, now, location)
+    if request.POST.get('replace') == '1':
+        discard_replaced_impressions(request.user, now)
+    log_impressions(request.user, recommended, now)
+    interest_ids = set(request.user.interests.values_list('interest_id', flat=True))
+    label_card_highlights([recommended], now, interest_ids, {event.pk for event in get_trending_events(now)})
+    context = {
+        'recommended': recommended,
+        'user_location': location,
+        'location_allowed': True,
+        'interest_ids': interest_ids,
+        'saved_event_ids': list_saved_event_ids(request.user, recommended),
+    }
+    with timezone.override(get_campus_timezone()):
+        html = render_to_string('discovery/_recommendations.html', context, request=request)
+    response = JsonResponse({'html': html, 'location': {'lat': location[0], 'lng': location[1]}})
+    remember_location(response, request, location, now)
+    return response
+
+
+@login_required
+@require_POST
+def turn_off_recommendation_location(request: HttpRequest) -> JsonResponse:
+    """"Don't ask again" on the location banner: switches Account & privacy to "Don't use my location"."""
+    from apps.accounts.services import turn_off_location
+
+    turn_off_location(user=request.user)
+    response = JsonResponse({'location': 'off'})
+    response.delete_cookie(LOCATION_COOKIE)
+    return response
 
 
 @require_http_methods(['GET'])
@@ -257,4 +377,5 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
     label_card_highlights(card_lists, now, context.get('interest_ids', set()), {event.pk for event in trending})
     # Dates render in campus time, not the server's UTC.
     with timezone.override(campus_timezone):
-        return render(request, 'discovery/landing.html', context)
+        response = render(request, 'discovery/landing.html', context)
+    return _forget_location_if_off(request, response, context.get('location_allowed', True))

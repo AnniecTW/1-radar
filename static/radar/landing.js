@@ -99,17 +99,21 @@ if (browseGrid && homeMain) {
   syncCardWidth();
 }
 
-document.querySelectorAll('[data-scroll]').forEach((button) => {
-  button.addEventListener('click', () => {
-    const row = button.closest('.section').querySelector('[data-row]');
-    row.scrollBy({ left: Number(button.dataset.scroll) * row.clientWidth * 0.8, behavior: 'smooth' });
-  });
+// Delegated, so rows swapped in later (Recommended for you, after sharing a location) scroll too.
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-scroll]');
+  if (!button) return;
+  const row = button.closest('.section').querySelector('[data-row]');
+  row.scrollBy({ left: Number(button.dataset.scroll) * row.clientWidth * 0.8, behavior: 'smooth' });
 });
 
 const mapElement = document.getElementById('map-preview');
 if (mapElement && window.maplibregl && mapElement.dataset.maptilerKey) {
   const points = JSON.parse(document.getElementById('map-points').textContent);
-  const center = JSON.parse(document.getElementById('map-center').textContent) || [40.102, -88.2272];
+  const userLocationScript = document.getElementById('user-location');
+  const userLocation = userLocationScript ? JSON.parse(userLocationScript.textContent) : null;
+  const center = (Array.isArray(userLocation) && userLocation)
+    || JSON.parse(document.getElementById('map-center').textContent) || [40.102, -88.2272];
   // Same MapTiler style as the Explore Map.
   const map = new maplibregl.Map({
     container: mapElement,
@@ -174,6 +178,17 @@ if (mapElement && window.maplibregl && mapElement.dataset.maptilerKey) {
       .addTo(map);
     if (!busiest || point.weight > busiest.point.weight) busiest = { point, marker };
   });
+  // An "approximate location" circle (map-location.js) once the user shares their location
+  // (landing-location.js), or if they shared it recently anywhere in Radar. It replaces the busiest-event popup.
+  let approximate = null;
+  const showUserLocation = ([lat, lng]) => {
+    approximate?.remove();
+    approximate = window.radarApproximateLocation(map, [lat, lng]);
+    mapElement.setAttribute('aria-label', 'Heat map of upcoming campus events, with a shaded circle around your approximate location');
+    map.easeTo({ center: [lng, lat] });
+  };
+  document.addEventListener('radar:location', (event) => showUserLocation(event.detail));
+  if (Array.isArray(userLocation)) showUserLocation(userLocation);
   // Show the most popular event straight away, like a preview of what the full map offers.
-  if (busiest) map.once('load', () => busiest.marker.togglePopup());
+  else if (busiest) map.once('load', () => busiest.marker.togglePopup());
 }

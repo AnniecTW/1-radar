@@ -1,6 +1,6 @@
 {% extends 'accounts/app_base.html' %}{% load static %}
 {% block title %}Explore Map · Radar{% endblock %}
-{% block extra_head %}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4"><link rel="stylesheet" href="{% static 'radar/explore-map.css' %}?v=6">{% endblock %}
+{% block extra_head %}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4"><link rel="stylesheet" href="{% static 'radar/explore-map.css' %}?v=7">{% endblock %}
 {% comment %}On this page the shared top-bar search searches the map, keeping its date, category and toggles. Keyword matching only, so no AI switch.{% endcomment %}
 {% block topbar_search %}
 <form class="search" action="{% url 'explore_map' %}" method="get" role="search">
@@ -39,7 +39,7 @@
       <label class="filter-toggle"><input type="checkbox" name="free" value="1" {% if free_only %}checked{% endif %}><i data-lucide="ticket-check" aria-hidden="true"></i>Free only</label>
       <button class="quick-filter{% if indoors_only %} selected{% endif %}" type="button" data-toggle-param="indoors" data-toggle-value="1" aria-pressed="{{ indoors_only|yesno:'true,false' }}"><i data-lucide="house" aria-hidden="true"></i>Indoors</button>
       <button class="quick-filter{% if quiet_only %} selected{% endif %}" type="button" data-toggle-param="quiet" data-toggle-value="1" aria-pressed="{{ quiet_only|yesno:'true,false' }}"><i data-lucide="headphones" aria-hidden="true"></i>Quiet events</button>
-      <details class="more-filter"><summary><i data-lucide="sliders-horizontal" aria-hidden="true"></i>More filters</summary><label class="filter-toggle"><input type="checkbox" name="walk" value="1" {% if walk_only %}checked{% endif %}><i data-lucide="footprints" aria-hidden="true"></i>15-minute walk</label></details>
+      <details class="more-filter"><summary><i data-lucide="sliders-horizontal" aria-hidden="true"></i>More filters</summary>{% if location_allowed %}<label class="filter-toggle"><input type="checkbox" name="walk" value="1" {% if walk_only %}checked{% endif %}><i data-lucide="footprints" aria-hidden="true"></i>15-minute walk</label>{% else %}<label class="filter-toggle is-locked" tabindex="0" aria-describedby="walk-locked-tip"><input type="checkbox" name="walk" value="1" disabled><i data-lucide="footprints" aria-hidden="true"></i>15-minute walk{% include 'discovery/_location_locked_tip.html' with tip_id='walk-locked-tip' %}</label>{% endif %}</details>
     </div>
   </form>
 
@@ -60,7 +60,11 @@
       <div class="map-controls" aria-label="Map controls">
         <button type="button" data-map-zoom="in" aria-label="Zoom in"><i data-lucide="plus" aria-hidden="true"></i></button>
         <button type="button" data-map-zoom="out" aria-label="Zoom out"><i data-lucide="minus" aria-hidden="true"></i></button>
-        <button type="button" data-map-locate aria-label="Show my location"><i data-lucide="locate-fixed" aria-hidden="true"></i></button>
+        {% if location_allowed %}
+          <button type="button" data-map-locate aria-label="Show my location"><i data-lucide="locate-fixed" aria-hidden="true"></i></button>
+        {% else %}
+          <span class="locked-control"><button type="button" data-map-locate aria-disabled="true" aria-label="Show my location (turned off)" aria-describedby="locate-locked-tip"><i data-lucide="locate-fixed" aria-hidden="true"></i></button>{% include 'discovery/_location_locked_tip.html' with tip_id='locate-locked-tip' %}</span>
+        {% endif %}
       </div>
       <div id="map-status" class="map-status" role="status">Loading map…</div>
     </section>
@@ -72,11 +76,12 @@
       <div id="event-list">{% include 'discovery/_map_results.html' %}</div>
     </section>
   </div>
-  {{ map_points|json_script:'map-points' }}{{ map_center|json_script:'map-center' }}
+  {{ map_points|json_script:'map-points' }}{{ map_center|json_script:'map-center' }}{{ shared_location|json_script:'shared-location' }}
   {% if not user.is_authenticated %}{% include 'discovery/_signin_dialog.html' %}{% endif %}
 </main>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css"><script src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"></script>
-<script>window.RADAR_MAP={key:"{{ maptiler_key|escapejs }}",category:"{{ selected_category|escapejs }}",date:"{{ selected_date|escapejs }}",q:"{{ search_text|escapejs }}",free:{{ free_only|yesno:'true,false' }},indoors:{{ indoors_only|yesno:'true,false' }},quiet:{{ quiet_only|yesno:'true,false' }},walk:{{ walk_only|yesno:'true,false' }},sort:"{% if popular_sort %}popular{% else %}date{% endif %}"};</script>
+<script>window.RADAR_MAP={key:"{{ maptiler_key|escapejs }}",category:"{{ selected_category|escapejs }}",date:"{{ selected_date|escapejs }}",q:"{{ search_text|escapejs }}",free:{{ free_only|yesno:'true,false' }},indoors:{{ indoors_only|yesno:'true,false' }},quiet:{{ quiet_only|yesno:'true,false' }},walk:{{ walk_only|yesno:'true,false' }},sort:"{% if popular_sort %}popular{% else %}date{% endif %}",shareUrl:"{% if user.is_authenticated and location_allowed %}{% url 'share_location' %}{% endif %}",csrf:"{{ csrf_token }}"};</script>
 <script src="{% static 'radar/signin-gate.js' %}?v=1"></script>
-<script src="{% static 'radar/explore-map.js' %}?v=3" defer></script>
+<script src="{% static 'radar/map-location.js' %}?v=1" defer></script>
+<script src="{% static 'radar/explore-map.js' %}?v=4" defer></script>
 {% endblock %}

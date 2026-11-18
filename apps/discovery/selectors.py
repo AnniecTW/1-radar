@@ -97,13 +97,6 @@ def get_trending_events(now: datetime) -> list[Event]:
     return list(events[:CAROUSEL_SIZE])
 
 
-def list_recommended_events(user, now: datetime) -> list[Event]:
-    """Upcoming events in the user's interests, most popular first. Empty when they picked none."""
-    interest_ids = user.interests.values_list('interest_id', flat=True)
-    events = list_upcoming_events(now).filter(interests__in=interest_ids).distinct()
-    return list(events.order_by('-popularity_score', 'start_at')[:CAROUSEL_SIZE])
-
-
 def list_saved_event_ids(user, events: list[Event]) -> set:
     """Which of these events the user saved, in one query for every card on the page."""
     event_ids = {event.pk for event in events}
@@ -239,6 +232,9 @@ def count_recent_signups(now: datetime) -> int | None:
 
 def get_card_highlight(event: Event, now: datetime, interest_ids: set, trending_ids: set) -> str:
     """One true sentence about why an event is worth a look, shown on its card. Empty when none applies."""
+    # Recommended cards explain why they were picked (FR-42).
+    if getattr(event, 'recommendation_reason', ''):
+        return event.recommendation_reason
     if event.start_at <= now < event.end_at:
         return 'Happening right now'
     matching = [interest.name for interest in event.interests.all() if interest.pk in interest_ids]

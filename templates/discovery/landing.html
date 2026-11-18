@@ -4,7 +4,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css">
   <link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4">
-  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=12">
+  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=15">
 {% endblock %}
 
 {% block content %}
@@ -75,19 +75,7 @@
     <div class="home-main">
       {% if search_text or selected_category or search_error %}{% include 'discovery/_browse.html' %}{% endif %}
 
-      {% if user.is_authenticated %}
-        {% if recommended %}
-          {% include 'discovery/_carousel.html' with section_id='recommendations' icon='sparkles' heading='Recommended for you' subheading='Popular upcoming events in your interests' events=recommended %}
-        {% else %}
-          <section class="section" id="recommendations" aria-labelledby="recommendations-title">
-            <div class="section-heading"><div>
-              <h2 id="recommendations-title"><i data-lucide="sparkles" aria-hidden="true"></i>Recommended for you</h2>
-              <p>Popular upcoming events in your interests</p>
-            </div></div>
-            <p class="empty">{% if interest_ids %}No upcoming events match your interests yet.{% else %}Pick a few interests and we’ll show events for you here.{% endif %} <a href="{% url 'preferences' %}">Edit interests</a></p>
-          </section>
-        {% endif %}
-      {% endif %}
+      {% if user.is_authenticated %}{% include 'discovery/_recommendations.html' %}{% endif %}
 
       {% url 'explore_map' as explore_url %}
       {% include 'discovery/_carousel.html' with section_id='today' icon='clock' heading='Happening today' subheading='Starting today or already underway' events=happening_today see_all_url=explore_url|add:'?date=today' compact=True %}
@@ -105,6 +93,7 @@
         <a class="rail-link" href="{% url 'explore_map' %}">View full map <i data-lucide="arrow-right" aria-hidden="true"></i></a>
         {{ map_points|json_script:"map-points" }}
         {{ map_center|json_script:"map-center" }}
+        {{ user_location|json_script:"user-location" }}
       </section>
 
       <section class="rail-card weekend-card" aria-labelledby="weekend-summary-title">
@@ -163,5 +152,7 @@
 
 <script src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"></script>
 <script src="{% static 'radar/signin-gate.js' %}?v=1"></script>
-<script src="{% static 'radar/landing.js' %}?v=7"></script>
+<script src="{% static 'radar/map-location.js' %}?v=1"></script>
+<script src="{% static 'radar/landing.js' %}?v=9"></script>
+{% if user.is_authenticated %}<script src="{% static 'radar/landing-location.js' %}?v=5"></script>{% endif %}
 {% endblock %}
