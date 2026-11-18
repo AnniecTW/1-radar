@@ -8,8 +8,12 @@ class Interest(models.Model):
     slug = models.SlugField(unique=True)
     group = models.CharField(max_length=40, blank=True)
     icon = models.CharField(max_length=40, blank=True)
-    # Dimension depends on the embedding model.
-    embedding = VectorField(dimensions=1536, null=True, blank=True)
+    # Internal only, never shown to users: the phrase the embedding is built from, because a
+    # one-word name like "Study" gives the model too little to go on.
+    # db_default lets code that predates this column (other branches, older deploys) still insert interests.
+    description = models.CharField(max_length=255, blank=True, db_default='')
+    # Same model and size as Event.embedding (Cloudflare BGE small), so the two can be compared.
+    embedding = VectorField(dimensions=384, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

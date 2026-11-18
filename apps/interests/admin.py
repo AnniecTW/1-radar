@@ -1,13 +1,33 @@
+from django import forms
 from django.contrib import admin
 
 from .models import Interest, UserInterest
 
 
+class InterestAdminForm(forms.ModelForm):
+    class Meta:
+        model = Interest
+        exclude = ('embedding',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Optional in the database so older code can still insert interests, but required here:
+        # without it the interest is embedded from its bare name, which gives weak recommendations.
+        description = self.fields['description']
+        description.required = True
+        description.help_text = (
+            'Internal only; users never see it. Recommendations compare it with event listings, so write it '
+            'like one: the name, a colon, then the kinds of events it covers. Example: "Music: concerts, open mics, '
+            'jam sessions, choir and band performances". Saving re-embeds the interest when this, the name or '
+            'the group changes.'
+        )
+
+
 @admin.register(Interest)
 class InterestAdmin(admin.ModelAdmin):
-    list_display = ('name', 'group', 'is_active')
+    form = InterestAdminForm
+    list_display = ('name', 'group', 'description', 'is_active')
     prepopulated_fields = {'slug': ('name',)}
-    exclude = ('embedding',)
 
 
 @admin.register(UserInterest)

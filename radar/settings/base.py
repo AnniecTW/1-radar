@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -31,6 +32,10 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 DEBUG = False
 
 ALLOWED_HOSTS = []
+
+# Saving an interest, or migrating the interests app, embeds interests through Cloudflare.
+# Off during `manage.py test` so tests never call it; tests of that behaviour turn it back on with override_settings.
+INTEREST_AUTO_EMBED = sys.argv[1:2] != ['test']
 
 
 # Application definition
