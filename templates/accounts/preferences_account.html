@@ -11,9 +11,8 @@
       {% csrf_token %}
       <fieldset class="radio-group">
         <legend>When can we use your location?</legend>
-        <label class="radio-row"><input type="radio" name="use" value="session"{% if location.use == 'session' %} checked{% endif %}><span><b>Only while I'm using the app</b><small>Recommended. Used for this session and not saved.</small></span></label>
-        <label class="radio-row"><input type="radio" name="use" value="save"{% if location.use == 'save' %} checked{% endif %}><span><b>Remember my location</b><small>Helps rank nearby events in your For You feed.</small></span></label>
-        <label class="radio-row"><input type="radio" name="use" value="off"{% if location.use == 'off' %} checked{% endif %}><span><b>Don't use my location</b><small>The map starts from the center of campus.</small></span></label>
+        <label class="radio-row"><input type="radio" name="use" value="session"{% if location.use == 'session' %} checked{% endif %}><span><b>While I'm using Radar</b><small>Ranks nearby events higher in Recommended for you. Radar keeps only an approximate location (within about half a kilometer) on this device for six hours, never in your account.</small></span></label>
+        <label class="radio-row"><input type="radio" name="use" value="off"{% if location.use == 'off' %} checked{% endif %}><span><b>Don't use my location</b><small>Radar won't ask, and recommendations leave out distance. The map starts from the center of campus.</small></span></label>
       </fieldset>
       <label class="setting ruled">
         <span>Start with a 15-minute walk</span>

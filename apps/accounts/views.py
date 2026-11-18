@@ -318,7 +318,12 @@ def edit_account_preferences(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             save_location_preferences(user=request.user, cleaned_data=form.cleaned_data)
             messages.success(request, 'Your preferences are saved.')
-            return redirect('account_preferences')
+            response = redirect('account_preferences')
+            if form.cleaned_data['use'] == 'off':
+                # Forget any location this browser shared for recommendations.
+                from apps.discovery.recommendations import LOCATION_COOKIE
+                response.delete_cookie(LOCATION_COOKIE)
+            return response
         messages.error(request, 'We could not save those settings. Please try again.')
     return render(request, 'accounts/preferences_account.html', {
         **shell,

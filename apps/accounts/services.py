@@ -85,6 +85,17 @@ def save_location_preferences(*, user: User, cleaned_data: dict) -> None:
     profile.save(update_fields=['notification_prefs', 'updated_at'])
 
 
+def turn_off_location(*, user: User) -> None:
+    """"Don't ask again" on the home page's location banner: the same as choosing "Don't use my location"
+    on Account & privacy, keeping the other map settings as they are."""
+    from .selectors import get_preferences
+
+    profile = get_or_create_profile(user)
+    location = {**get_preferences(profile)['location'], 'use': 'off'}
+    profile.notification_prefs = {**profile.notification_prefs, 'location': location}
+    profile.save(update_fields=['notification_prefs', 'updated_at'])
+
+
 def make_verification_token(user: User) -> str:
     # The email is signed in so a link stops working if the address changes.
     return signing.dumps({'user_id': str(user.pk), 'email': user.email}, salt=VERIFICATION_TOKEN_SALT)

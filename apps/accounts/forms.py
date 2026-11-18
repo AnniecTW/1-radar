@@ -69,7 +69,7 @@ class FeedPreferencesForm(PreferredInterestsForm):
 
 
 class LocationPreferencesForm(forms.Form):
-    use = forms.ChoiceField(choices=[('session', 'Session'), ('save', 'Save'), ('off', 'Off')])
+    use = forms.ChoiceField(choices=[('session', 'While using Radar'), ('off', 'Off')])
     start_with_walk = forms.BooleanField(required=False)
     show_heat_map = forms.BooleanField(required=False)
     default_map_view = forms.ChoiceField(choices=[('map', 'Map'), ('satellite', 'Satellite'), ('list', 'List')])
