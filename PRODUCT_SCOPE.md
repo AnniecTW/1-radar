@@ -23,7 +23,7 @@ Compared with the P2-A2 project proposal:
 - **Ticketing:** Radar no longer issues its own QR tickets. Paid events link to the host's ticket page; free events keep RSVP, capacity and the waitlist inside Radar.
 - **Snap-a-Flyer:** a first version is built (Moondream 3.1 on Cloudflare Workers AI). It runs during the upload instead of in a Celery task queue, and opens the normal Create Event form pre-filled for review instead of a separate review screen.
 - **AI search:** built as embedding search (BGE-small through Cloudflare Workers AI, ranked in PostgreSQL with pgvector) with an AI toggle and keyword fallback, instead of LLM query parsing.
-- **Recommendations:** rule-based interest matching for now; ranking with event embeddings is planned.
+- **Recommendations:** built as the PRD's content-based + popularity ranking with event and interest embeddings. The profile vector is rebuilt on each request instead of cached in Redis, and proximity uses a location the user chooses to share on the homepage.
 - **Organizations:** the Editor role was dropped. Radar admins now approve a verified badge for organizations.
 - **Analytics:** traffic sources and audience breakdown, listed as stretch goals in the PRD, are built.
 - **Tech stack:** Django 6.1 and Python 3.13 instead of Django 5.2 and Python 3.12; plain Django JSON views instead of Django REST Framework; PostgreSQL with PostGIS and pgvector hosted on Supabase; MapTiler maps.

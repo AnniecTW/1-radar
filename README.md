@@ -221,6 +221,24 @@ Radar's AI feature is **AI search**, which finds events by meaning instead of ex
 
 New and edited events get embeddings automatically when their searchable text changes. If Cloudflare is unavailable or the keys are missing, the page says "AI search is temporarily unavailable" and shows keyword matches instead, and saving events still works. Each AI search makes one call to Cloudflare, which has usage limits.
 
+### Recommendations
+
+"Recommended for you" on the home page ranks upcoming events for each signed-in user. It averages the embeddings of the events they checked into, RSVP'd to, saved, liked or viewed, together with the interests they chose, and scores events by similarity to that average, followed organizations, popularity, distance and how soon they start. Ranking uses only stored embeddings, so it makes no Cloudflare calls.
+
+**To set it up:** interests need embeddings too. Each is built from the interest's internal description, which users never see. `migrate` writes the descriptions and creates the embeddings, `seed_mock_data` fills in any blank descriptions, and adding or rewording an interest in the Django admin (where a description is required) re-embeds it. Tests never call Cloudflare for this. If Cloudflare was unavailable at the time, fill in the missing ones (add `--force` to rebuild all):
+
+```sh
+python manage.py embed_interests
+```
+
+**To use it:** sign in, pick interests on `/preferences/`, and save, like or RSVP to a few events. The home page's Recommended row then shows why each event was picked. Tap **Share location** on the banner above it to put nearby events higher; Radar keeps only an approximate location (within about half a kilometer) in a cookie on your device for six hours, never in the database. The Explore Map opens on the same location, and using its crosshair or 15-minute walk filter shares it for recommendations too. **Don't ask again** on the banner, or **Don't use my location** on Account & privacy, turns it off everywhere.
+
+**Pruning:** every card shown is logged to `RecommendationImpression` to measure click-through rate. Rows older than 180 days are deleted, except "Not interested" rows for events that haven't ended yet. The home page prunes the signed-in user's own rows each time it logs new ones. To clear old rows for everyone, including users who stopped visiting, run this by hand or from a scheduled job (`--days` changes the cutoff):
+
+```sh
+python manage.py prune_recommendation_impressions
+```
+
 ### Snap a flyer
 
 Snap a flyer reads an event flyer with a vision model (`@cf/moondream/moondream3.1-9B-A2B` on Cloudflare Workers AI) and fills in the Create Event form. It uses the same `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` as AI search.
@@ -252,7 +270,7 @@ Each user can read 10 flyers per 24 hours (`FLYER_DAILY_LIMIT`). If Cloudflare i
 python manage.py test
 ```
 
-Tests create a temporary database, so your `DATABASE_URL` user needs permission to create databases. To run only the AI search tests:
+Tests create a temporary database, so your `DATABASE_URL` user needs permission to create databases. Through the Supabase pooler, add `--keepdb` (`python manage.py test --keepdb`): otherwise the tests pass but deleting the temporary database fails with "is being accessed by other users", because the pooler keeps a connection to it open. To run only the AI search tests:
 
 ```sh
 python manage.py test apps.events.tests.test_semantic_search
@@ -263,3 +281,11 @@ To run only the Snap a flyer tests (the model call is mocked, so no Cloudflare k
 ```sh
 python manage.py test apps.flyers
 ```
+
+To run only the recommendation tests (Cloudflare is mocked here too):
+
+```sh
+python manage.py test apps.discovery
+```
+
+The rule tests in `apps.discovery.tests.test_recommendation_rules` (weights, decay, category cap, reasons) need no database at all, so they run even without permission to create one.
