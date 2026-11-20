@@ -18,8 +18,8 @@ class InterestAdminForm(forms.ModelForm):
         description.help_text = (
             'Internal only; users never see it. Recommendations compare it with event listings, so write it '
             'like one: the name, a colon, then the kinds of events it covers. Example: "Music: concerts, open mics, '
-            'jam sessions, choir and band performances". Saving re-embeds the interest when this, the name or '
-            'the group changes.'
+            'jam sessions, choir and band performances". Only this text is embedded, so saving re-embeds the '
+            'interest when it changes. If you rename the interest, update the name at the start of this text too.'
         )
 
 

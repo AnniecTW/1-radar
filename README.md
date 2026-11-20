@@ -198,7 +198,7 @@ Radar's AI feature is **AI search**, which finds events by meaning instead of ex
 
 **How it works:** Radar turns each event's title, description, categories, location and price into a 384-dimension embedding with Cloudflare Workers AI (`@cf/baai/bge-small-en-v1.5`), and stores it in PostgreSQL with pgvector. A search embeds your query the same way, then ranks events by cosine similarity and leaves out weak matches (below `0.58` by default).
 
-**To set it up:**
+**Setup:** nothing to do on the shared database, where every interest already has an embedding. Each is built from the interest's internal description, which users never see. Adding or rewording an interest in the Django admin (where a description is required) re-embeds it on save, and a fresh database gets descriptions and embeddings from `migrate` and `seed_mock_data`. Tests never call Cloudflare for this. If an interest ends up without an embedding, for example because Cloudflare was down when it was saved, fill in the missing ones (add `--force` to rebuild all):
 
 1. Add `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` to `.env` and restart the server. The token needs permission to use Workers AI.
 2. Check the connection. This makes one Cloudflare call:
@@ -231,9 +231,13 @@ New and edited events get embeddings automatically when their searchable text ch
 python manage.py embed_interests
 ```
 
-**To use it:** sign in, pick interests on `/preferences/`, and save, like or RSVP to a few events. The home page's Recommended row then shows why each event was picked. Tap **Share location** on the banner above it to put nearby events higher; Radar keeps only an approximate location (within about half a kilometer) in a cookie on your device for six hours, never in the database. The Explore Map opens on the same location, and using its crosshair or 15-minute walk filter shares it for recommendations too. **Don't ask again** on the banner, or **Don't use my location** on Account & privacy, turns it off everywhere.
+**To use it:** sign in, pick interests on `/preferences/`, and save, like or RSVP to a few events; each Recommended card then says why it was picked. **Share location** on the banner (or **Use my location** in the Recommended heading, after **Not now** or a blocked prompt) ranks nearby events higher, and the Explore Map, its crosshair and its 15-minute walk filter use the same location. Only an approximate location (about 500 m) is kept, in a cookie on the device for six hours, never in the database. **Don't ask again** on the banner or **Don't use my location** on Account & privacy turns it off everywhere.
 
-**Pruning:** every card shown is logged to `RecommendationImpression` to measure click-through rate. Rows older than 180 days are deleted, except "Not interested" rows for events that haven't ended yet. The home page prunes the signed-in user's own rows each time it logs new ones. To clear old rows for everyone, including users who stopped visiting, run this by hand or from a scheduled job (`--days` changes the cutoff):
+**Not interested:** the eye-off button on a Recommended card hides the event until it ends, with **Undo** for about 8 seconds, and ranks similar events lower. The penalty starts at 0.75 similarity and reaches 0.2 (scores top out around 1) at 0.90, where repeats of a series sit; it takes the biggest penalty across dismissals, not the sum, and fades with a 30-day half-life. Dismissing also cancels that event's earlier views, likes and cancelled RSVPs (later ones count again); saves, RSVPs and check-ins always count.
+
+**Clear recommendation history:** on Account & privacy, after a confirm dialog. Recommendations ignore all activity and "Not interested" marks from before the reset and start over from interests and followed organizations. Nothing is deleted (only the reset time is saved in the profile's settings), and **Undo** puts the previous reset back for 10 minutes.
+
+**Pruning:** each card shown is logged to `RecommendationImpression` for click-through rates. Rows older than 180 days are deleted, except "Not interested" rows for events that haven't ended. The home page prunes the signed-in user's rows as it logs new ones; to prune everyone's, run this by hand or on a schedule (`--days` sets the cutoff):
 
 ```sh
 python manage.py prune_recommendation_impressions
