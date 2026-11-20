@@ -61,6 +61,26 @@
 :is(.home,.explore-page) .going{display:inline-flex;align-items:center;gap:6px;color:#4b555d;font-size:12px}
 :is(.home,.explore-page) .going svg{width:16px;height:16px;color:#6b7279}
 
+/* Full-size cards line up across a row: a title always takes two lines' height, the chips stay on one line
+   (the price keeps its width; categories share the rest evenly, so a short one stays whole and a long one shortens), the reason sits
+   on one line just above the footer, and the footer text doesn't wrap. */
+:is(.home,.explore-page) .event-body h3{min-height:2.6em}
+:is(.home,.explore-page) .event-body .tags{flex-wrap:nowrap;overflow:hidden}
+:is(.home,.explore-page) .event-body .tag{flex:1 1 0;min-width:0;max-width:max-content;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.home,.explore-page) .event-body .tag-price{flex:none}
+/* The date and time are never cut off: if they don't fit, the time range moves to a second line, kept whole. */
+:is(.home,.explore-page) .event-date{align-items:flex-start}
+:is(.home,.explore-page) .event-date svg{flex-shrink:0;margin-top:1px}
+:is(.home,.explore-page) .event-date>span{white-space:normal;overflow:visible}
+:is(.home,.explore-page) .event-body .insight{margin-top:auto;align-items:center;min-width:0}
+:is(.home,.explore-page) .event-body .insight svg{flex-shrink:0}
+:is(.home,.explore-page) .event-body .insight span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.home,.explore-page) .event-body .insight+.card-footer{margin-top:0}
+:is(.home,.explore-page) .card-footer .going{min-width:0;white-space:nowrap}
+:is(.home,.explore-page) .card-footer .going svg{flex-shrink:0}
+:is(.home,.explore-page) .card-footer .going span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+:is(.home,.explore-page) .card-footer .rsvp{flex-shrink:0}
+
 /* Compact card (Trending): photo on the left. */
 :is(.home,.explore-page) .compact-card{display:flex;gap:12px;align-items:stretch;background:var(--paper);border:1px solid var(--edge);border-radius:16px;padding:8px;box-shadow:var(--card-shadow);transition:transform .18s,box-shadow .18s}
 :is(.home,.explore-page) .compact-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(40,34,26,.1)}
@@ -73,7 +93,7 @@
 :is(.home,.explore-page) .compact-body h3{font-size:14px;-webkit-line-clamp:1;margin-bottom:5px}
 :is(.home,.explore-page) .compact-body .event-meta{font-size:11px;margin-bottom:2px}
 :is(.home,.explore-page) .compact-body .tags{margin:5px 0;flex-wrap:nowrap;overflow:hidden;min-height:22px}
-:is(.home,.explore-page) .compact-body .tag{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.home,.explore-page) .compact-body .tag{flex:1 1 0;min-width:0;max-width:max-content;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :is(.home,.explore-page) .compact-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:2px}
 :is(.home,.explore-page) .compact-footer .rsvp{padding:4px 10px;border-radius:8px;font-size:11px}
 :is(.home,.explore-page) .compact-body .going{font-size:11px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -103,4 +123,3 @@
 /* Compact cards: the photo fills the left column without setting its height, so every card in a row is sized by its text and they all match. */
 :is(.home,.explore-page) .compact-card{min-width:0}
 :is(.home,.explore-page) .compact-image>a{position:absolute;inset:0}
-:is(.home,.explore-page) .compact-body .tag:first-child{flex-shrink:0}

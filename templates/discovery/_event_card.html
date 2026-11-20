@@ -15,16 +15,16 @@
   </div>
   <div class="event-body">
     <h3><a href="{% url 'event_detail' event.slug %}{{ link_query }}">{{ event.title }}</a></h3>
-    <p class="event-meta"><i data-lucide="calendar" aria-hidden="true"></i><span>{{ event.start_at|date:"D, M j" }} · {{ event.start_at|date:"g:i A" }} – {{ event.end_at|date:"g:i A" }}</span></p>
+    <p class="event-meta event-date"><i data-lucide="calendar" aria-hidden="true"></i><span><span>{{ event.start_at|date:"D, M j" }} ·</span> <span>{{ event.start_at|date:"g:i A" }} – {{ event.end_at|date:"g:i A" }}</span></span></p>
     <p class="event-meta"><i data-lucide="map-pin" aria-hidden="true"></i><span>{% if event.venue %}{{ event.venue.name }}{% if event.location_text %}, {{ event.location_text }}{% endif %}{% else %}{{ event.location_text }}{% endif %}</span></p>
     <div class="tags">
       {% for interest in event.interests.all|slice:":2" %}<span class="tag tone-{{ interest.slug|category_tone }}">{{ interest.name }}</span>{% endfor %}
-      {% if event.is_free %}<span class="tag tone-free">Free</span>{% else %}<span class="tag tone-paid">{{ event.price_text|default:"Paid" }}</span>{% endif %}
+      {% if event.is_free %}<span class="tag tag-price tone-free">Free</span>{% else %}<span class="tag tag-price tone-paid">{{ event.price_text|default:"Paid" }}</span>{% endif %}
     </div>
-    {% if event.description %}<p class="description">{{ event.description|truncatechars:150 }}</p>{% endif %}
+    {% if event.description %}<p class="description">{{ event.description|truncatechars:300 }}</p>{% endif %}
     {% if event.highlight %}<p class="insight"><i data-lucide="sparkles" aria-hidden="true"></i><span>{{ event.highlight }}</span></p>{% endif %}
     <div class="card-footer">
-      <span class="going"><i data-lucide="users-round" aria-hidden="true"></i>{% if not event.is_free %}Paid event{% elif event.rsvp_required %}{{ event.going_count }} going{% else %}{{ event.interested_count }} interested{% endif %}</span>
+      <span class="going"><i data-lucide="users-round" aria-hidden="true"></i><span>{% if not event.is_free %}Paid event{% elif event.rsvp_required %}{{ event.going_count }} going{% else %}{{ event.interested_count }} interested{% endif %}</span></span>
       {% include 'discovery/_event_action.html' %}
     </div>
   </div>
