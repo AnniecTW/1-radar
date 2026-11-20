@@ -1,6 +1,6 @@
 {% extends 'accounts/app_base.html' %}{% load static %}
 {% block title %}Explore Map · Radar{% endblock %}
-{% block extra_head %}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4"><link rel="stylesheet" href="{% static 'radar/explore-map.css' %}?v=8">{% endblock %}
+{% block extra_head %}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=5"><link rel="stylesheet" href="{% static 'radar/explore-map.css' %}?v=8">{% endblock %}
 {% comment %}On this page the shared top-bar search searches the map, keeping its date, category and toggles. Keyword matching only, so no AI switch.{% endcomment %}
 {% block topbar_search %}
 <form class="search" action="{% url 'explore_map' %}" method="get" role="search">

@@ -14,6 +14,9 @@ class RecommendationImpression(models.Model):
     clicked = models.BooleanField(default=False)
     # "Not interested".
     dismissed = models.BooleanField(default=False)
+    # When "Not interested" was tapped. Nullable, so code that doesn't know the column still inserts rows;
+    # dismissals from before it was added have none.
+    dismissed_at = models.DateTimeField(null=True, blank=True)
     shown_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

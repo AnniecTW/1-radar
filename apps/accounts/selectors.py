@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.utils import timezone
 
 from apps.events.models import Event
@@ -65,6 +67,15 @@ def get_preferences(profile) -> dict:
         'feed': {'default_tab': 'for_you', 'free_only': False, **saved.get('feed', {})},
         'location': location,
     }
+
+
+def get_recommendation_reset_at(profile) -> datetime | None:
+    """When the user last cleared their recommendation history, or None if they never did."""
+    raw = ((profile.notification_prefs or {}).get('recommendations') or {}).get('reset_at') if profile else None
+    try:
+        return datetime.fromisoformat(raw) if raw else None
+    except (TypeError, ValueError):
+        return None
 
 
 def location_is_allowed(profile) -> bool:

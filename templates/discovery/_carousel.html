@@ -1,4 +1,4 @@
-{% comment %}A scrolling row of event cards. Needs: section_id, icon, heading, subheading, events. Optional: see_all_url, compact, link_query (added to event links, e.g. '?ref=rec' to count recommendation clicks), location_button (when location is allowed but not shared yet: a hidden "Use my location" button that landing-location.js reveals).{% endcomment %}
+{% comment %}A scrolling row of event cards. Needs: section_id, icon, heading, subheading, events. Optional: see_all_url, compact, link_query (added to event links, e.g. '?ref=rec' to count recommendation clicks), dismissible (a "Not interested" button on each card, for Recommended for you), location_button (when location is allowed but not shared yet: a hidden "Use my location" button that landing-location.js reveals).{% endcomment %}
 {% if events %}
 <section class="section" id="{{ section_id }}" aria-labelledby="{{ section_id }}-title">
   <div class="section-heading">
@@ -14,7 +14,7 @@
     </div>
   </div>
   <div class="card-row{% if compact %} compact-row{% endif %}" data-row>
-    {% for event in events %}{% if compact %}{% include 'discovery/_event_card_compact.html' %}{% else %}{% include 'discovery/_event_card.html' %}{% endif %}{% endfor %}
+    {% for event in events %}{% if compact %}{% include 'discovery/_event_card_compact.html' %}{% else %}{% include 'discovery/_event_card.html' with rank=forloop.counter %}{% endif %}{% endfor %}
   </div>
 </section>
 {% endif %}

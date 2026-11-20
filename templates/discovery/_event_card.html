@@ -5,6 +5,13 @@
     <span class="day-badge">{{ event.start_at|relative_day }}</span>
     {% if event.visibility == 'campus_only' %}<span class="campus-badge">Campus only</span>{% endif %}
     {% include 'discovery/_save_heart.html' %}
+    {% if dismissible %}
+    <form class="card-dismiss-form" method="post" action="{% url 'dismiss_recommendation' event.pk %}" data-dismiss-recommendation>
+      {% csrf_token %}
+      <input type="hidden" name="rank" value="{{ rank }}">
+      <button class="dismiss" type="submit" aria-label="Not interested in {{ event.title }}" title="Not interested"><i data-lucide="eye-off" aria-hidden="true"></i></button>
+    </form>
+    {% endif %}
   </div>
   <div class="event-body">
     <h3><a href="{% url 'event_detail' event.slug %}{{ link_query }}">{{ event.title }}</a></h3>

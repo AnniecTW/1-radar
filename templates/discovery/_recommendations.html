@@ -18,7 +18,7 @@
   {% endif %}
 
   {% if recommended %}
-    {% include 'discovery/_carousel.html' with section_id='recommendations' icon='sparkles' heading='Recommended for you' subheading='Picked from your interests and the events you engage with' events=recommended link_query='?ref=rec' location_button=location_allowed %}
+    {% include 'discovery/_carousel.html' with section_id='recommendations' icon='sparkles' heading='Recommended for you' subheading='Picked from your interests and the events you engage with' events=recommended link_query='?ref=rec' location_button=location_allowed dismissible=True %}
   {% else %}
     <section class="section" id="recommendations" aria-labelledby="recommendations-title">
       <div class="section-heading"><div>

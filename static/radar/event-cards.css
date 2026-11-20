@@ -37,6 +37,14 @@
 :is(.home,.explore-page) .save[aria-pressed="true"]{color:var(--terra)}
 :is(.home,.explore-page) .save[aria-pressed="true"] svg{fill:currentColor}
 :is(.home,.explore-page) .save:disabled{opacity:.6;cursor:wait}
+/* "Not interested" on Recommended cards, opposite the heart. */
+.home .card-dismiss-form{position:absolute;top:8px;left:8px;margin:0}
+.home .dismiss{width:32px;height:32px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.95);color:var(--muted);cursor:pointer;box-shadow:0 2px 8px rgba(16,41,66,.15)}
+.home .dismiss svg{width:16px;height:16px}
+.home .dismiss:hover{color:var(--ink)}
+.home .dismiss:disabled{opacity:.6;cursor:wait}
+.home .event-card.is-leaving{opacity:0;transform:scale(.96);transition:opacity .18s,transform .18s}
+@media (prefers-reduced-motion:reduce){.home .event-card.is-leaving{transition:none}}
 :is(.home,.explore-page) .event-body{padding:11px 13px 13px;display:flex;flex-direction:column;flex:1}
 :is(.home,.explore-page) .event-body h3,:is(.home,.explore-page) .compact-body h3{margin:0 0 7px;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 :is(.home,.explore-page) .event-body h3 a,:is(.home,.explore-page) .compact-body h3 a{color:var(--ink)}

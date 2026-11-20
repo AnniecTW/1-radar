@@ -3,7 +3,7 @@
 Each page load builds the user's profile vector from vectors already stored in the database: the
 events they acted on and the interests they chose. Nothing here calls Cloudflare. Upcoming events are
 then ranked in one query by similarity to that vector, blended with follows, popularity, distance and
-how soon the event starts.
+how soon the event starts, minus a penalty for events close to ones the user marked "Not interested".
 """
 from collections import Counter
 from dataclasses import dataclass, field
@@ -28,7 +28,7 @@ from apps.rsvps.models import RSVP
 
 from .models import RecommendationImpression
 
-ALGORITHM_VERSION = 'embedding-v1'
+ALGORITHM_VERSION = 'embedding-v2'  # v2 added the "Not interested" penalty.
 FALLBACK_ALGORITHM_VERSION = 'interest-tags-v1'
 CAROUSEL_SIZE = 10
 
@@ -54,6 +54,15 @@ WALK_METERS = 1250  # FR-12's 15-minute walk.
 FAR_METERS = 5000
 CATEGORY_CAP = 4  # No category takes more than 40% of the top 10.
 RANKED_POOL = 40  # Ranked candidates read back, so the category cap has events to choose from.
+
+# "Not interested" (FR-43): events close to a dismissed one lose up to DISMISS_PENALTY from their score (which
+# tops out around 1). Nothing below 0.75 similarity, rising evenly to the full penalty at 0.90, where repeats of
+# the same series sit. An event near several dismissals takes the biggest penalty, not the sum, so a few
+# dismissals can't bury a whole topic. The penalty fades with the same 30-day half-life as other actions.
+DISMISS_PENALTY = 0.2
+DISMISS_SIMILARITY_START = 0.75
+DISMISS_SIMILARITY_FULL = 0.90
+MAX_DISMISSALS = 20  # The most recent ones; older ones have mostly faded anyway.
 
 # For the "Similar to <event>" reason. BGE scores related text highly, so this is deliberately strict.
 SIMILAR_REASON_MIN = 0.8
@@ -133,9 +142,40 @@ def hosted_event_ids(user) -> QuerySet:
 STRONG_WEIGHTS = {'checkin': CHECKIN_WEIGHT, 'rsvp': RSVP_WEIGHT, 'save': SAVE_WEIGHT, 'like': LIKE_WEIGHT}
 
 
-def collect_signals(user, now: datetime) -> dict:
-    """The user's recent actions, grouped by event, in one round trip. Leaves out events they host."""
-    cutoff = now - timedelta(days=LOOKBACK_DAYS)
+# What a "Not interested" cancels when it came before the dismissal. Saves, RSVPs and check-ins always count:
+# they are a clear yes (and Recommended never shows an event the user has saved, RSVP'd to or checked in to).
+CANCELLED_BY_DISMISSAL = {'view', 'cancelled', 'like'}
+
+
+def history_start(user, now: datetime) -> datetime:
+    """The oldest activity recommendations read: six months back, or the last "Clear recommendation history"
+    on Account & privacy if that is more recent. Clearing deletes nothing; older rows are just ignored."""
+    from apps.accounts.models import Profile
+    from apps.accounts.selectors import get_recommendation_reset_at
+
+    reset_at = get_recommendation_reset_at(Profile.objects.filter(user=user).first())
+    lookback = now - timedelta(days=LOOKBACK_DAYS)
+    return max(lookback, reset_at) if reset_at else lookback
+
+
+def dismissals(user, since: datetime | None = None) -> QuerySet:
+    """The user's "Not interested" rows (since the last history reset, when `since` is given), each with
+    `dismissed_when`. Dismissals from before dismissed_at existed fall back to when the card was shown."""
+    rows = (RecommendationImpression.objects.filter(user=user, dismissed=True)
+            .annotate(dismissed_when=Coalesce('dismissed_at', 'shown_at')))
+    return rows if since is None else rows.filter(dismissed_when__gte=since)
+
+
+def dismissed_event_ids(user, since: datetime | None = None) -> QuerySet:
+    return dismissals(user, since).values('event_id')
+
+
+def collect_signals(user, now: datetime, since: datetime | None = None) -> dict:
+    """The user's actions since `since` (default: history_start), grouped by event, in one round trip.
+    Leaves out events they host. A "Not interested" cancels the views, likes and cancelled RSVPs of that event
+    from before it, so viewing an event and then dismissing it doesn't still pull the profile toward it.
+    Anything after it (coming back to the event from search, say) counts again."""
+    cutoff = since or history_start(user, now)
     hosted = hosted_event_ids(user)
 
     def rows(model, time_field, kind):
@@ -152,8 +192,11 @@ def collect_signals(user, now: datetime) -> dict:
         rows(EventView, 'created_at', Value('view', output_field=CharField())),
         all=True,
     )
+    dismissed_when = dict(dismissals(user, cutoff).order_by('dismissed_when').values_list('event_id', 'dismissed_when'))
     signals: dict = {}
     for event_id, at, kind in actions:
+        if kind in CANCELLED_BY_DISMISSAL and event_id in dismissed_when and at <= dismissed_when[event_id]:
+            continue  # dismissed_when holds the latest dismissal, if there were several.
         signal = signals.setdefault(event_id, EventSignal())
         if kind in STRONG_WEIGHTS:
             signal.add_strong(STRONG_WEIGHTS[kind], at, now)
@@ -171,8 +214,8 @@ class Profile:
     chosen_interest_ids: set  # Interests the user picked, with or without a vector yet.
 
 
-def build_profile(user, now: datetime) -> Profile:
-    weights = {event_id: signal.weight(now) for event_id, signal in collect_signals(user, now).items()}
+def build_profile(user, now: datetime, since: datetime | None = None) -> Profile:
+    weights = {event_id: signal.weight(now) for event_id, signal in collect_signals(user, now, since).items()}
     event_rows = list(
         Event.objects.filter(pk__in=[event_id for event_id, weight in weights.items() if weight > 0],
                              embedding__isnull=False)
@@ -198,14 +241,14 @@ def build_profile(user, now: datetime) -> Profile:
 
 # Ranking -----------------------------------------------------------------------------------------------
 
-def exclude_for_user(events: QuerySet, user) -> QuerySet:
-    """Leave out events the user already has in hand, hosts, or dismissed."""
+def exclude_for_user(events: QuerySet, user, since: datetime | None = None) -> QuerySet:
+    """Leave out events the user already has in hand, hosts, or dismissed (since the last history reset)."""
     return (
         events.exclude(pk__in=hosted_event_ids(user))
         .exclude(pk__in=RSVP.objects.filter(user=user).exclude(status=RSVP.Status.CANCELLED).values('event_id'))
         .exclude(pk__in=EventSave.objects.filter(user=user).values('event_id'))
         .exclude(pk__in=CheckIn.objects.filter(user=user).values('event_id'))
-        .exclude(pk__in=RecommendationImpression.objects.filter(user=user, dismissed=True).values('event_id'))
+        .exclude(pk__in=dismissed_event_ids(user, since))
     )
 
 
@@ -222,9 +265,38 @@ def _clamp01(expression):
     return Greatest(Least(expression, Value(1.0)), Value(0.0))
 
 
-def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, location=None) -> list[Event]:
+def recent_dismissals(user, now: datetime, since: datetime | None = None) -> list[tuple[list[float], float]]:
+    """(vector, strength) of the user's most recent "Not interested" events, where strength is how much of the
+    penalty is left after fading since the dismissal."""
+    rows = (dismissals(user, since or history_start(user, now)).filter(event__embedding__isnull=False)
+            .order_by('-dismissed_when')
+            .values_list('event_id', 'dismissed_when', 'event__embedding')[:MAX_DISMISSALS * 2])
+    latest = {}
+    for event_id, dismissed_when, embedding in rows:
+        latest.setdefault(event_id, (list(embedding), decay(dismissed_when, now)))
+    return list(latest.values())[:MAX_DISMISSALS]
+
+
+def dismissal_penalty(dismissals):
+    """The SQL for each candidate's "Not interested" penalty: the biggest one over the dismissed events."""
+    span = DISMISS_SIMILARITY_FULL - DISMISS_SIMILARITY_START
+    # Events without a vector yet count as unrelated. The Coalesce matters: Postgres' LEAST and GREATEST skip
+    # NULLs, so without it _clamp01 would turn a missing similarity into 1 and give them the full penalty.
+    terms = [
+        Value(DISMISS_PENALTY * strength) * _clamp01(
+            (Coalesce(Value(1.0) - CosineDistance('embedding', vector), Value(0.0)) - Value(DISMISS_SIMILARITY_START))
+            / Value(span))
+        for vector, strength in dismissals
+    ]
+    if not terms:
+        return Value(0.0)
+    return Greatest(Value(0.0), *terms, output_field=FloatField())
+
+
+def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, location=None,
+                dismissals=()) -> list[Event]:
     """Score every candidate in SQL and return the best RANKED_POOL, highest first. Each event gets
-    rec_score, rec_similarity, rec_follows and rec_distance (metres, or None) for the reasons."""
+    rec_score, rec_similarity, rec_follows, rec_penalty and rec_distance (metres, or None) for the reasons."""
     weights = score_weights(location is not None)
     max_popularity = candidates.aggregate(top=Max('popularity_score'))['top'] or 0
 
@@ -247,7 +319,7 @@ def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, locat
     urgency = _clamp01((Value(deadline) - start_epoch) / Value(URGENCY_WINDOW.total_seconds()))
 
     annotations = {'rec_similarity': similarity, 'rec_follows': follows, 'rec_popularity': popularity,
-                   'rec_urgency': urgency}
+                   'rec_urgency': urgency, 'rec_penalty': dismissal_penalty(dismissals)}
     if location is not None:
         distance = Cast(Distance('location', Point(location[1], location[0], srid=4326)), FloatField())
         annotations['rec_distance'] = distance
@@ -261,7 +333,7 @@ def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, locat
         annotations['rec_proximity'] = Value(0.0)
 
     score = ExpressionWrapper(
-        sum((Value(weights[part]) * F(f'rec_{part}') for part in SCORE_WEIGHTS), Value(0.0)),
+        sum((Value(weights[part]) * F(f'rec_{part}') for part in SCORE_WEIGHTS), Value(0.0)) - F('rec_penalty'),
         output_field=FloatField(),
     )
     ranked = candidates.annotate(**annotations).annotate(rec_score=score).order_by('-rec_score', 'start_at')
@@ -314,11 +386,12 @@ def recommend_events(user, now: datetime, location=None) -> list[Event]:
     with upcoming events in the user's chosen interests. Empty when the user has neither."""
     from .selectors import list_upcoming_events
 
-    candidates = exclude_for_user(list_upcoming_events(now), user)
-    profile = build_profile(user, now)
+    since = history_start(user, now)
+    candidates = exclude_for_user(list_upcoming_events(now), user, since)
+    profile = build_profile(user, now, since)
     events = []
     if profile.vector is not None:
-        ranked = rank_events(candidates, user, now, profile.vector, location)
+        ranked = rank_events(candidates, user, now, profile.vector, location, recent_dismissals(user, now, since))
         events = apply_category_cap(ranked, lambda event: [interest.pk for interest in event.interests.all()])
         for event in events:
             event.recommendation_algorithm = ALGORITHM_VERSION
@@ -380,6 +453,23 @@ def mark_recommendation_clicked(user, event, now: datetime) -> None:
                   .order_by('-shown_at').first())
     if impression and not impression.clicked:
         RecommendationImpression.objects.filter(pk=impression.pk).update(clicked=True)
+
+
+def dismiss_recommendation(user, event, now: datetime, rank: int = 0) -> None:
+    """"Not interested" on a Recommended card: mark the latest showing of that event as dismissed, now. If
+    there is none (it was pruned, say), log one, so the event still stays out of the row."""
+    latest = RecommendationImpression.objects.filter(user=user, event=event).order_by('-shown_at').first()
+    if latest is None:
+        RecommendationImpression.objects.create(user=user, event=event, rank=rank, score=0.0,
+                                                algorithm_version=ALGORITHM_VERSION, dismissed=True, dismissed_at=now)
+    elif not latest.dismissed:
+        RecommendationImpression.objects.filter(pk=latest.pk).update(dismissed=True, dismissed_at=now)
+
+
+def undo_dismissal(user, event) -> None:
+    """Undo on the "Hidden" message: the event can be recommended again, and what the user did to it counts again."""
+    (RecommendationImpression.objects.filter(user=user, event=event, dismissed=True)
+     .update(dismissed=False, dismissed_at=None))
 
 
 # Location (a signed cookie on the user's device, never in the database) ----------------------------------

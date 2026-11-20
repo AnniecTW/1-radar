@@ -21,8 +21,8 @@ from django.urls import include, path
 
 from apps.discovery.views import show_landing_page
 from apps.discovery.views import (
-    events_in_map_bounds, set_recommendation_location, share_location, show_explore_map,
-    turn_off_recommendation_location,
+    dismiss_recommendation_view, events_in_map_bounds, set_recommendation_location, share_location,
+    show_explore_map, turn_off_recommendation_location,
 )
 from apps.events.views import show_event_detail
 
@@ -34,6 +34,8 @@ urlpatterns = [
     path('api/recommendation-location/', set_recommendation_location, name='set_recommendation_location'),
     path('api/recommendation-location/off/', turn_off_recommendation_location,
          name='turn_off_recommendation_location'),
+    path('api/recommendations/<uuid:event_id>/dismiss/', dismiss_recommendation_view,
+         name='dismiss_recommendation'),
     path('events/<slug:slug>/', show_event_detail, name='event_detail'),
     path('accounts/', include('apps.accounts.urls')),
     path('onboarding/', include('apps.interests.urls')),

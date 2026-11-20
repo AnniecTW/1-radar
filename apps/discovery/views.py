@@ -4,8 +4,9 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET, require_POST
@@ -13,8 +14,8 @@ from django.views.decorators.http import require_http_methods
 from datetime import timedelta
 
 from .recommendations import (
-    LOCATION_COOKIE, discard_replaced_impressions, log_impressions, read_location, recommend_events,
-    remember_location, round_location,
+    LOCATION_COOKIE, discard_replaced_impressions, dismiss_recommendation, log_impressions, read_location,
+    recommend_events, remember_location, round_location, undo_dismissal,
 )
 from .selectors import (
     get_campus_center,
@@ -314,6 +315,29 @@ def set_recommendation_location(request: HttpRequest) -> JsonResponse:
     response = JsonResponse({'html': html, 'location': {'lat': location[0], 'lng': location[1]}})
     remember_location(response, request, location, now)
     return response
+
+
+@login_required
+@require_POST
+def dismiss_recommendation_view(request: HttpRequest, event_id) -> HttpResponse:
+    """"Not interested" on a Recommended card (FR-43), or `undo=1` from the "Hidden" message.
+    recommendation-dismiss.js sends it in the background; without JavaScript the form posts and lands back
+    on the home page, where the row no longer has the event."""
+    from apps.events.models import Event
+
+    event = get_object_or_404(Event, pk=event_id)
+    undo = request.POST.get('undo') == '1'
+    if undo:
+        undo_dismissal(request.user, event)
+    else:
+        try:
+            rank = max(0, min(int(request.POST.get('rank', 0)), 32767))
+        except ValueError:
+            rank = 0
+        dismiss_recommendation(request.user, event, timezone.now(), rank)
+    if 'application/json' in request.headers.get('Accept', ''):
+        return JsonResponse({'dismissed': not undo})
+    return redirect(f"{reverse('dashboard')}#recommendations")
 
 
 @login_required
