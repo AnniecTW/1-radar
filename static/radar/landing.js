@@ -185,6 +185,9 @@ if (mapElement && window.maplibregl && mapElement.dataset.maptilerKey) {
     approximate?.remove();
     approximate = window.radarApproximateLocation(map, [lat, lng]);
     mapElement.setAttribute('aria-label', 'Heat map of upcoming campus events, with a shaded circle around your approximate location');
+    // The "centered on campus" hint on the heading no longer applies.
+    document.querySelector('[data-map-hint]')?.remove();
+    document.getElementById('map-title')?.classList.remove('has-hint');
     map.easeTo({ center: [lng, lat] });
   };
   document.addEventListener('radar:location', (event) => showUserLocation(event.detail));

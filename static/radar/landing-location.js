@@ -11,6 +11,9 @@
 
   const status = banner.querySelector('[data-location-status]');
   const shareButton = banner.querySelector('button[type="submit"]');
+  // "Use my location" in the row's heading: the way back after "Not now" or a block in the browser.
+  const useButton = container.querySelector('[data-location-share]');
+  const showUseButton = () => { if (useButton) { useButton.hidden = false; useButton.disabled = false; } };
 
   // Remembering "Not now" is a per-browser convenience; if storage is blocked the banner just shows again.
   const recentlyDismissed = () => {
@@ -51,15 +54,27 @@
     document.dispatchEvent(new CustomEvent('radar:location', { detail: [data.location.lat, data.location.lng] }));
   };
 
+  // Problems are shown in the banner, even when sharing started from "Use my location".
+  const showProblem = (text) => {
+    banner.hidden = false;
+    if (useButton) useButton.hidden = true;
+    status.hidden = false;
+    status.classList.remove('is-note');
+    status.textContent = text;
+    shareButton.disabled = false;
+  };
+
   const share = async ({ quiet }) => {
     try {
       await send(await getPosition(), { quiet });
     } catch (error) {
-      if (quiet) return;
-      if (error && error.code === 1) { banner.hidden = true; return; } // The user blocked it in the browser.
-      status.hidden = false;
-      status.textContent = 'Couldn’t get your location. Recommendations still work without it.';
-      shareButton.disabled = false;
+      if (quiet) { showUseButton(); return; } // A background refresh failed: offer a retry, quietly.
+      if (error && error.code === 1) { // PERMISSION_DENIED: blocked in the browser, now or earlier.
+        showProblem('Location is blocked for this site in your browser. To share it, allow location for this site '
+          + 'in your browser’s settings, then tap Share location again.');
+        return;
+      }
+      showProblem('Couldn’t get your location. Recommendations still work without it.');
     }
   };
 
@@ -71,6 +86,11 @@
   banner.querySelector('[data-location-dismiss]').addEventListener('click', () => {
     rememberDismissed();
     banner.hidden = true;
+    showUseButton();
+  });
+  useButton?.addEventListener('click', () => {
+    useButton.disabled = true;
+    share({ quiet: false });
   });
   // "Don't ask again" switches Account & privacy to "Don't use my location", so the two can't disagree.
   const neverButton = banner.querySelector('[data-location-never]');
@@ -95,8 +115,8 @@
 
   const decide = (state) => {
     if (state === 'granted') { share({ quiet: true }); return; } // Shared before: refresh without asking.
-    if (state === 'denied') return; // Blocked in the browser: don't keep asking.
-    if (!recentlyDismissed()) banner.hidden = false;
+    if (state === 'denied') { showUseButton(); return; } // Blocked in the browser: don't keep asking.
+    if (recentlyDismissed()) showUseButton(); else banner.hidden = false;
   };
   if (navigator.permissions?.query) {
     navigator.permissions.query({ name: 'geolocation' }).then((result) => decide(result.state), () => decide('prompt'));

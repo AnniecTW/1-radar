@@ -99,7 +99,9 @@
   document.querySelectorAll('[data-map-style]').forEach((button) => button.addEventListener('click', () => {
     if (button.getAttribute('aria-pressed') === 'true') return;
     document.querySelectorAll('[data-map-style]').forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
-    map.setStyle(STYLES[button.dataset.mapStyle]);
+    // diff: false rebuilds the style and fires 'style.load', which redraws the heatmap and the location
+    // circle. The default diff patches the old style in place: it drops both and never fires 'style.load'.
+    map.setStyle(STYLES[button.dataset.mapStyle], { diff: false });
   }));
 
   document.querySelectorAll('[data-map-zoom]').forEach((button) => button.addEventListener('click', () => {
@@ -117,12 +119,13 @@
     body.append('csrfmiddlewaretoken', config.csrf);
     fetch(config.shareUrl, { method: 'POST', body, headers: { Accept: 'application/json' } }).catch(() => {});
   };
-  // The crosshair and the walk filter use the precise position on this page; only the snapped one is shared.
+  // The crosshair and the walk filter use the same snapped position as everything else in Radar, so the
+  // exact one never leaves the device, not even in the walk filter's request.
   const getLocation = () => new Promise((resolve) => {
     if (!navigator.geolocation) { resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const coords = [position.coords.latitude, position.coords.longitude];
+        const coords = window.radarSnapLocation([position.coords.latitude, position.coords.longitude]);
         shareApproximate(coords);
         resolve(coords);
       },
@@ -130,23 +133,14 @@
       { maximumAge: 300000, timeout: 5000 },
     );
   });
-  let youAreHere = null;
   document.querySelector('[data-map-locate]')?.addEventListener('click', async (event) => {
     // Turned off by "Don't use my location": the hint beside the button explains how to turn it on.
     if (event.currentTarget.getAttribute('aria-disabled') === 'true') return;
     const coords = await getLocation();
     if (!coords) { status.hidden = false; status.textContent = 'Could not get your location.'; return; }
-    const lngLat = [coords[1], coords[0]];
-    if (!youAreHere) {
-      const dot = document.createElement('div');
-      dot.className = 'you-are-here';
-      dot.setAttribute('aria-label', 'Your location');
-      youAreHere = new maplibregl.Marker({ element: dot });
-    }
-    youAreHere.setLngLat(lngLat).addTo(map);
-    approximate?.remove(); // The precise dot replaces the approximate circle.
-    approximate = null;
-    map.flyTo({ center: lngLat, zoom: Math.max(map.getZoom(), 14.5), duration: reducedMotion ? 0 : 900 });
+    approximate?.remove();
+    approximate = window.radarApproximateLocation(map, coords);
+    map.flyTo({ center: [coords[1], coords[0]], zoom: Math.max(map.getZoom(), 14.5), duration: reducedMotion ? 0 : 900 });
   });
 
   // Pins: a round badge in the category colour with its icon, larger for more popular events.

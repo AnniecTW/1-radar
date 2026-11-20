@@ -78,6 +78,17 @@ html{scroll-behavior:smooth}
 .home .section-actions{display:flex;align-items:center;gap:6px;flex:none}
 .home .see-all{display:inline-flex;align-items:center;gap:6px;color:var(--terra);font-weight:600;font-size:13px;padding:8px 10px;border-radius:18px;white-space:nowrap}
 .home .see-all svg{width:15px;height:15px}
+.home .see-all[hidden]{display:none}
+.home button.see-all{border:0;background:none;cursor:pointer;font-family:inherit}
+/* Hover (or keyboard focus) hints: "Use my location" and the "Events near you" heading. */
+.home .has-hint{position:relative}
+.home .hint{position:absolute;z-index:20;top:calc(100% + 8px);right:0;width:max-content;max-width:240px;padding:8px 11px;border-radius:10px;
+  background:#2b2f33;color:#fff;font:500 12px/1.45 'DM Sans',sans-serif;letter-spacing:0;text-align:left;white-space:normal;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;visibility:hidden;transform:translateY(-3px);pointer-events:none;
+  transition:opacity .15s,transform .15s,visibility .15s}
+.home .has-hint:hover .hint,.home .has-hint:focus-within .hint{opacity:1;visibility:visible;transform:none}
+.home .rail-heading .hint{left:0;right:auto}
+@media (prefers-reduced-motion:reduce){.home .hint{transition:none}}
 .home .see-all:hover{background:#fff6f0;color:var(--terra)}
 .home .round-button{width:32px;height:32px;display:grid;place-items:center;padding:0;border-radius:50%;border:1px solid var(--edge);background:var(--paper);color:var(--ink);cursor:pointer}
 .home .round-button svg{width:17px;height:17px}

@@ -1,6 +1,6 @@
 {% extends 'accounts/app_base.html' %}{% load static %}
 {% block title %}Explore Map · Radar{% endblock %}
-{% block extra_head %}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4"><link rel="stylesheet" href="{% static 'radar/explore-map.css' %}?v=7">{% endblock %}
+{% block extra_head %}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4"><link rel="stylesheet" href="{% static 'radar/explore-map.css' %}?v=8">{% endblock %}
 {% comment %}On this page the shared top-bar search searches the map, keeping its date, category and toggles. Keyword matching only, so no AI switch.{% endcomment %}
 {% block topbar_search %}
 <form class="search" action="{% url 'explore_map' %}" method="get" role="search">
@@ -83,5 +83,5 @@
 <script>window.RADAR_MAP={key:"{{ maptiler_key|escapejs }}",category:"{{ selected_category|escapejs }}",date:"{{ selected_date|escapejs }}",q:"{{ search_text|escapejs }}",free:{{ free_only|yesno:'true,false' }},indoors:{{ indoors_only|yesno:'true,false' }},quiet:{{ quiet_only|yesno:'true,false' }},walk:{{ walk_only|yesno:'true,false' }},sort:"{% if popular_sort %}popular{% else %}date{% endif %}",shareUrl:"{% if user.is_authenticated and location_allowed %}{% url 'share_location' %}{% endif %}",csrf:"{{ csrf_token }}"};</script>
 <script src="{% static 'radar/signin-gate.js' %}?v=1"></script>
 <script src="{% static 'radar/map-location.js' %}?v=1" defer></script>
-<script src="{% static 'radar/explore-map.js' %}?v=4" defer></script>
+<script src="{% static 'radar/explore-map.js' %}?v=6" defer></script>
 {% endblock %}

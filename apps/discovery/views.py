@@ -80,7 +80,7 @@ def _map_events(request, bounds=None):
         try:
             lat, lng = float(request.GET['lat']), float(request.GET['lng'])
             if not (-90 <= lat <= 90 and -180 <= lng <= 180): raise ValueError
-            walk_center = (lat, lng)
+            walk_center = round_location(lat, lng)  # The browser already snaps it; never trust that alone.
         except (KeyError, ValueError):
             walk_center = get_campus_center()
         if walk_center:

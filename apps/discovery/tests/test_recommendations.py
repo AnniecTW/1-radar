@@ -235,6 +235,31 @@ class LocationTests(RecommendationTestCase):
     def test_banner_shows_until_a_location_is_shared(self):
         self.assertContains(self.client.get(reverse('dashboard')), 'data-location-banner')
 
+    def test_use_my_location_button_waits_in_the_row_until_a_location_is_shared(self):
+        # The button is hidden in the HTML; landing-location.js reveals it after "Not now" or a browser block.
+        jazz = self.make_vector_event('Jazz Night', MUSIC, hours_away=-72)
+        EventSave.objects.create(user=self.fan, event=jazz)
+        self.make_vector_event('Open Mic', MUSIC)
+        home = self.client.get(reverse('dashboard'))
+        self.assertContains(home, 'data-location-share aria-describedby="use-location-hint" hidden')
+        self.assertContains(home, 'so Recommended for you can put events near you first.')  # Its hover hint.
+        self.client.post(self.url, {'lat': '40.102', 'lng': '-88.227'})
+        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-location-share')
+        self.client.post(reverse('turn_off_recommendation_location'))
+        self.client.cookies.pop(LOCATION_COOKIE, None)
+        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-location-share')
+
+    def test_map_heading_says_it_is_centered_on_campus_until_a_location_is_shared(self):
+        not_shared = 'Radar doesn’t have your location, so the map is centered on campus.'
+        self.assertContains(self.client.get(reverse('dashboard')), not_shared)
+        self.client.post(self.url, {'lat': '40.102', 'lng': '-88.227'})
+        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-map-hint')
+        self.client.post(reverse('turn_off_recommendation_location'))
+        self.client.cookies.pop(LOCATION_COOKIE, None)
+        self.assertContains(self.client.get(reverse('dashboard')), 'Location is off in Account &amp; privacy')
+        self.client.logout()
+        self.assertContains(self.client.get(reverse('dashboard')), not_shared)
+
     def test_dont_use_my_location_hides_the_banner_and_forgets_the_cookie(self):
         self.client.post(self.url, {'lat': '40.102', 'lng': '-88.227'})
         shared_cookie = self.client.cookies[LOCATION_COOKIE].value
@@ -293,6 +318,14 @@ class ExploreMapLocationTests(RecommendationTestCase):
         self.assertContains(response, 'walk:false')
         self.assertContains(response, 'shareUrl:""')
         self.assertEqual(self.client.post(reverse('share_location'), {'lat': '40.1', 'lng': '-88.2'}).status_code, 403)
+
+    def test_the_walk_filter_snaps_the_coordinates_it_is_sent(self):
+        # (40.1024, -88.2276) snaps to (40.100, -88.230). This event is about 1.22 km south of the snapped
+        # point, inside the 1.25 km walk, but about 1.5 km from the raw one.
+        self.make_event('South Quad Picnic', location=Point(-88.230, 40.089, srid=4326))
+        response = self.client.get(reverse('map_events'), {
+            'bbox': '-88.4,39.9,-88.0,40.3', 'date': 'all', 'walk': '1', 'lat': '40.1024', 'lng': '-88.2276'})
+        self.assertEqual([event['title'] for event in response.json()['events']], ['South Quad Picnic'])
 
     def test_guests_keep_the_map_controls_but_share_nothing(self):
         self.client.logout()

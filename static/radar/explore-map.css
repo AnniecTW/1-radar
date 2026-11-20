@@ -190,7 +190,6 @@ body.keyboard-focus-mode .map-filters .filter-select:has(select:focus-visible){o
 .maplibregl-marker.map-pin.marker-active svg{transform:none}
 .map-pin:focus-visible{outline:none}
 .map-pin:focus-visible .pin-face{outline:3px solid #102942;outline-offset:2px}
-.you-are-here{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#2f6fb0;box-shadow:0 0 0 6px rgba(47,111,176,.25),0 2px 6px rgba(16,41,66,.3)}
 
 /* Pin popups. */
 .maplibregl-popup-content{padding:10px 13px;border-radius:12px;box-shadow:0 10px 26px rgba(16,41,66,.2)}

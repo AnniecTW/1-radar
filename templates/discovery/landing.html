@@ -4,7 +4,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css">
   <link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=4">
-  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=15">
+  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=17">
 {% endblock %}
 
 {% block content %}
@@ -87,8 +87,9 @@
 
     <aside class="home-rail" aria-label="Around campus">
       <section class="rail-card" id="map" aria-labelledby="map-title">
-        <h2 class="rail-heading" id="map-title"><i data-lucide="map-pin" aria-hidden="true"></i>Events near you</h2>
-        <div id="map-preview" class="map-preview" data-maptiler-key="{{ maptiler_key }}" role="img" aria-label="Heat map of upcoming campus events"></div>
+        {% comment %}Without a shared location the map starts on campus; the heading's hover hint says so, and landing.js removes it once a location is shared.{% endcomment %}
+        <h2 class="rail-heading{% if not user_location %} has-hint{% endif %}" id="map-title"><i data-lucide="map-pin" aria-hidden="true"></i>Events near you{% if not user_location %}<span class="hint" data-map-hint aria-hidden="true">{% if user.is_authenticated and not location_allowed %}Location is off in Account &amp; privacy, so the map is centered on campus.{% else %}Radar doesn’t have your location, so the map is centered on campus.{% endif %}</span>{% endif %}</h2>
+        <div id="map-preview" class="map-preview" data-maptiler-key="{{ maptiler_key }}" role="img" aria-label="Heat map of upcoming campus events{% if not user_location %}, centered on campus{% endif %}"></div>
         <p class="rail-note">Brighter spots have more likes, saves and RSVPs.</p>
         <a class="rail-link" href="{% url 'explore_map' %}">View full map <i data-lucide="arrow-right" aria-hidden="true"></i></a>
         {{ map_points|json_script:"map-points" }}
@@ -153,6 +154,6 @@
 <script src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"></script>
 <script src="{% static 'radar/signin-gate.js' %}?v=1"></script>
 <script src="{% static 'radar/map-location.js' %}?v=1"></script>
-<script src="{% static 'radar/landing.js' %}?v=9"></script>
-{% if user.is_authenticated %}<script src="{% static 'radar/landing-location.js' %}?v=5"></script>{% endif %}
+<script src="{% static 'radar/landing.js' %}?v=10"></script>
+{% if user.is_authenticated %}<script src="{% static 'radar/landing-location.js' %}?v=6"></script>{% endif %}
 {% endblock %}

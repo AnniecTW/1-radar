@@ -1,7 +1,7 @@
 {% comment %}"Recommended for you" and the location banner (signed-in users only). Rendered in the home page, and again by set_recommendation_location after the user shares their location. Needs: recommended, interest_ids, user_location, location_allowed, saved_event_ids.{% endcomment %}
 <div data-recommendations>
   {% if location_allowed and not user_location %}
-    {% comment %}Hidden until landing-location.js decides it should show: it never shows without JavaScript, once the browser has blocked location, or for a while after "Not now". Never rendered after "Don't use my location".{% endcomment %}
+    {% comment %}Hidden until landing-location.js decides it should show: it never shows without JavaScript, once the browser has blocked location, or for a while after "Not now". In those last two cases the row's "Use my location" button shows instead, so a misclick can be undone. Never rendered after "Don't use my location".{% endcomment %}
     <form class="location-banner" method="post" action="{% url 'set_recommendation_location' %}" data-location-banner data-off-url="{% url 'turn_off_recommendation_location' %}" hidden>
       {% csrf_token %}
       <input type="hidden" name="lat">
@@ -18,7 +18,7 @@
   {% endif %}
 
   {% if recommended %}
-    {% include 'discovery/_carousel.html' with section_id='recommendations' icon='sparkles' heading='Recommended for you' subheading='Picked from your interests and the events you engage with' events=recommended link_query='?ref=rec' %}
+    {% include 'discovery/_carousel.html' with section_id='recommendations' icon='sparkles' heading='Recommended for you' subheading='Picked from your interests and the events you engage with' events=recommended link_query='?ref=rec' location_button=location_allowed %}
   {% else %}
     <section class="section" id="recommendations" aria-labelledby="recommendations-title">
       <div class="section-heading"><div>
