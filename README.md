@@ -293,3 +293,23 @@ python manage.py test apps.discovery
 ```
 
 The rule tests in `apps.discovery.tests.test_recommendation_rules` (weights, decay, category cap, reasons) need no database at all, so they run even without permission to create one.
+
+## Deployment
+
+The demo runs on Azure App Service from the Docker image in [Dockerfile](Dockerfile), with production settings in [radar/settings/production.py](radar/settings/production.py). Things to know when you work on `main`:
+
+- **Every push to `main` redeploys the demo**, about 5–10 minutes later ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). If the build fails, nothing is deployed. If the new version builds but crashes on start, the demo is down until it's fixed, so check the **Actions** tab after you merge.
+- **The demo uses the shared Supabase database.** What you create while developing shows up on the demo, and the other way round. Delete test events and accounts you don't want graders to see.
+- **Migrations are not applied on deploy.** Run `python manage.py migrate` yourself after the code is merged to `main`, never from an unmerged branch. Only add nullable columns or columns with defaults, so the demo keeps working before and after.
+- **New Python packages go in `requirements.txt`, pinned to a version,** or the demo crashes on start. A package that needs a system library also needs it in the Dockerfile.
+- **A new setting read from the environment** needs a value on Azure too; ask Annie, who manages the deployment.
+- **`DEBUG` is off on the demo,** so errors show a plain "Server Error (500)" page. The traceback is in Azure's log stream.
+- **Changed CSS or JS:** bump the `?v=N` on its tag in the template, as we already do, or browsers keep the old file.
+
+To try the production image on your computer (Docker Desktop, plain HTTP, your `.env`):
+
+```sh
+docker build -t radar .
+docker run --rm -p 8000:8000 --env-file .env -e GDAL_LIBRARY_PATH= -e GEOS_LIBRARY_PATH= \
+  -e SECURE_SSL_REDIRECT=0 -e ALLOWED_HOSTS=localhost radar
+```

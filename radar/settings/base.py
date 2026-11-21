@@ -119,8 +119,14 @@ DATABASES = {
 
 # GeoDjango needs the GDAL and GEOS libraries. Homebrew on Apple Silicon installs them in
 # /opt/homebrew/lib, which isn't on the default search path; override in .env if yours differ.
-GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH', '/opt/homebrew/lib/libgdal.dylib')
-GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH', '/opt/homebrew/lib/libgeos_c.dylib')
+# Elsewhere (Linux, the Docker image) Django finds them on the system path by itself.
+def _homebrew_library(name):
+    path = Path('/opt/homebrew/lib') / name
+    return str(path) if path.exists() else None
+
+
+GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH') or _homebrew_library('libgdal.dylib')
+GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH') or _homebrew_library('libgeos_c.dylib')
 
 
 # Password validation
