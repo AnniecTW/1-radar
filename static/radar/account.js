@@ -63,4 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
     chips.addEventListener('change', updateCount)
     updateCount()
   }
+
+  // Forms with data-confirm="<dialog id>" ask first (Clear recommendation history). The dialog's own form
+  // closes it with the tapped button's value; only "confirm" sends the original form.
+  document.querySelectorAll('form[data-confirm]').forEach((form) => {
+    const dialog = document.getElementById(form.dataset.confirm)
+    if (!dialog?.showModal) return
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      dialog.returnValue = ''
+      dialog.showModal()
+    })
+    dialog.addEventListener('close', () => {
+      if (dialog.returnValue === 'confirm') form.submit()
+    })
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close() })
+  })
 })

@@ -41,12 +41,17 @@
   const heatmapToggle = document.getElementById('heatmap-toggle');
   const initialPoints = JSON.parse(document.getElementById('map-points').textContent);
   const center = JSON.parse(document.getElementById('map-center').textContent);
+  // The approximate location the user shared anywhere in Radar (null if none, or location is turned off).
+  const sharedScript = document.getElementById('shared-location');
+  const shared = sharedScript ? JSON.parse(sharedScript.textContent) : null;
   if (!config.key) { status.textContent = 'Map unavailable: configure MAPTILER_API_KEY.'; return; }
 
   const styleUrl = (name) => `https://api.maptiler.com/maps/${name}/style.json?key=${encodeURIComponent(config.key)}`;
   const STYLES = { streets: styleUrl('streets-v2'), satellite: styleUrl('hybrid') };
-  const map = new maplibregl.Map({ container: mapElement, style: STYLES.streets, center: [center[1], center[0]], zoom: 12.2 });
+  const start = Array.isArray(shared) ? shared : center;
+  const map = new maplibregl.Map({ container: mapElement, style: STYLES.streets, center: [start[1], start[0]], zoom: 12.2 });
   new ResizeObserver(() => map.resize()).observe(mapElement);
+  let approximate = Array.isArray(shared) ? window.radarApproximateLocation(map, shared) : null;
 
   let currentPoints = initialPoints;
   const markers = new Map();
@@ -94,34 +99,48 @@
   document.querySelectorAll('[data-map-style]').forEach((button) => button.addEventListener('click', () => {
     if (button.getAttribute('aria-pressed') === 'true') return;
     document.querySelectorAll('[data-map-style]').forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
-    map.setStyle(STYLES[button.dataset.mapStyle]);
+    // diff: false rebuilds the style and fires 'style.load', which redraws the heatmap and the location
+    // circle. The default diff patches the old style in place: it drops both and never fires 'style.load'.
+    map.setStyle(STYLES[button.dataset.mapStyle], { diff: false });
   }));
 
   document.querySelectorAll('[data-map-zoom]').forEach((button) => button.addEventListener('click', () => {
     map.zoomTo(map.getZoom() + (button.dataset.mapZoom === 'in' ? 1 : -1), { duration: 250 });
   }));
 
+  // Share once, used everywhere: a location found here is also saved, snapped to ~500 m, for the home
+  // page's recommendations. Only for signed-in users who allow location (config.shareUrl is empty otherwise).
+  const shareApproximate = (coords) => {
+    if (!config.shareUrl) return;
+    const [lat, lng] = window.radarSnapLocation(coords);
+    const body = new FormData();
+    body.append('lat', lat);
+    body.append('lng', lng);
+    body.append('csrfmiddlewaretoken', config.csrf);
+    fetch(config.shareUrl, { method: 'POST', body, headers: { Accept: 'application/json' } }).catch(() => {});
+  };
+  // The crosshair and the walk filter use the same snapped position as everything else in Radar, so the
+  // exact one never leaves the device, not even in the walk filter's request.
   const getLocation = () => new Promise((resolve) => {
     if (!navigator.geolocation) { resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
-      (position) => resolve([position.coords.latitude, position.coords.longitude]),
+      (position) => {
+        const coords = window.radarSnapLocation([position.coords.latitude, position.coords.longitude]);
+        shareApproximate(coords);
+        resolve(coords);
+      },
       () => resolve(null),
       { maximumAge: 300000, timeout: 5000 },
     );
   });
-  let youAreHere = null;
-  document.querySelector('[data-map-locate]')?.addEventListener('click', async () => {
+  document.querySelector('[data-map-locate]')?.addEventListener('click', async (event) => {
+    // Turned off by "Don't use my location": the hint beside the button explains how to turn it on.
+    if (event.currentTarget.getAttribute('aria-disabled') === 'true') return;
     const coords = await getLocation();
     if (!coords) { status.hidden = false; status.textContent = 'Could not get your location.'; return; }
-    const lngLat = [coords[1], coords[0]];
-    if (!youAreHere) {
-      const dot = document.createElement('div');
-      dot.className = 'you-are-here';
-      dot.setAttribute('aria-label', 'Your location');
-      youAreHere = new maplibregl.Marker({ element: dot });
-    }
-    youAreHere.setLngLat(lngLat).addTo(map);
-    map.flyTo({ center: lngLat, zoom: Math.max(map.getZoom(), 14.5), duration: reducedMotion ? 0 : 900 });
+    approximate?.remove();
+    approximate = window.radarApproximateLocation(map, coords);
+    map.flyTo({ center: [coords[1], coords[0]], zoom: Math.max(map.getZoom(), 14.5), duration: reducedMotion ? 0 : 900 });
   });
 
   // Pins: a round badge in the category colour with its icon, larger for more popular events.
@@ -225,12 +244,15 @@
     status.hidden = true;
     addHeatmap(); // no-op if 'style.load' already added it
     showResults(initialPoints);
-    if (initialPoints.length > 1) {
+    // Show every event, and the user's approximate location too when they shared one.
+    const framed = initialPoints.map((point) => [point.lng, point.lat]);
+    if (Array.isArray(shared)) framed.push([shared[1], shared[0]]);
+    if (framed.length > 1) {
       const bounds = new maplibregl.LngLatBounds();
-      initialPoints.forEach((point) => bounds.extend([point.lng, point.lat]));
+      framed.forEach((lngLat) => bounds.extend(lngLat));
       map.fitBounds(bounds, { padding: 64, maxZoom: 14, duration: 0 });
-    } else if (initialPoints.length === 1) {
-      map.setCenter([initialPoints[0].lng, initialPoints[0].lat]);
+    } else if (framed.length === 1) {
+      map.setCenter(framed[0]);
     }
     if (config.walk) {
       try { await fetchArea(map.getBounds(), await getLocation()); } catch {

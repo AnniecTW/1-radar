@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.utils import timezone
 
 from apps.events.models import Event
@@ -49,17 +51,36 @@ def get_preferences(profile) -> dict:
         key: {'app': True, 'email': key != 'new_events', **saved.get('notifications', {}).get(key, {})}
         for key, _ in NOTIFICATION_UPDATES
     }
+    location = {
+        'use': 'session',
+        'start_with_walk': True,
+        'show_heat_map': True,
+        'default_map_view': 'map',
+        **saved.get('location', {}),
+    }
+    # "Remember my location" was removed: Radar never stores a location in the account, so anyone who
+    # picked it gets "While I'm using Radar".
+    if location['use'] not in ('session', 'off'):
+        location['use'] = 'session'
     return {
         'notifications': notifications,
         'feed': {'default_tab': 'for_you', 'free_only': False, **saved.get('feed', {})},
-        'location': {
-            'use': 'session',
-            'start_with_walk': True,
-            'show_heat_map': True,
-            'default_map_view': 'map',
-            **saved.get('location', {}),
-        },
+        'location': location,
     }
+
+
+def get_recommendation_reset_at(profile) -> datetime | None:
+    """When the user last cleared their recommendation history, or None if they never did."""
+    raw = ((profile.notification_prefs or {}).get('recommendations') or {}).get('reset_at') if profile else None
+    try:
+        return datetime.fromisoformat(raw) if raw else None
+    except (TypeError, ValueError):
+        return None
+
+
+def location_is_allowed(profile) -> bool:
+    """False when the user chose "Don't use my location" on Account & privacy."""
+    return get_preferences(profile)['location']['use'] != 'off'
 
 
 def get_account_deletion_blockers(user) -> dict:

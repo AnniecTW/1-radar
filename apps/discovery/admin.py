@@ -5,5 +5,5 @@ from .models import RecommendationImpression
 
 @admin.register(RecommendationImpression)
 class RecommendationImpressionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'event', 'rank', 'score', 'algorithm_version', 'clicked', 'dismissed', 'shown_at')
+    list_display = ('user', 'event', 'rank', 'score', 'algorithm_version', 'clicked', 'dismissed', 'dismissed_at', 'shown_at')
     list_filter = ('algorithm_version', 'clicked', 'dismissed')

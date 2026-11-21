@@ -9,11 +9,16 @@ from apps.accounts.models import CampusDomain, Profile, User
 from apps.analytics.models import EventDailyStats
 from apps.attendance.models import CheckIn
 from apps.events.models import Event, EventInterest
+from apps.interests.descriptions import DESCRIPTIONS
 from apps.interests.models import Interest
 from apps.notifications.models import Notification
 from apps.organizations.models import Organization, OrganizationFollow, OrganizationMembership
 from apps.rsvps.models import RSVP, Ticket, TrafficSource
 from apps.venues.models import Venue
+
+
+# Written like the seeded descriptions (apps/interests/descriptions.py), modelled on 'tech'.
+DEMO_TECHNOLOGY_DESCRIPTION = 'Demo Technology: coding workshops, hackathons, AI and software talks, robotics, app demos'
 
 
 class Command(BaseCommand):
@@ -104,6 +109,7 @@ class Command(BaseCommand):
         interest, _ = Interest.objects.get_or_create(
             slug='demo-technology', defaults={'name': 'Demo Technology', 'group': 'Academic', 'is_active': True}
         )
+        self._fill_interest_descriptions()
 
         events = {}
         event_specs = [
@@ -166,3 +172,15 @@ class Command(BaseCommand):
             defaults={'payload': {'position': waitlisted.waitlist_position}},
         )
         self.stdout.write(self.style.SUCCESS('Seeded 5 users, 1 organization, 3 events, and sample engagement.'))
+
+    def _fill_interest_descriptions(self):
+        """Give interests with a blank description the same text migration 0003 wrote, without overwriting
+        anything an admin edited. Each save re-embeds that interest (see apps/interests/signals.py)."""
+        descriptions = {**DESCRIPTIONS, 'demo-technology': DEMO_TECHNOLOGY_DESCRIPTION}
+        filled = 0
+        for interest in Interest.objects.filter(slug__in=descriptions, description=''):
+            interest.description = descriptions[interest.slug]
+            interest.save(update_fields=['description'])
+            filled += 1
+        if filled:
+            self.stdout.write(f'Filled in {filled} interest descriptions.')

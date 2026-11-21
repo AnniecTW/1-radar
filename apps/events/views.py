@@ -40,7 +40,11 @@ def show_event_detail(request, slug):
             raise Http404
     elif event.status not in (Event.Status.PUBLISHED, Event.Status.CANCELLED, Event.Status.COMPLETED):
         raise Http404
-    _track_view(request, event)
+    from_recommendation = request.GET.get('ref') == 'rec'
+    _track_view(request, event, from_recommendation=from_recommendation)
+    if from_recommendation and request.user.is_authenticated:
+        from apps.discovery.recommendations import mark_recommendation_clicked
+        mark_recommendation_clicked(request.user, event, timezone.now())
     counts=event.rsvps.aggregate(
         going=Count('id',filter=Q(status='going')),
         interested=Count('id',filter=Q(status='interested')),
@@ -67,9 +71,10 @@ def _decorate_hosted_event(event, user, now, tz):
             event.countdown = {0: 'Today', 1: 'Tomorrow'}.get(days, f'In {days} days')
 
 
-def _track_view(request, event):
+def _track_view(request, event, from_recommendation=False):
     """Log the visit for the host's analytics (views and where they came from)."""
     from apps.engagement.services import guess_view_source, record_event_view
+    from apps.rsvps.models import TrafficSource
 
     if event.status != Event.Status.PUBLISHED:
         return
@@ -78,9 +83,12 @@ def _track_view(request, event):
         return
     if user is None and not request.session.session_key:
         request.session.save()
+    if from_recommendation:
+        source = TrafficSource.RECOMMENDATION
+    else:
+        source = guess_view_source(request.headers.get('Referer', ''), request.get_host())
     record_event_view(
-        event=event, user=user, session_key=request.session.session_key or '',
-        source=guess_view_source(request.headers.get('Referer', ''), request.get_host()), now=timezone.now(),
+        event=event, user=user, session_key=request.session.session_key or '', source=source, now=timezone.now(),
     )
 
 

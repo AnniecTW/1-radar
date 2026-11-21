@@ -20,13 +20,22 @@ from django.contrib import admin
 from django.urls import include, path
 
 from apps.discovery.views import show_landing_page
-from apps.discovery.views import show_explore_map, events_in_map_bounds
+from apps.discovery.views import (
+    dismiss_recommendation_view, events_in_map_bounds, set_recommendation_location, share_location,
+    show_explore_map, turn_off_recommendation_location,
+)
 from apps.events.views import show_event_detail
 
 urlpatterns = [
     path('', show_landing_page, name='dashboard'),
     path('explore/', show_explore_map, name='explore_map'),
     path('api/map-events/', events_in_map_bounds, name='map_events'),
+    path('api/location/', share_location, name='share_location'),
+    path('api/recommendation-location/', set_recommendation_location, name='set_recommendation_location'),
+    path('api/recommendation-location/off/', turn_off_recommendation_location,
+         name='turn_off_recommendation_location'),
+    path('api/recommendations/<uuid:event_id>/dismiss/', dismiss_recommendation_view,
+         name='dismiss_recommendation'),
     path('events/<slug:slug>/', show_event_detail, name='event_detail'),
     path('accounts/', include('apps.accounts.urls')),
     path('onboarding/', include('apps.interests.urls')),

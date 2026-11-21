@@ -11,9 +11,8 @@
       {% csrf_token %}
       <fieldset class="radio-group">
         <legend>When can we use your location?</legend>
-        <label class="radio-row"><input type="radio" name="use" value="session"{% if location.use == 'session' %} checked{% endif %}><span><b>Only while I'm using the app</b><small>Recommended. Used for this session and not saved.</small></span></label>
-        <label class="radio-row"><input type="radio" name="use" value="save"{% if location.use == 'save' %} checked{% endif %}><span><b>Remember my location</b><small>Helps rank nearby events in your For You feed.</small></span></label>
-        <label class="radio-row"><input type="radio" name="use" value="off"{% if location.use == 'off' %} checked{% endif %}><span><b>Don't use my location</b><small>The map starts from the center of campus.</small></span></label>
+        <label class="radio-row"><input type="radio" name="use" value="session"{% if location.use == 'session' %} checked{% endif %}><span><b>While I'm using Radar</b><small>Ranks nearby events higher in Recommended for you. Radar keeps only an approximate location (within about half a kilometer) on this device for six hours, never in your account.</small></span></label>
+        <label class="radio-row"><input type="radio" name="use" value="off"{% if location.use == 'off' %} checked{% endif %}><span><b>Don't use my location</b><small>Radar won't ask, and recommendations leave out distance. The map starts from the center of campus.</small></span></label>
       </fieldset>
       <label class="setting ruled">
         <span>Start with a 15-minute walk</span>
@@ -73,9 +72,35 @@
       <h2 id="privacy-heading">Privacy &amp; data</h2>
       <p class="privacy-line"><b>Follows:</b> organizations see how many people follow them, not who.</p>
       <p class="privacy-line"><b>Attendance:</b> only an event's host and organizers can see its attendee list.</p>
-      <p class="privacy-line"><b>Location:</b> stays in your session unless you choose to save it.</p>
+      <p class="privacy-line"><b>Location:</b> if you share it, only an approximate location is kept on this device for six hours, never in your account.</p>
+      <div class="history-reset" id="recommendation-history">
+        <p class="privacy-line"><b>Recommendation history:</b> Recommended for you learns from the events you view, like, save, RSVP to and check in to, and the ones you mark Not interested.{% if history_reset_at and not history_undo %} Last cleared {{ history_reset_at|date:"M j, Y" }}.{% endif %}</p>
+        {% if history_undo %}
+          <form class="history-undo" method="post" action="{% url 'undo_clear_recommendation_history' %}" role="status">
+            {% csrf_token %}
+            <span>History cleared. Recommendations now start over from your interests and the organizations you follow.</span>
+            <button class="text-button strong" type="submit">Undo</button>
+          </form>
+        {% else %}
+          {% comment %}account.js asks first in the dialog below; without JavaScript the form posts straight away, and Undo still works.{% endcomment %}
+          <form method="post" action="{% url 'clear_recommendation_history' %}" data-confirm="clear-history-dialog">
+            {% csrf_token %}
+            <button class="link-strong link-button" type="submit">Clear recommendation history</button>
+          </form>
+        {% endif %}
+      </div>
       <p class="privacy-line"><a class="link-strong" href="{% url 'delete_account' %}">Delete my account</a></p>
     </section>
   </div>
 </main>
+
+<dialog id="clear-history-dialog" class="confirm-dialog" aria-labelledby="clear-history-title" aria-describedby="clear-history-text">
+  <h2 id="clear-history-title">Clear recommendation history?</h2>
+  <p id="clear-history-text">Recommended for you will stop using the events you’ve viewed, liked, saved, RSVP’d to and checked in to so far, and events you marked Not interested can show up again. It starts over from your interests and the organizations you follow.</p>
+  <p>Nothing is deleted: your saved events, likes and RSVPs stay where they are. You can undo this for 10 minutes.</p>
+  <form method="dialog" class="dialog-actions">
+    <button class="text-button" value="cancel">Cancel</button>
+    <button class="banner-button navy" value="confirm">Clear history</button>
+  </form>
+</dialog>
 {% endblock %}

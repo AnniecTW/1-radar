@@ -2,7 +2,7 @@
 {% if not event.is_free and event.external_url|slice:":4" == "http" %}
   <a class="rsvp" href="{% url 'event_tickets' event.pk %}" target="_blank" rel="noopener noreferrer">Get tickets</a>
 {% elif user.is_authenticated %}
-  <a class="rsvp{% if event.is_free and not event.rsvp_required %} outline{% endif %}" href="{% url 'event_detail' event.slug %}">{% if not event.is_free %}Contact host{% elif event.rsvp_required %}RSVP{% else %}Interested{% endif %}</a>
+  <a class="rsvp{% if event.is_free and not event.rsvp_required %} outline{% endif %}" href="{% url 'event_detail' event.slug %}{{ link_query }}">{% if not event.is_free %}Contact host{% elif event.rsvp_required %}RSVP{% else %}Interested{% endif %}</a>
 {% elif not event.is_free %}
   <button class="rsvp" type="button" data-gate data-prompt="Sign in to contact the host of {{ event.title }}">Contact host</button>
 {% elif event.rsvp_required %}

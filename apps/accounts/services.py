@@ -85,6 +85,44 @@ def save_location_preferences(*, user: User, cleaned_data: dict) -> None:
     profile.save(update_fields=['notification_prefs', 'updated_at'])
 
 
+def turn_off_location(*, user: User) -> None:
+    """"Don't ask again" on the home page's location banner: the same as choosing "Don't use my location"
+    on Account & privacy, keeping the other map settings as they are."""
+    from .selectors import get_preferences
+
+    profile = get_or_create_profile(user)
+    location = {**get_preferences(profile)['location'], 'use': 'off'}
+    profile.notification_prefs = {**profile.notification_prefs, 'location': location}
+    profile.save(update_fields=['notification_prefs', 'updated_at'])
+
+
+def reset_recommendation_history(*, user: User, now) -> str | None:
+    """"Clear recommendation history" on Account & privacy. Nothing is deleted: activity and "Not interested"
+    marks from before `now` are just ignored by recommendations from then on. Returns the previous reset time
+    (ISO text, or None), which Undo puts back."""
+    profile = get_or_create_profile(user)
+    settings = profile.notification_prefs.get('recommendations') or {}
+    previous = settings.get('reset_at')
+    profile.notification_prefs = {**profile.notification_prefs,
+                                  'recommendations': {**settings, 'reset_at': now.isoformat()}}
+    profile.save(update_fields=['notification_prefs', 'updated_at'])
+    return previous
+
+
+def undo_recommendation_reset(*, user: User, reset_at: str, previous: str | None) -> bool:
+    """Put the previous reset time back, but only if `reset_at` is still the latest reset (a newer one wins)."""
+    profile = get_or_create_profile(user)
+    settings = profile.notification_prefs.get('recommendations') or {}
+    if settings.get('reset_at') != reset_at:
+        return False
+    restored = {key: value for key, value in settings.items() if key != 'reset_at'}
+    if previous:
+        restored['reset_at'] = previous
+    profile.notification_prefs = {**profile.notification_prefs, 'recommendations': restored}
+    profile.save(update_fields=['notification_prefs', 'updated_at'])
+    return True
+
+
 def make_verification_token(user: User) -> str:
     # The email is signed in so a link stops working if the address changes.
     return signing.dumps({'user_id': str(user.pk), 'email': user.email}, salt=VERIFICATION_TOKEN_SALT)

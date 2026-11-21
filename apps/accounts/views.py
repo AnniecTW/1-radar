@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -30,7 +31,9 @@ from .forms import (
     FeedPreferencesForm, ForgotPasswordForm, LocationPreferencesForm, LoginForm, ProfileForm, ResetPasswordForm,
     SignupForm,
 )
-from .selectors import NOTIFICATION_UPDATES, get_account_deletion_blockers, get_initials, get_preferences
+from .selectors import (
+    NOTIFICATION_UPDATES, get_account_deletion_blockers, get_initials, get_preferences, get_recommendation_reset_at,
+)
 from .services import (
     clear_login_failures,
     delete_account as delete_user_account,
@@ -42,6 +45,8 @@ from .services import (
     create_user_account,
     get_or_create_profile,
     make_verification_token,
+    reset_recommendation_history,
+    undo_recommendation_reset,
     save_feed_preferences,
     save_location_preferences,
     send_verification_email,
@@ -318,14 +323,60 @@ def edit_account_preferences(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             save_location_preferences(user=request.user, cleaned_data=form.cleaned_data)
             messages.success(request, 'Your preferences are saved.')
-            return redirect('account_preferences')
+            response = redirect('account_preferences')
+            if form.cleaned_data['use'] == 'off':
+                # Forget any location this browser shared for recommendations.
+                from apps.discovery.recommendations import LOCATION_COOKIE
+                response.delete_cookie(LOCATION_COOKIE)
+            return response
         messages.error(request, 'We could not save those settings. Please try again.')
     return render(request, 'accounts/preferences_account.html', {
         **shell,
         'active_page': 'profile',
         'preferences_page': 'account',
         'location': get_preferences(shell['profile'])['location'],
+        'history_reset_at': get_recommendation_reset_at(shell['profile']),
+        'history_undo': _pending_history_undo(request),
     })
+
+
+# "Clear recommendation history" can be undone for this long, from the note it leaves on Account & privacy.
+HISTORY_UNDO_SESSION_KEY = 'recommendation_history_undo'
+HISTORY_UNDO_WINDOW = timedelta(minutes=10)
+
+
+def _pending_history_undo(request: HttpRequest) -> dict | None:
+    pending = request.session.get(HISTORY_UNDO_SESSION_KEY)
+    try:
+        if pending and timezone.now() - datetime.fromisoformat(pending['reset_at']) <= HISTORY_UNDO_WINDOW:
+            return pending
+    except (KeyError, TypeError, ValueError):
+        pass
+    request.session.pop(HISTORY_UNDO_SESSION_KEY, None)
+    return None
+
+
+@login_required
+@require_POST
+def clear_recommendation_history(request: HttpRequest) -> HttpResponse:
+    """Recommendations start over from the user's interests and follows. Nothing is deleted, so it can be undone."""
+    now = timezone.now()
+    previous = reset_recommendation_history(user=request.user, now=now)
+    request.session[HISTORY_UNDO_SESSION_KEY] = {'reset_at': now.isoformat(), 'previous': previous}
+    return redirect(f"{reverse('account_preferences')}#recommendation-history")
+
+
+@login_required
+@require_POST
+def undo_clear_recommendation_history(request: HttpRequest) -> HttpResponse:
+    pending = _pending_history_undo(request)
+    request.session.pop(HISTORY_UNDO_SESSION_KEY, None)
+    if pending and undo_recommendation_reset(user=request.user, reset_at=pending['reset_at'],
+                                             previous=pending['previous']):
+        messages.success(request, 'Your recommendation history is back.')
+    else:
+        messages.error(request, 'That can no longer be undone.')
+    return redirect(f"{reverse('account_preferences')}#recommendation-history")
 
 
 @login_required
