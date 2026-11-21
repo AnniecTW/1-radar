@@ -1,0 +1,21 @@
+# Keep secrets, local data and build leftovers out of the Docker image.
+.env
+.env.*
+!.env.example
+.envrc
+.git
+.github
+.venv
+venv
+env
+**/__pycache__
+**/*.py[cod]
+media
+staticfiles
+db.sqlite3*
+*.log
+.DS_Store
+.vscode
+.idea
+doc
+Radar_PRD.md

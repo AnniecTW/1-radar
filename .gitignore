@@ -237,3 +237,6 @@ scripts/
 # OS and editor files
 .DS_Store
 .Rhistory
+
+# collectstatic output (production builds only)
+staticfiles/
