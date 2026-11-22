@@ -54,13 +54,15 @@ STORAGES = {
 
 # Database. Supabase's transaction pooler (port 6543) lets many app processes share a few real
 # connections, so the demo and everyone's dev servers don't run out. It hands each transaction to
-# whichever connection is free, so connections can't be kept open between requests and server-side
-# cursors can't be used. (Django already turns off psycopg's prepared statements, which it would also break.)
+# whichever real connection is free, so server-side cursors can't be used. (Django already turns off
+# psycopg's prepared statements, which it would also break.)
+# Our connection to the pooler is kept open between requests: the database is across the country, and
+# opening a new connection costs several round trips on every page. Holding it is cheap, because the
+# pooler only lends us a real connection while a query runs. Health checks replace one that has dropped.
+DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', '60'))
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 if str(DATABASES['default'].get('PORT')) == '6543':
-    DATABASES['default']['CONN_MAX_AGE'] = 0
     DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
-else:
-    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 # Logs go to the container's output, which App Service shows in Log stream.
 LOGGING = {

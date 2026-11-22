@@ -31,7 +31,6 @@ RUN useradd --create-home --uid 1000 radar && chown -R radar /app
 USER radar
 
 EXPOSE 8000
-# Two worker processes with four threads each. The timeout leaves room for Snap-a-Flyer, which waits up to
-# 25 s for the vision model. Migrations are not run here: the database is shared, so they stay a manual step.
-# exec makes gunicorn the main process, so it gets Azure's stop signal and shuts down cleanly.
-CMD ["sh", "-c", "exec gunicorn radar.wsgi:application --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 60 --access-logfile - --error-logfile -"]
+# Workers, port and log format are in gunicorn.conf.py. Migrations are not run here: the database is shared,
+# so they stay a manual step.
+CMD ["gunicorn", "radar.wsgi:application"]
