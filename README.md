@@ -302,7 +302,7 @@ The demo runs on Azure App Service from the Docker image in [Dockerfile](Dockerf
 - **The demo uses the shared Supabase database.** What you create while developing shows up on the demo, and the other way round. Delete test events and accounts you don't want graders to see.
 - **Migrations are not applied on deploy.** Run `python manage.py migrate` yourself after the code is merged to `main`, never from an unmerged branch. Only add nullable columns or columns with defaults, so the demo keeps working before and after.
 - **New Python packages go in `requirements.txt`, pinned to a version,** or the demo crashes on start. A package that needs a system library also needs it in the Dockerfile.
-- **A new setting read from the environment** needs a value on Azure too; ask Annie, who manages the deployment.
+- **A new setting read from the environment** needs a value on Azure too.
 - **`DEBUG` is off on the demo,** so errors show a plain "Server Error (500)" page. The traceback is in Azure's log stream.
 - **Changed CSS or JS:** bump the `?v=N` on its tag in the template, as we already do, or browsers keep the old file.
 
