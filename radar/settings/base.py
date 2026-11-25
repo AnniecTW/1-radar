@@ -71,6 +71,7 @@ AUTHENTICATION_BACKENDS = ['apps.accounts.backends.EmailOrUsernameBackend']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'radar.request_memo.RequestMemoMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

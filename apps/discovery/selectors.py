@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.db.models import Count, Q, QuerySet
+from django.db.models import CharField, Count, Q, QuerySet, Value
 from django.utils import timezone
 
 from apps.accounts.models import CampusDomain, User
@@ -12,6 +12,7 @@ from apps.events.selectors import filter_discoverable_events
 from apps.interests.models import Interest
 from apps.organizations.models import Organization
 from apps.rsvps.models import RSVP
+from radar.request_memo import remember
 
 from .constants import (
     CATEGORY_CHIP_COUNT,
@@ -30,7 +31,8 @@ SATURDAY = 5
 
 
 def get_active_campus_domain() -> CampusDomain | None:
-    return CampusDomain.objects.filter(is_active=True).order_by('id').first()
+    """The campus settings (timezone, map center). Read once per request: many pages need them in several places."""
+    return remember('campus_domain', lambda: CampusDomain.objects.filter(is_active=True).order_by('id').first())
 
 
 def get_campus_timezone() -> ZoneInfo:
@@ -46,27 +48,27 @@ def get_campus_center() -> tuple[float, float] | None:
     return campus_domain.center_point.y, campus_domain.center_point.x
 
 
-def list_upcoming_events(now: datetime) -> QuerySet[Event]:
-    """Discoverable events that have not ended yet, with the counts the cards show."""
+def list_upcoming_events(now: datetime, with_interests: bool = True) -> QuerySet[Event]:
+    """Discoverable events that have not ended yet, with the counts the cards show. with_interests=False
+    skips loading the interest chips, for a caller that loads them for several lists at once."""
     going = Count('rsvps', filter=Q(rsvps__status=RSVP.Status.GOING), distinct=True)
     interested = Count('rsvps', filter=Q(rsvps__status=RSVP.Status.INTERESTED), distinct=True)
-    return (
+    events = (
         filter_discoverable_events(Event.objects.filter(end_at__gt=now))
         .select_related('organization', 'venue')
-        .prefetch_related('interests')
         .annotate(going_count=going, interested_count=interested)
     )
+    return events.prefetch_related('interests') if with_interests else events
 
 
-def get_happening_today_events(now: datetime, campus_timezone: ZoneInfo) -> list[Event]:
+def _happening_today(now: datetime, campus_timezone: ZoneInfo) -> QuerySet[Event]:
     """Events that start today (campus time) or are already running, by start time."""
     local_now = now.astimezone(campus_timezone)
     day_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
     day_end = day_start + timedelta(days=1)
     starts_today = Q(start_at__gte=day_start, start_at__lt=day_end)
     already_running = Q(start_at__lte=now)
-    events = list_upcoming_events(now).filter(starts_today | already_running).order_by('start_at')
-    return list(events[:CAROUSEL_SIZE])
+    return list_upcoming_events(now, with_interests=False).filter(starts_today | already_running).order_by('start_at')
 
 
 def get_weekend_window(now: datetime, campus_timezone: ZoneInfo) -> tuple[datetime, datetime]:
@@ -80,21 +82,57 @@ def get_weekend_window(now: datetime, campus_timezone: ZoneInfo) -> tuple[dateti
     return saturday, saturday + timedelta(days=2)
 
 
-def get_weekend_events(now: datetime, campus_timezone: ZoneInfo) -> list[Event]:
+def _this_weekend(now: datetime, campus_timezone: ZoneInfo) -> QuerySet[Event]:
     weekend_start, weekend_end = get_weekend_window(now, campus_timezone)
-    events = list_upcoming_events(now).filter(
+    return list_upcoming_events(now, with_interests=False).filter(
         start_at__gte=weekend_start, start_at__lt=weekend_end
     ).order_by('start_at')
-    return list(events[:CAROUSEL_SIZE])
+
+
+def _trending(now: datetime) -> QuerySet[Event]:
+    """Most popular events starting in the next 14 days, so far-off events don't crowd out near ones."""
+    window_end = now + timedelta(days=TRENDING_WINDOW_DAYS)
+    return list_upcoming_events(now, with_interests=False).filter(
+        start_at__gt=now, start_at__lt=window_end
+    ).order_by('-popularity_score', 'start_at')
 
 
 def get_trending_events(now: datetime) -> list[Event]:
-    """Most popular events starting in the next 14 days, so far-off events don't crowd out near ones."""
-    window_end = now + timedelta(days=TRENDING_WINDOW_DAYS)
-    events = list_upcoming_events(now).filter(start_at__gt=now, start_at__lt=window_end).order_by(
-        '-popularity_score', 'start_at'
-    )
-    return list(events[:CAROUSEL_SIZE])
+    return list(_trending(now)[:CAROUSEL_SIZE])
+
+
+def _by_start(event: Event):
+    return (event.start_at is None, event.start_at)  # Like PostgreSQL: events without a start go last.
+
+
+def get_home_event_lists(now: datetime, campus_timezone: ZoneInfo, category_slug: str = '',
+                         include_browse: bool = True) -> dict[str, list[Event]]:
+    """The home page's carousels ('today', 'weekend', 'trending') and, unless it is showing search results,
+    its browse grid ('browse'), fetched in one round trip instead of one per list. Each list keeps its own
+    filter, order and size; PostgreSQL runs them as one UNION ALL and each row says which list it is for.
+    Interest chips are not loaded: the caller loads them for all the lists at once."""
+    parts = {
+        'today': (_happening_today(now, campus_timezone), CAROUSEL_SIZE),
+        'weekend': (_this_weekend(now, campus_timezone), CAROUSEL_SIZE),
+        'trending': (_trending(now), CAROUSEL_SIZE),
+    }
+    if include_browse:
+        browse = list_upcoming_events(now, with_interests=False)
+        if category_slug:
+            browse = browse.filter(pk__in=Event.objects.filter(interests__slug=category_slug).values('pk'))
+        parts['browse'] = (browse.order_by('start_at'), BROWSE_GRID_SIZE)
+    tagged = [queryset.annotate(home_list=Value(name, output_field=CharField()))[:size]
+              for name, (queryset, size) in parts.items()]
+    lists = {name: [] for name in parts}
+    for event in tagged[0].union(*tagged[1:], all=True):
+        lists[event.home_list].append(event)
+    # A UNION doesn't promise to keep each part's order, so sort each list again the same way.
+    for name, events in lists.items():
+        if name == 'trending':
+            events.sort(key=lambda event: (-event.popularity_score, _by_start(event)))
+        else:
+            events.sort(key=_by_start)
+    return lists
 
 
 def list_saved_event_ids(user, events: list[Event]) -> set:

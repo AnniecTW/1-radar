@@ -39,9 +39,14 @@ def like_button(context, event, variant=''):
 @register.inclusion_tag('engagement/_follow_button.html', takes_context=True)
 def follow_button(context, organization, source='org_page', variant=''):
     data, user = _base(context, variant)
-    data.update(
-        organization=organization,
-        source=source,
-        active=data['signed_in'] and OrganizationFollow.objects.filter(user=user, organization=organization).exists(),
-    )
+    # A page listing several organizations can pass followed_organization_ids, found in one query, instead
+    # of one query per button.
+    followed_ids = context.get('followed_organization_ids')
+    if not data['signed_in']:
+        active = False
+    elif followed_ids is not None:
+        active = organization.pk in followed_ids
+    else:
+        active = OrganizationFollow.objects.filter(user=user, organization=organization).exists()
+    data.update(organization=organization, source=source, active=active)
     return data
