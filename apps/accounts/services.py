@@ -22,6 +22,7 @@ from apps.organizations.services import unfollow_organization
 from apps.rsvps.models import RSVP
 from apps.rsvps.services import cancel_rsvp
 from apps.search.models import SearchQueryLog
+from radar.request_memo import remember
 
 from .exceptions import AccountDeletionBlockedError, EmailAlreadyRegisteredError, InvalidPasswordResetLinkError, InvalidVerificationTokenError
 from .models import Profile, User
@@ -51,8 +52,11 @@ def create_user_account(*, email: str, password: str, first_name: str, last_name
 
 
 def get_or_create_profile(user: User) -> Profile:
-    profile, _ = Profile.objects.get_or_create(user=user, defaults={'display_name': user.first_name})
-    return profile
+    """The user's profile, read once per request: the top bar and the page itself often both need it."""
+    def load():
+        profile, _ = Profile.objects.get_or_create(user=user, defaults={'display_name': user.first_name})
+        return profile
+    return remember(('profile', user.pk), load)
 
 
 def update_profile(*, user: User, display_name: str, bio: str, major: str, graduation_year: int | None) -> Profile:

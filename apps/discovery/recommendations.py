@@ -150,10 +150,10 @@ CANCELLED_BY_DISMISSAL = {'view', 'cancelled', 'like'}
 def history_start(user, now: datetime) -> datetime:
     """The oldest activity recommendations read: six months back, or the last "Clear recommendation history"
     on Account & privacy if that is more recent. Clearing deletes nothing; older rows are just ignored."""
-    from apps.accounts.models import Profile
     from apps.accounts.selectors import get_recommendation_reset_at
+    from apps.accounts.services import get_or_create_profile
 
-    reset_at = get_recommendation_reset_at(Profile.objects.filter(user=user).first())
+    reset_at = get_recommendation_reset_at(get_or_create_profile(user))
     lookback = now - timedelta(days=LOOKBACK_DAYS)
     return max(lookback, reset_at) if reset_at else lookback
 

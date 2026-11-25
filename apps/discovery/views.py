@@ -12,6 +12,9 @@ from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.http import require_http_methods
 from datetime import timedelta
+from django.db.models import prefetch_related_objects
+
+from apps.organizations.models import OrganizationFollow
 
 from .recommendations import (
     LOCATION_COOKIE, discard_replaced_impressions, dismiss_recommendation, log_impressions, read_location,
@@ -20,10 +23,9 @@ from .recommendations import (
 from .selectors import (
     get_campus_center,
     get_campus_timezone,
-    get_happening_today_events,
+    get_home_event_lists,
     get_map_points,
     get_trending_events,
-    get_weekend_events,
     HERO_SLIDE_COUNT,
     list_browse_events,
     list_category_interests,
@@ -363,19 +365,21 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
         category_slug = ''
     search_text, search_error = _read_search_request(request)
     semantic_search = request.GET.get('semantic') == '1'
+    home_lists = get_home_event_lists(now, campus_timezone, category_slug, include_browse=not search_text)
     if search_text and semantic_search:
         from .selectors import search_browse_events
         browse_events, keyword_fallback = search_browse_events(now, category_slug, search_text)
     else:
-        browse_events, keyword_fallback = list_browse_events(now, category_slug, search_text), False
+        browse_events = home_lists['browse'] if 'browse' in home_lists else list_browse_events(now, category_slug, search_text)
+        keyword_fallback = False
 
-    trending = get_trending_events(now)
+    trending = home_lists['trending']
     chip_categories, more_categories = split_category_chips(categories, now)
     context = {
         'active_nav': 'discover',
         'featured_events': trending[:HERO_SLIDE_COUNT],
-        'happening_today': get_happening_today_events(now, campus_timezone),
-        'this_weekend': get_weekend_events(now, campus_timezone),
+        'happening_today': home_lists['today'],
+        'this_weekend': home_lists['weekend'],
         'trending': trending,
         'chip_categories': chip_categories,
         'more_categories': more_categories,
@@ -394,9 +398,16 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
         'weekend_summary': get_weekend_summary(now, campus_timezone),
         'recent_signups': count_recent_signups(now),
     }
+    # The carousels and the grid share many events, so their interest chips are loaded in one query.
+    prefetch_related_objects(context['happening_today'] + context['this_weekend'] + trending + browse_events, 'interests')
     if request.user.is_authenticated:
         shown_events = context['happening_today'] + context['this_weekend'] + trending + browse_events
         context.update(_signed_in_context(request, now, shown_events))
+        # One query for every Follow button in "Organizations to follow", not one per button.
+        context['followed_organization_ids'] = set(
+            OrganizationFollow.objects.filter(user=request.user, organization__in=context['featured_organizations'])
+            .values_list('organization_id', flat=True)
+        )
     card_lists = [context['happening_today'], context['this_weekend'], trending, browse_events, context.get('recommended', [])]
     label_card_highlights(card_lists, now, context.get('interest_ids', set()), {event.pk for event in trending})
     # Dates render in campus time, not the server's UTC.
