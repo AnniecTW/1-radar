@@ -110,6 +110,20 @@ html{scroll-behavior:smooth}
 
 .home .empty{background:var(--paper);border:1px dashed var(--line);border-radius:16px;padding:26px;text-align:center;color:var(--muted)}
 .home .empty a{color:var(--terra);font-weight:600}
+/* "Recommended for you" while recommendations-row.js loads it (_recommendations_loading.html): real card
+   markup with invisible words, drawn as bars a light sweeps across. The status line is read out, not shown,
+   until loading fails. */
+.home .rec-status:not(.is-problem){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.home .skeleton-card{pointer-events:none;user-select:none}
+.home .skeleton-card .event-body *{color:transparent} /* Including the "…" where a line is cut off. */
+.home .skeleton-card:hover{transform:none;box-shadow:var(--card-shadow)}
+.home .skeleton-card :is(.sk,.sk-tag,.sk-button,.sk-block,.sk-icon){color:transparent;border-color:transparent;
+  background:linear-gradient(90deg,#efe8df 30%,#f9f4ee 50%,#efe8df 70%);background-size:300% 100%;animation:radar-shimmer 1.5s ease-in-out infinite}
+.home .skeleton-card .sk{border-radius:6px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.home .skeleton-card h3 .sk{font-size:11px;vertical-align:middle} /* Thinner bars on the same two lines, so they don't touch. */
+.home .skeleton-card .sk-icon{flex:none;width:14px;height:14px;border-radius:4px}
+@keyframes radar-shimmer{from{background-position:100% 0}to{background-position:0 0}}
+@media (prefers-reduced-motion:reduce){.home .skeleton-card *{animation:none}}
 /* Location banner above Recommended for you (landing-location.js). */
 .home .location-banner{display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;margin-top:26px;padding:14px 16px;background:var(--paper);border:1px solid var(--edge);border-radius:16px;box-shadow:var(--card-shadow)}
 .home .location-banner[hidden]{display:none}

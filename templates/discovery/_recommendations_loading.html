@@ -1,0 +1,17 @@
+{% comment %}Stands in for "Recommended for you" while recommendations-row.js fetches the real row (_recommendations.html) from show_recommendations_row, so the rest of the home page doesn't wait for the ranking.
+The loading cards use the real card markup with placeholder words, made invisible and drawn as shimmering bars, so they take exactly the size of real cards.{% endcomment %}
+<div data-recommendations data-recommendations-src="{% url 'recommendations_row' %}">
+  <section class="section" id="recommendations" aria-labelledby="recommendations-title" aria-busy="true">
+    <div class="section-heading"><div>
+      <h2 id="recommendations-title"><i data-lucide="sparkles" aria-hidden="true"></i>Recommended for you</h2>
+      <p>Picked from your interests and the events you engage with</p>
+    </div></div>
+    <p class="rec-status" data-recommendations-status role="status">Finding events for you…</p>
+    <div class="card-row skeleton-row" data-recommendations-skeleton aria-hidden="true">
+      {% include 'discovery/_skeleton_card.html' with title='An event title that is long enough to wrap onto a second line' place='Illini Union, Room 314' reason='Because you like Music' %}
+      {% include 'discovery/_skeleton_card.html' with title='A shorter event title' place='Siebel Center for Design' reason='Similar to an event you saved' %}
+      {% include 'discovery/_skeleton_card.html' with title='Another event title that also takes up two lines here' place='Main Quad' reason='A short walk from you' %}
+    </div>
+    <noscript><p class="empty">Recommendations need JavaScript. <a href="{% url 'explore_map' %}">Explore events</a> instead.</p></noscript>
+  </section>
+</div>

@@ -1,0 +1,13 @@
+{% comment %}A loading card for _recommendations_loading.html: real card markup with invisible placeholder words. Needs: title, place, reason (placeholder text of different lengths, so the bars vary).{% endcomment %}
+<article class="event-card skeleton-card">
+  <div class="event-image sk-block"></div>
+  <div class="event-body">
+    <h3><span class="sk">{{ title }}</span></h3>
+    <p class="event-meta event-date"><span class="sk-icon"></span><span><span class="sk">Sat, Nov 28 · 7:00 PM</span></span></p>
+    <p class="event-meta"><span class="sk-icon"></span><span><span class="sk">{{ place }}</span></span></p>
+    <div class="tags"><span class="tag sk-tag">Category</span><span class="tag sk-tag">Topic</span><span class="tag tag-price sk-tag">Free</span></div>
+    <p class="description"><span class="sk">A short description of the event that runs to about three lines on a card, so the loading card takes the same room as a real one.</span></p>
+    <p class="insight"><span class="sk">{{ reason }}</span></p>
+    <div class="card-footer"><span class="going"><span class="sk">12 interested</span></span><span class="rsvp sk-button">Interested</span></div>
+  </div>
+</article>

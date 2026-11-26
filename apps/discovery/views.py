@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.cache import never_cache
 from datetime import timedelta
 from django.db.models import prefetch_related_objects
 
@@ -212,23 +213,52 @@ def _read_search_request(request: HttpRequest) -> tuple[str, str]:
 
 
 def _signed_in_context(request: HttpRequest, now, shown_events: list) -> dict:
-    """The extras a signed-in user sees: the top bar's name, picks for them, and which cards they saved."""
+    """The extras a signed-in user sees: the top bar's name, their location, and which cards they saved.
+    "Recommended for you" isn't here: the page loads it afterwards (show_recommendations_row)."""
     from apps.accounts.selectors import location_is_allowed
     from apps.accounts.views import get_account_shell_context
 
     shell = get_account_shell_context(request.user)
     location_allowed = location_is_allowed(shell['profile'])
-    location = read_location(request, now) if location_allowed else None
-    recommended = recommend_events(request.user, now, location)
-    log_impressions(request.user, recommended, now)
     return {
         **shell,
+        'user_location': read_location(request, now) if location_allowed else None,
+        'location_allowed': location_allowed,
+        'interest_ids': set(request.user.interests.values_list('interest_id', flat=True)),
+        'saved_event_ids': list_saved_event_ids(request.user, shown_events),
+    }
+
+
+def _render_recommendations_row(request: HttpRequest, now, location, location_allowed: bool,
+                                replace: bool = False) -> str:
+    """Rank, log the impressions and render "Recommended for you" with its location banner. `replace` drops
+    the impressions of the row this one replaces (a quiet refresh right after the row loaded)."""
+    recommended = recommend_events(request.user, now, location)
+    if replace:
+        discard_replaced_impressions(request.user, now)
+    log_impressions(request.user, recommended, now)
+    interest_ids = set(request.user.interests.values_list('interest_id', flat=True))
+    label_card_highlights([recommended], now, interest_ids, {event.pk for event in get_trending_events(now)})
+    context = {
         'recommended': recommended,
         'user_location': location,
         'location_allowed': location_allowed,
-        'interest_ids': set(request.user.interests.values_list('interest_id', flat=True)),
-        'saved_event_ids': list_saved_event_ids(request.user, shown_events + recommended),
+        'interest_ids': interest_ids,
+        'saved_event_ids': list_saved_event_ids(request.user, recommended),
     }
+    with timezone.override(get_campus_timezone()):
+        return render_to_string('discovery/_recommendations.html', context, request=request)
+
+
+@login_required
+@require_GET
+@never_cache
+def show_recommendations_row(request: HttpRequest) -> HttpResponse:
+    """The "Recommended for you" row as HTML, which the home page fetches once it is on screen
+    (recommendations-row.js). Ranking takes about ten database queries; the rest of the page doesn't wait."""
+    now = timezone.now()
+    location_allowed, location = _location_state(request, now)
+    return HttpResponse(_render_recommendations_row(request, now, location, location_allowed))
 
 
 def _location_state(request: HttpRequest, now) -> tuple[bool, tuple[float, float] | None]:
@@ -299,21 +329,7 @@ def set_recommendation_location(request: HttpRequest) -> JsonResponse:
     if coordinates is None:
         return JsonResponse({'error': 'valid lat and lng are required'}, status=400)
     location = round_location(*coordinates)
-    recommended = recommend_events(request.user, now, location)
-    if request.POST.get('replace') == '1':
-        discard_replaced_impressions(request.user, now)
-    log_impressions(request.user, recommended, now)
-    interest_ids = set(request.user.interests.values_list('interest_id', flat=True))
-    label_card_highlights([recommended], now, interest_ids, {event.pk for event in get_trending_events(now)})
-    context = {
-        'recommended': recommended,
-        'user_location': location,
-        'location_allowed': True,
-        'interest_ids': interest_ids,
-        'saved_event_ids': list_saved_event_ids(request.user, recommended),
-    }
-    with timezone.override(get_campus_timezone()):
-        html = render_to_string('discovery/_recommendations.html', context, request=request)
+    html = _render_recommendations_row(request, now, location, True, replace=request.POST.get('replace') == '1')
     response = JsonResponse({'html': html, 'location': {'lat': location[0], 'lng': location[1]}})
     remember_location(response, request, location, now)
     return response
@@ -408,7 +424,7 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
             OrganizationFollow.objects.filter(user=request.user, organization__in=context['featured_organizations'])
             .values_list('organization_id', flat=True)
         )
-    card_lists = [context['happening_today'], context['this_weekend'], trending, browse_events, context.get('recommended', [])]
+    card_lists = [context['happening_today'], context['this_weekend'], trending, browse_events]
     label_card_highlights(card_lists, now, context.get('interest_ids', set()), {event.pk for event in trending})
     # Dates render in campus time, not the server's UTC.
     with timezone.override(campus_timezone):

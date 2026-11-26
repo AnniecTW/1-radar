@@ -178,7 +178,7 @@ class DismissEndpointTests(RecommendationTestCase):
 
     def test_only_recommended_cards_have_the_button(self):
         self.make_vector_event('Open Mic', MUSIC, interests=[self.music])
-        home = self.client.get(reverse('dashboard'))
+        home = self.client.get(reverse('recommendations_row'))
         shown = len(home.context['recommended'])
         self.assertGreater(shown, 0)
         self.assertContains(home, 'data-dismiss-recommendation', count=shown)

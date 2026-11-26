@@ -126,8 +126,23 @@ class RankingTests(RecommendationTestCase):
 
 
 class HomePageTests(RecommendationTestCase):
+    def test_home_page_leaves_the_row_to_load_afterwards(self):
+        jazz = self.make_vector_event('Jazz Night', MUSIC, hours_away=-72)
+        EventSave.objects.create(user=self.fan, event=jazz)
+        self.make_vector_event('Open Mic', MUSIC)
+        home = self.client.get(reverse('dashboard'))
+        self.assertContains(home, f'data-recommendations-src="{reverse("recommendations_row")}"')
+        self.assertContains(home, 'Finding events for you')
+        self.assertNotContains(home, 'data-dismiss-recommendation')
+        self.assertFalse(RecommendationImpression.objects.exists())  # Nothing ranked or logged yet.
+
+    def test_row_is_for_signed_in_users_and_only_read(self):
+        self.assertEqual(self.client.post(reverse('recommendations_row')).status_code, 405)
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse('recommendations_row')).status_code, 302)
+
     def test_prompt_to_pick_interests_when_there_is_nothing_to_recommend(self):
-        response = self.client.get(reverse('dashboard'))
+        response = self.client.get(reverse('recommendations_row'))
         self.assertContains(response, 'Pick a few interests to get recommendations.')
         self.assertContains(response, reverse('preferences'))
 
@@ -140,7 +155,7 @@ class HomePageTests(RecommendationTestCase):
         EventSave.objects.create(user=self.fan, event=jazz)
         open_mic = self.make_vector_event('Open Mic', MUSIC)
 
-        response = self.client.get(reverse('dashboard'))
+        response = self.client.get(reverse('recommendations_row'))
         self.assertContains(response, 'Similar to Jazz Night')
         self.assertContains(response, reverse('event_detail', args=[open_mic.slug]) + '?ref=rec')
         impression = RecommendationImpression.objects.get(user=self.fan, event=open_mic)
@@ -177,11 +192,11 @@ class PruneImpressionTests(RecommendationTestCase):
         self.assertEqual(self.remaining(old, old_clicked, old_dismissed_past, old_dismissed_upcoming, recent),
                          {old_dismissed_upcoming, recent})
 
-    def test_home_page_prunes_only_the_visitors_rows(self):
+    def test_loading_the_row_prunes_only_the_visitors_rows(self):
         event = self.make_event('Last Spring', hours_away=-24 * 200)
         mine = self.impression(event, 200)
         theirs = self.impression(event, 200, user=self.make_user('other'))
-        self.client.get(reverse('dashboard'))
+        self.client.get(reverse('recommendations_row'))
         self.assertEqual(self.remaining(mine, theirs), {theirs})
 
     def test_command_prunes_everyone(self):
@@ -210,14 +225,14 @@ class LocationTests(RecommendationTestCase):
         self.assertNotIn('data-location-banner', response.json()['html'])
         self.assertIn(LOCATION_COOKIE, response.cookies)
         self.assertTrue(response.cookies[LOCATION_COOKIE]['httponly'])
-        # The home page now ranks with it and doesn't ask again.
-        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-location-banner')
+        # The row now ranks with it and doesn't ask again.
+        self.assertNotContains(self.client.get(reverse('recommendations_row')), 'data-location-banner')
 
     def test_quiet_refresh_replaces_the_impressions_the_page_just_logged(self):
         jazz = self.make_vector_event('Jazz Night', MUSIC, hours_away=-72)
         EventSave.objects.create(user=self.fan, event=jazz)
         open_mic = self.make_vector_event('Open Mic', MUSIC)
-        self.client.get(reverse('dashboard'))
+        self.client.get(reverse('recommendations_row'))
         self.client.post(self.url, {'lat': '40.102', 'lng': '-88.227', 'replace': '1'})
         self.assertEqual(RecommendationImpression.objects.filter(user=self.fan, event=open_mic).count(), 1)
         # Sharing on purpose, later, is a second real showing and is counted.
@@ -233,21 +248,21 @@ class LocationTests(RecommendationTestCase):
         self.assertEqual(self.client.post(self.url, {'lat': '40', 'lng': '-88'}).status_code, 302)
 
     def test_banner_shows_until_a_location_is_shared(self):
-        self.assertContains(self.client.get(reverse('dashboard')), 'data-location-banner')
+        self.assertContains(self.client.get(reverse('recommendations_row')), 'data-location-banner')
 
     def test_use_my_location_button_waits_in_the_row_until_a_location_is_shared(self):
         # The button is hidden in the HTML; landing-location.js reveals it after "Not now" or a browser block.
         jazz = self.make_vector_event('Jazz Night', MUSIC, hours_away=-72)
         EventSave.objects.create(user=self.fan, event=jazz)
         self.make_vector_event('Open Mic', MUSIC)
-        home = self.client.get(reverse('dashboard'))
-        self.assertContains(home, 'data-location-share aria-describedby="use-location-hint" hidden')
-        self.assertContains(home, 'so Recommended for you can put events near you first.')  # Its hover hint.
+        row = self.client.get(reverse('recommendations_row'))
+        self.assertContains(row, 'data-location-share aria-describedby="use-location-hint" hidden')
+        self.assertContains(row, 'so Recommended for you can put events near you first.')  # Its hover hint.
         self.client.post(self.url, {'lat': '40.102', 'lng': '-88.227'})
-        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-location-share')
+        self.assertNotContains(self.client.get(reverse('recommendations_row')), 'data-location-share')
         self.client.post(reverse('turn_off_recommendation_location'))
         self.client.cookies.pop(LOCATION_COOKIE, None)
-        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-location-share')
+        self.assertNotContains(self.client.get(reverse('recommendations_row')), 'data-location-share')
 
     def test_map_heading_says_it_is_centered_on_campus_until_a_location_is_shared(self):
         not_shared = 'Radar doesn’t have your location, so the map is centered on campus.'
@@ -267,8 +282,8 @@ class LocationTests(RecommendationTestCase):
         self.assertEqual(response.cookies[LOCATION_COOKIE].value, '')  # Deleted straight away.
 
         self.client.cookies[LOCATION_COOKIE] = shared_cookie  # Even if the browser still sends it...
+        self.assertNotContains(self.client.get(reverse('recommendations_row')), 'data-location-banner')
         home = self.client.get(reverse('dashboard'))
-        self.assertNotContains(home, 'data-location-banner')
         self.assertContains(home, '<script id="user-location" type="application/json">null</script>', html=False)
         self.assertEqual(home.cookies[LOCATION_COOKIE].value, '')  # ...it is ignored and deleted.
         self.assertEqual(self.client.post(self.url, {'lat': '40.102', 'lng': '-88.227'}).status_code, 403)
@@ -277,7 +292,7 @@ class LocationTests(RecommendationTestCase):
         response = self.client.post(reverse('turn_off_recommendation_location'))
         self.assertEqual(response.json(), {'location': 'off'})
         self.assertContains(self.client.get(reverse('account_preferences')), 'value="off" checked')
-        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-location-banner')
+        self.assertNotContains(self.client.get(reverse('recommendations_row')), 'data-location-banner')
 
     def test_the_removed_remember_option_counts_as_while_using_radar(self):
         from apps.accounts.selectors import get_preferences
@@ -287,7 +302,7 @@ class LocationTests(RecommendationTestCase):
         profile.notification_prefs = {'location': {'use': 'save'}}
         profile.save()
         self.assertEqual(get_preferences(profile)['location']['use'], 'session')
-        self.assertContains(self.client.get(reverse('dashboard')), 'data-location-banner')
+        self.assertContains(self.client.get(reverse('recommendations_row')), 'data-location-banner')
 
 
 class ExploreMapLocationTests(RecommendationTestCase):
@@ -306,7 +321,7 @@ class ExploreMapLocationTests(RecommendationTestCase):
     def test_sharing_from_the_map_is_used_by_recommendations(self):
         response = self.client.post(reverse('share_location'), {'lat': '40.1023', 'lng': '-88.2271'})
         self.assertEqual(response.json(), {'location': {'lat': 40.1, 'lng': -88.225}})
-        self.assertNotContains(self.client.get(reverse('dashboard')), 'data-location-banner')
+        self.assertNotContains(self.client.get(reverse('recommendations_row')), 'data-location-banner')
         self.assertEqual(self.client.post(reverse('share_location'), {'lat': 'north'}).status_code, 400)
 
     def test_location_off_greys_out_the_crosshair_and_walk_filter(self):
