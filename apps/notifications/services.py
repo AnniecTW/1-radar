@@ -1,5 +1,6 @@
 from django.utils import timezone
 
+from .emails import send_after_commit
 from .models import Notification
 
 Type = Notification.Type
@@ -19,34 +20,50 @@ PREFERENCE_FOR_TYPE = {
 }
 
 
-def wants_in_app(user, notification_type) -> bool:
-    """True unless the user switched off "In app" for this kind of update in Preferences."""
+def wants(user, notification_type, channel: str) -> bool:
+    """True unless the user switched this kind of update off in Preferences. `channel` is 'app' or 'email'.
+
+    Types with no Preferences row, such as an organization invite, are in-app only. Without a saved
+    profile the Preferences defaults apply: everything on, except email for new events.
+    """
     from apps.accounts.models import Profile
     from apps.accounts.selectors import get_preferences
 
     key = PREFERENCE_FOR_TYPE.get(notification_type)
     if key is None:
-        return True
+        return channel == 'app'
     try:
         profile = user.profile
     except Profile.DoesNotExist:
-        return True
-    return get_preferences(profile)['notifications'][key]['app']
+        profile = Profile(user=user)  # unsaved: the Preferences defaults
+    return get_preferences(profile)['notifications'][key][channel]
+
+
+def wants_in_app(user, notification_type) -> bool:
+    return wants(user, notification_type, 'app')
+
+
+def wants_email(user, notification_type) -> bool:
+    return wants(user, notification_type, 'email')
 
 
 def notify(*, user, type, event=None, organization=None, payload=None) -> Notification | None:
-    """Create an in-app notification if the user's Preferences allow it; returns None when skipped."""
-    if not wants_in_app(user, type):
-        return None
-    return Notification.objects.create(
-        user=user, type=type, event=event, organization=organization, payload=payload or {}
-    )
+    """Send one update the ways the user's Preferences allow: an in-app notification and/or an email.
+
+    Returns the in-app notification, or None when "In app" is off (an email may still go out).
+    """
+    fields = dict(user=user, type=type, event=event, organization=organization, payload=payload or {})
+    notification = Notification.objects.create(**fields) if wants_in_app(user, type) else None
+    if wants_email(user, type):
+        send_after_commit([(user, notification or Notification(**fields))])
+    return notification
 
 
 def notify_followers_of_new_event(*, event, actor=None) -> int:
-    """FR-59: tell an organization's followers it published an event. Returns how many were notified.
+    """FR-59: tell an organization's followers it published an event. Returns how many in-app notifications.
 
     Skips personal events and unlisted events, muted follows, deleted accounts and the person who published it.
+    Followers who turned on email for new events also get an email.
     """
     from apps.events.models import Event
     from apps.organizations.models import OrganizationFollow
@@ -55,17 +72,20 @@ def notify_followers_of_new_event(*, event, actor=None) -> int:
         return 0
     follows = (
         OrganizationFollow.objects.filter(organization_id=event.organization_id, notify=True, user__is_active=True)
-        .select_related('user__profile')
+        .select_related('user__profile', 'organization')
     )
     if actor is not None and getattr(actor, 'pk', None):
         follows = follows.exclude(user_id=actor.pk)
-    rows = [
-        Notification(user=follow.user, type=Type.FOLLOWED_ORG_NEW_EVENT, event=event,
-                     organization_id=event.organization_id)
-        for follow in follows
-        if wants_in_app(follow.user, Type.FOLLOWED_ORG_NEW_EVENT)
-    ]
+    rows, emails = [], []
+    for follow in follows:
+        notification = Notification(user=follow.user, type=Type.FOLLOWED_ORG_NEW_EVENT, event=event,
+                                    organization=follow.organization)
+        if wants_in_app(follow.user, Type.FOLLOWED_ORG_NEW_EVENT):
+            rows.append(notification)
+        if wants_email(follow.user, Type.FOLLOWED_ORG_NEW_EVENT):
+            emails.append((follow.user, notification))
     Notification.objects.bulk_create(rows)
+    send_after_commit(emails)
     return len(rows)
 
 

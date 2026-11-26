@@ -254,3 +254,6 @@ else:
 
 # SMTP providers such as Gmail only accept the authenticated account as the sender.
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or SMTP_USER or 'RADAR <no-reply@radar.local>'
+
+# Links in notification emails, which are sent outside a request. Set it to the deployed address.
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')

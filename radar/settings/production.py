@@ -26,6 +26,9 @@ ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS') or ['localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = _env_list('CSRF_TRUSTED_ORIGINS') or [
     f'https://{host}' for host in ALLOWED_HOSTS if host not in ('localhost', '127.0.0.1')
 ]
+# Links in notification emails. Defaults to https:// plus the first public allowed host.
+_public_hosts = [host for host in ALLOWED_HOSTS if host not in ('localhost', '127.0.0.1') and not host.startswith('.')]
+SITE_URL = os.environ.get('SITE_URL') or (f'https://{_public_hosts[0]}' if _public_hosts else SITE_URL)
 
 # HTTPS. Azure ends TLS at its front end and passes the request on as plain HTTP with
 # X-Forwarded-Proto, so Django has to read that header to know the visitor used HTTPS. That also makes
