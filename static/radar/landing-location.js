@@ -1,7 +1,9 @@
 // "Recommended for you" puts closer events higher once the user shares their location.
 // Radar's banner explains why first; the browser's own prompt appears only after a tap on
 // "Share location", because a "Block" there is usually permanent.
-(() => {
+// The row (and its banner) arrives after the page loads, so this starts on radar:recommendations
+// (recommendations-row.js), or right away on a page that renders the row itself.
+const startLocationBanner = () => {
   const DISMISS_KEY = 'radar.locationBannerDismissedAt';
   const DISMISS_DAYS = 30;
   const container = document.querySelector('[data-recommendations]');
@@ -123,4 +125,9 @@
   } else {
     decide('prompt');
   }
-})();
+};
+if (document.querySelector('[data-recommendations-src]')) {
+  document.addEventListener('radar:recommendations', startLocationBanner, { once: true });
+} else {
+  startLocationBanner();
+}

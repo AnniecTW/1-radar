@@ -4,7 +4,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css">
   <link rel="stylesheet" href="{% static 'radar/event-cards.css' %}?v=8">
-  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=18">
+  <link rel="stylesheet" href="{% static 'radar/landing.css' %}?v=19">
 {% endblock %}
 
 {% block content %}
@@ -75,7 +75,7 @@
     <div class="home-main">
       {% if search_text or selected_category or search_error %}{% include 'discovery/_browse.html' %}{% endif %}
 
-      {% if user.is_authenticated %}{% include 'discovery/_recommendations.html' %}{% endif %}
+      {% if user.is_authenticated %}{% include 'discovery/_recommendations_loading.html' %}{% endif %}
 
       {% url 'explore_map' as explore_url %}
       {% include 'discovery/_carousel.html' with section_id='today' icon='clock' heading='Happening today' subheading='Starting today or already underway' events=happening_today see_all_url=explore_url|add:'?date=today' compact=True %}
@@ -155,5 +155,5 @@
 <script src="{% static 'radar/signin-gate.js' %}?v=1"></script>
 <script src="{% static 'radar/map-location.js' %}?v=1"></script>
 <script src="{% static 'radar/landing.js' %}?v=10"></script>
-{% if user.is_authenticated %}<script src="{% static 'radar/landing-location.js' %}?v=6"></script><script src="{% static 'radar/recommendation-dismiss.js' %}?v=1"></script>{% endif %}
+{% if user.is_authenticated %}<script src="{% static 'radar/landing-location.js' %}?v=7"></script><script src="{% static 'radar/recommendation-dismiss.js' %}?v=1"></script><script src="{% static 'radar/recommendations-row.js' %}?v=1"></script>{% endif %}
 {% endblock %}
