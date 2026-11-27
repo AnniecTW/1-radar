@@ -1,0 +1,168 @@
+{% extends 'accounts/app_base.html' %}{% load static %}
+{% block title %}Recommendation analytics{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/host.css' %}?v=2"><link rel="stylesheet" href="{% static 'radar/search-dashboard.css' %}?v=2">{% endblock %}
+{% block content %}
+{% include 'search/_staff_tabs.html' %}
+<header class="host-header">
+  <div>
+    <p class="eyebrow">Staff only</p>
+    <h1>Recommendation analytics</h1>
+    <p class="host-lede">How “Recommended for you” is used and how well it works. One row per card shown, kept for six months; nothing here shows who saw what.</p>
+    <p class="hint">As of {{ now|date:"M j, g:i A" }}, campus time.</p>
+  </div>
+  <form class="host-header-actions" method="get">
+    <label class="host-filter">Period
+      <select name="range">{% for key, value in ranges.items %}<option value="{{ key }}"{% if key == range_key %} selected{% endif %}>{{ value.0 }}</option>{% endfor %}</select>
+    </label>
+    <label class="host-filter">Data
+      <select name="source">{% for key, label in sources.items %}<option value="{{ key }}"{% if key == source %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    </label>
+    <button class="host-button" type="submit">Apply</button>
+  </form>
+</header>
+
+{% if source != 'real' %}<p class="form-alert warn">Includes simulated students from <code>replay_recommendation_traffic</code>. Their clicks and dismissals follow that command’s assumptions, not real behaviour.</p>
+{% elif not rows_count and simulated_count %}<p class="form-alert">No real recommendations in this period yet. {{ simulated_count }} simulated cards are available: choose <b>Simulated</b> under Data.</p>{% endif %}
+
+<dl class="kpis" aria-label="Key numbers">
+  {% for kpi in kpis %}
+    <div><dd class="{% if kpi.tone %}tone-{{ kpi.tone }}{% endif %}">{{ kpi.value }}</dd><dt>{{ kpi.label }}{% if kpi.note %}<small>{{ kpi.note }}</small>{% endif %}</dt></div>
+  {% endfor %}
+</dl>
+
+<div class="chart-pair">
+  <section class="host-section" aria-labelledby="daily-heading">
+    <h2 id="daily-heading">Cards shown per day</h2>
+    <p class="section-note">By what the student did with each card.</p>
+    <div class="stack-bars" role="img" aria-label="Recommendation cards shown per day, stacked by reaction">
+      {% for column in daily.columns %}<div class="col" data-tip="{{ column.tip }}" tabindex="0" aria-label="{{ column.tip }}">{% for segment in column.segments %}<span class="seg-{{ segment.css }}" style="height: {{ segment.height }}px"></span>{% endfor %}</div>{% endfor %}
+    </div>
+    <div class="bar-axis">{% for label in daily.axis %}<span>{{ label }}</span>{% endfor %}</div>
+    <ul class="legend">{% for item in daily.legend %}<li><i class="seg-{{ item.css }}" aria-hidden="true"></i>{{ item.label }}</li>{% endfor %}</ul>
+  </section>
+
+  <section class="host-section" aria-labelledby="position-heading">
+    <h2 id="position-heading">Click-through by position</h2>
+    <p class="section-note">{% if positions.first_ctr is not None %}The first card is opened {{ positions.first_ctr }}% of the time{% if positions.rest_ctr is not None %}, the rest {{ positions.rest_ctr }}%{% endif %}. A steep drop means students mostly look at the start of the row.{% else %}No cards shown yet.{% endif %}</p>
+    <div class="bars short" role="img" aria-label="Click-through rate by card position">
+      {% for bar in positions.bars %}<span data-tip="{{ bar.tip }}" tabindex="0" aria-label="{{ bar.tip }}" style="height: {{ bar.height }}px"></span>{% endfor %}
+    </div>
+    <div class="bar-axis"><span>1st</span><span>5th</span><span>10th</span></div>
+  </section>
+</div>
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="signals-heading">
+    <h2 id="signals-heading">Which signals go with clicks</h2>
+    <p class="section-note">Each part of the score, 0 to 1 before weighting: its average on cards that were opened against cards that weren’t. {{ signals.clicks }} click{{ signals.clicks|pluralize }} on {{ signals.count }} embedding-ranked card{{ signals.count|pluralize }}.</p>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th scope="col">Signal</th><th scope="col" class="num">Weight</th><th scope="col" class="num">Opened</th><th scope="col" class="num">Not opened</th><th scope="col" class="num">Difference</th></tr></thead>
+        <tbody>{% for row in signals.table %}<tr><th scope="row">{{ row.label }}</th><td class="num">{{ row.weight }}%</td><td class="num">{{ row.clicked|floatformat:2|default:"—" }}</td><td class="num">{{ row.other|floatformat:2|default:"—" }}</td><td class="num{% if row.strong %} better{% endif %}">{% if row.gap is not None %}{% if row.gap > 0 %}+{% endif %}{{ row.gap|floatformat:2 }}{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <p class="section-note">Weights are the current settings; without a shared location, distance’s share goes to the others. A clear positive difference (bold) means that signal tracks what students open. This shows association, not cause: popular events also tend to be the ones starting soon, for example.</p>
+  </section>
+
+  <section class="host-section" aria-labelledby="score-heading">
+    <h2 id="score-heading">Does a higher score get more clicks?</h2>
+    <p class="section-note">Click-through by total score, for {{ score_buckets.count }} embedding-ranked card{{ score_buckets.count|pluralize }}. Bars rising to the right mean the score predicts what students open.</p>
+    <div class="bars" role="img" aria-label="Click-through rate by recommendation score">
+      {% for bar in score_buckets.bars %}<span data-tip="{{ bar.tip }}" tabindex="0" aria-label="{{ bar.tip }}" style="height: {{ bar.height }}px"></span>{% endfor %}
+    </div>
+    <div class="bar-axis"><span>0.0</span><span>0.5</span><span>1.0</span></div>
+  </section>
+</div>
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="reasons-heading">
+    <h2 id="reasons-heading">Click-through by reason shown</h2>
+    <p class="section-note">The line under each card saying why it was picked.</p>
+    {% for row in reasons.reasons %}
+      <div class="source-row" data-tip="{{ row.label }} · {{ row.ctr }}% of {{ row.count }} cards opened, {{ row.dismissed }}% not interested" tabindex="0"><span>{{ row.label }}</span><div class="source-track" aria-hidden="true"><span class="seg-ai" style="width: {{ row.ctr }}%"></span></div><span>{{ row.ctr }}%</span></div>
+    {% empty %}<p class="section-note">No cards shown yet.</p>{% endfor %}
+    <h3 class="sub-heading">By method</h3>
+    {% if reasons.algorithms %}
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Method</th><th scope="col" class="num">Cards</th><th scope="col" class="num">Opened</th><th scope="col" class="num">Not interested</th></tr></thead>
+          <tbody>{% for row in reasons.algorithms %}<tr><th scope="row">{{ row.label }}</th><td class="num">{{ row.count }}</td><td class="num">{{ row.ctr }}%</td><td class="num">{{ row.dismissed }}%</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <p class="section-note">The fill-in tops up a short row with events in the student’s chosen categories.</p>
+    {% endif %}
+  </section>
+
+  <section class="host-section" aria-labelledby="load-heading">
+    <h2 id="load-heading">Time to rank a row</h2>
+    <p class="section-note">From starting to rank to having the row’s events, for {{ load.count }} row{{ load.count|pluralize }}. The home page loads this row after the rest of the page, so students don’t wait for it.</p>
+    {% for bucket in load.histogram %}
+      <div class="source-row" data-tip="{{ bucket.label }} · {{ bucket.count }} row{{ bucket.count|pluralize }} ({{ bucket.share }}%)" tabindex="0">
+        <span>{{ bucket.label }}{% for mark in bucket.marks %} <b class="mark">{{ mark }}</b>{% endfor %}</span>
+        <div class="source-track" aria-hidden="true"><span style="width: {{ bucket.width }}%"></span></div>
+        <span>{{ bucket.count }}</span>
+      </div>
+    {% endfor %}
+  </section>
+</div>
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="events-heading">
+    <h2 id="events-heading">Most recommended events</h2>
+    <p class="section-note">{{ events.distinct }} different event{{ events.distinct|pluralize }} recommended in this period.</p>
+    {% if events.top %}
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Event</th><th scope="col" class="num">Shown</th><th scope="col" class="num">Opened</th><th scope="col" class="num">Not interested</th></tr></thead>
+          <tbody>{% for row in events.top %}<tr><th scope="row">{{ row.title }}</th><td class="num">{{ row.count }}</td><td class="num">{{ row.ctr }}%</td><td class="num">{{ row.dismissed }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="host-section" aria-labelledby="disliked-heading">
+    <h2 id="disliked-heading">Categories marked “Not interested”</h2>
+    <p class="section-note">An event counts toward each of its categories. A high share means the row keeps suggesting a topic students don’t want.</p>
+    {% if events.disliked %}
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Category</th><th scope="col" class="num">Dismissed</th><th scope="col" class="num">Of cards shown</th></tr></thead>
+          <tbody>{% for row in events.disliked %}<tr><th scope="row">{{ row.name }}</th><td class="num">{{ row.dismissed }}</td><td class="num">{{ row.rate }}%</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}<p class="section-note">Nothing was dismissed in this period.</p>{% endif %}
+  </section>
+</div>
+
+<h2 class="part-heading">Recommendation quality</h2>
+{% if evaluation %}
+  <div class="chart-pair">
+    <section class="host-section" aria-labelledby="eval-heading">
+      <h2 id="eval-heading">Embedding ranking vs simple rules</h2>
+      <p class="section-note">Latest <code>evaluate_recommendations</code> run, {{ evaluation.run.created_at|date:"M j, g:i A" }}: {{ evaluation.run.persona_count }} made-up students over {{ evaluation.run.event_count }} test events, top 10 each.{% if evaluation.run.note %} Note: {{ evaluation.run.note }}{% endif %}</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Score</th>{% for method in evaluation.methods %}<th scope="col" class="num">{{ method }}</th>{% endfor %}</tr></thead>
+          <tbody>{% for row in evaluation.rows %}<tr><th scope="row">{{ row.label }}</th>{% for cell in row.cells %}<td class="num{% if cell.best %} better{% endif %}">{{ cell.value|floatformat:2|default:"—" }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <p class="section-note"><b>Hit rate</b>: students with at least one event they want in their top 10. <b>Recall@10</b>: share of the events they want that made the top 10. <b>Precision@4</b>: share of the first 4 cards that they want, with empty slots counted as misses so a shorter row can’t score higher. A student who wants only 2 events can reach at most 0.5, the same for every method, so compare methods rather than read it as a grade. <b>Coverage</b>: share of test events recommended to anyone. <b>Interest tags</b> shows events in the chosen categories; <b>Soonest first</b> shows everyone the same events. Borderline events, and events a student already RSVP’d to, saved, liked or viewed, are left out of these scores. <b>Hidden event</b>: each RSVP or save is removed in turn (the recommender hides those events) to see whether the event comes back in the top 10; MRR is 1 / its position, or 0.</p>
+    </section>
+
+    <section class="host-section" aria-labelledby="misses-heading">
+      <h2 id="misses-heading">Where the embedding ranking missed</h2>
+      <p class="section-note">Made-up students whose top 10 left out an event they want.</p>
+      {% for row in evaluation.misses %}
+        <p class="miss"><b>{{ row.persona }}</b> <span>{{ row.about }} Recall {{ row.recall|floatformat:2 }} · missed {{ row.missing|join:", " }}</span></p>
+      {% empty %}<p class="section-note">Every student’s top 10 had every event they want.</p>{% endfor %}
+      {% if evaluation.lost %}
+        <p class="section-note">Hidden RSVPs and saves that didn’t come back:</p>
+        {% for item in evaluation.lost %}<p class="miss"><b>{{ item.persona }}</b> <span>{{ item.event }} ({{ item.action }})</span></p>{% endfor %}
+      {% endif %}
+    </section>
+  </div>
+{% else %}
+  <p class="section-note">No evaluation yet. Run <code>python manage.py evaluate_recommendations</code> to score recommendations for the made-up students in <code>apps/discovery/eval_data</code>.</p>
+{% endif %}
+<script src="{% static 'radar/chart-tips.js' %}" defer></script>
+{% endblock %}

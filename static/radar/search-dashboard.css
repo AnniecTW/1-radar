@@ -52,6 +52,8 @@
 .miss b{font-weight:600}
 .miss span{color:var(--muted);overflow-wrap:anywhere}
 
+.staff-tabs{margin-bottom:22px}
+
 @media (max-width:860px){
   .host-header-actions{width:100%}
 }
