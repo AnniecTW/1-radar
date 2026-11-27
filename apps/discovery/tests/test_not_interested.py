@@ -56,7 +56,7 @@ class PenaltyTests(RecommendationTestCase):
         self.dismiss(self.make_vector_event('Jazz Night', MUSIC))
         ranked = {event.pk: event for event in recommend_events(self.fan, self.now)}
         self.assertAlmostEqual(before - ranked[repeat.pk].rec_score, DISMISS_PENALTY, places=3)
-        self.assertEqual(ranked[repeat.pk].recommendation_algorithm, 'embedding-v2')
+        self.assertEqual(ranked[repeat.pk].recommendation_algorithm, ALGORITHM_VERSION)
 
     def test_several_dismissals_take_the_biggest_penalty_not_the_sum(self):
         self.dismiss(self.make_vector_event('Jazz Night', MUSIC))

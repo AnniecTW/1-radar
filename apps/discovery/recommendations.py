@@ -13,7 +13,7 @@ from django.contrib.gis.db.models.functions import Distance
 from django.core import signing
 from django.contrib.gis.geos import Point
 from django.db.models import (
-    Case, CharField, Exists, ExpressionWrapper, F, FloatField, Func, Max, OuterRef, Q, QuerySet, Value, When,
+    Case, CharField, Exists, ExpressionWrapper, F, FloatField, Func, Max, Min, OuterRef, Q, QuerySet, Value, When,
 )
 from django.db.models.functions import Cast, Coalesce, Greatest, Least
 from pgvector.django import CosineDistance
@@ -28,9 +28,11 @@ from apps.rsvps.models import RSVP
 
 from .models import RecommendationImpression
 
-ALGORITHM_VERSION = 'embedding-v2'  # v2 added the "Not interested" penalty.
+# v2 added the "Not interested" penalty; v3 rescales similarity per user (see rank_events).
+ALGORITHM_VERSION = 'embedding-v3'
 FALLBACK_ALGORITHM_VERSION = 'interest-tags-v1'
 CAROUSEL_SIZE = 10
+SIMILARITY_MIN_SPREAD = 0.01  # Below this, candidates are equally close and similarity isn't rescaled.
 
 # How much one action says about a user's taste. All RSVP statuses count the same: whether a user ends
 # up "going", "waitlisted" or "interested" depends on how the event is set up, not on how keen they are.
@@ -300,9 +302,18 @@ def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, locat
     weights = score_weights(location is not None)
     max_popularity = candidates.aggregate(top=Max('popularity_score'))['top'] or 0
 
-    # Events without a vector yet get similarity 0, so they can still rank on the other parts.
-    similarity = Coalesce(Greatest(Value(1.0) - CosineDistance('embedding', profile_vector), Value(0.0)),
-                          Value(0.0))
+    # Raw cosine similarity sits in a narrow band (about 0.4-0.85 with BGE: unrelated events still score ~0.6),
+    # so on its own it barely moves the score and "starts soon" decides the order. Rescale it per user: their
+    # closest candidate gets 1, their furthest 0, like popularity is divided by the most popular event.
+    # Events without a vector yet get 0, so they can still rank on the other parts.
+    raw_similarity = Value(1.0) - CosineDistance('embedding', profile_vector)
+    band = candidates.filter(embedding__isnull=False).aggregate(low=Min(raw_similarity), high=Max(raw_similarity))
+    low, high = band['low'], band['high']
+    if low is not None and high - low > SIMILARITY_MIN_SPREAD:
+        # Coalesce inside the clamp: LEAST/GREATEST skip NULLs, so a vectorless event would otherwise get 1.
+        similarity = _clamp01(Coalesce((raw_similarity - Value(low)) / Value(high - low), Value(0.0)))
+    else:  # One candidate, or all equally close: nothing to stretch.
+        similarity = Coalesce(Greatest(raw_similarity, Value(0.0)), Value(0.0))
     follows = Case(
         When(Exists(OrganizationFollow.objects.filter(user=user, organization_id=OuterRef('organization_id'))),
              then=Value(1.0)),
