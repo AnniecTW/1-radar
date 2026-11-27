@@ -29,7 +29,7 @@
         {% if user.is_campus_verified %}<a{% if active_nav == 'organizations' %} class="active" aria-current="page"{% endif %} href="{% url 'list_my_organizations' %}"><i data-lucide="building-2" aria-hidden="true"></i>My Organizations</a>{% endif %}
         <a{% if active_nav == 'my_dashboard' %} class="active" aria-current="page"{% endif %} href="{% url 'my_events' %}"><i data-lucide="layout-dashboard" aria-hidden="true"></i>My Dashboard</a>
         <a{% if active_nav == 'profile' %} class="active" aria-current="page"{% endif %} href="{% url 'profile' %}"><i data-lucide="user-round" aria-hidden="true"></i>Profile</a>
-        {% if user.is_staff %}<a{% if active_nav == 'search_analytics' %} class="active" aria-current="page"{% endif %} href="{% url 'search_dashboard' %}"><i data-lucide="search-check" aria-hidden="true"></i>Search Analytics</a>{% endif %}
+        {% if user.is_staff %}<a{% if active_nav == 'staff_analytics' %} class="active" aria-current="page"{% endif %} href="{% url 'search_dashboard' %}"><i data-lucide="activity" aria-hidden="true"></i>Staff Analytics</a>{% endif %}
         {% else %}
         {% include '_sidebar_locked_item.html' with icon='sparkles' label='Recommendations' tip='Sign in to get events picked for you.' %}
         {% include '_sidebar_locked_item.html' with icon='plus-circle' label='Create Event' tip='Sign in to create and host events.' %}

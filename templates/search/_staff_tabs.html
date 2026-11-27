@@ -1,0 +1,4 @@
+<nav class="tabs staff-tabs" aria-label="Staff analytics">
+  <a{% if staff_tab == 'search' %} class="active" aria-current="page"{% endif %} href="{% url 'search_dashboard' %}?{{ filter_query }}">Search</a>
+  <a{% if staff_tab == 'recommendations' %} class="active" aria-current="page"{% endif %} href="{% url 'recommendation_dashboard' %}?{{ filter_query }}">Recommendations</a>
+</nav>
