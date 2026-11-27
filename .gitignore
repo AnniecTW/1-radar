@@ -240,3 +240,4 @@ scripts/
 
 # collectstatic output (production builds only)
 staticfiles/
+.archify/
