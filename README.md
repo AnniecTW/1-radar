@@ -223,14 +223,19 @@ New and edited events get embeddings automatically when their searchable text ch
 
 **Search log:** every homepage search, AI or keyword, is saved to `SearchQueryLog` (Django admin → Search query logs) to find searches that come up empty and to tune AI search. Rows never record who searched, email addresses and long numbers are blanked out, and rows older than 180 days are deleted (searching prunes at most once an hour; `python manage.py prune_search_logs` does it on demand). Each row stores the mode, whether AI search fell back to keywords, the shown event IDs with their similarity, and the first result opened.
 
-**Search analytics (staff only):** `/analytics/search/` (Search Analytics in the sidebar) charts the search log: searches per day by outcome, Cloudflare calls, response time, fallbacks, top and empty searches, and clicks. Filter by period and by real or simulated searches.
+**Staff analytics:** staff accounts get Staff Analytics in the sidebar, with a Search tab and a Recommendations tab that share the period and data filters. `/analytics/search/` charts the search log: searches per day by outcome, Cloudflare calls, response time, fallbacks, top and empty searches, and clicks. Filter by period and by real or simulated searches.
 
 - `python manage.py evaluate_search` scores AI search against keyword search (precision, recall and more) on labelled test searches and events in `apps/search/eval_data/`. Nothing stays in the database except the scores. Embeddings are cached in `embedding_cache.json`, so only the first run calls Cloudflare.
 - `python manage.py replay_search_traffic --confirm` logs about 150 mock searches, flagged as simulated, so the dashboard has data before there are real users. `--url https://<site>` sends them to a running site instead; `--clear` removes earlier simulated searches.
 
+`/analytics/recommendations/` charts "Recommended for you" from the impression log: cards shown and clicked per day, click-through by position, reason and score, which score parts go with clicks, "Not interested" by category, and time to rank a row.
+
+- `python manage.py evaluate_recommendations` scores the recommender for 16 made-up students (`apps/discovery/eval_data/personas.json`) over the same test events as `evaluate_search`, against two simple rules (chosen categories, and soonest first). It also hides each RSVP or save in turn and checks whether that event comes back in the top 10. Nothing stays in the database except the scores; it shares the embedding cache.
+- `python manage.py replay_recommendation_traffic --confirm` creates made-up students (inactive, usernames starting `rec-sim-`) who only pick categories, runs the real recommender for them over the last 14 days, and logs simulated clicks and dismissals. `--clear` deletes them and everything they logged.
+
 ### Recommendations
 
-"Recommended for you" on the home page ranks upcoming events for each signed-in user. It averages the embeddings of the events they checked into, RSVP'd to, saved, liked or viewed, together with the interests they chose, and scores events by similarity to that average, followed organizations, popularity, distance and how soon they start. Ranking uses only stored embeddings, so it makes no Cloudflare calls.
+"Recommended for you" on the home page ranks upcoming events for each signed-in user. It averages the embeddings of the events they checked into, RSVP'd to, saved, liked or viewed, together with the interests they chose, and scores events by similarity to that average (stretched per user, so their closest upcoming event counts 1 and the furthest 0), followed organizations, popularity, distance and how soon they start. Ranking uses only stored embeddings, so it makes no Cloudflare calls.
 
 **Setup:** nothing to do on the shared database, where every interest already has an embedding. Each is built from the interest's internal description, which users never see. Adding or rewording an interest in the Django admin (where a description is required) re-embeds it on save, and a fresh database gets descriptions and embeddings from `migrate` and `seed_mock_data`. Tests never call Cloudflare for this. If an interest ends up without an embedding, for example because Cloudflare was down when it was saved, fill in the missing ones (add `--force` to rebuild all):
 
