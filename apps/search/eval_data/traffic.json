@@ -1,0 +1,305 @@
+{
+ "about": "Mock searches for replay_search_traffic: how often each is picked (weight) and how often it uses AI search (ai_share). Typos and unlikely topics are there on purpose, to produce fallbacks to nothing.",
+ "traffic": [
+  {
+   "query": "something fun to do tonight",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "free food on campus",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "where can I meet new people",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "study groups for finals",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "learn to code",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "career fair internships",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "relaxing events to destress",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "live music this weekend",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "outdoor activities",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "volunteer opportunities",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "art workshops",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "cultural festivals",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "board game night",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "yoga or meditation",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "talks about artificial intelligence",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "networking with alumni",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "sports watch party",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "movie screening",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "events for international students",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "cheap things to do with friends",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "hackathon",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "poetry and open mic",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "help with my resume",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "research opportunities",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "dance party",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "hiking trip",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "cooking class",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "gaming tournament",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "mental health support",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "startup pitch competition",
+   "weight": 3,
+   "ai_share": 0.85
+  },
+  {
+   "query": "pizza",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "yoga",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "music",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "career",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "robotics",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "basketball",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "coffee",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "library",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "concert",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "film",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "hackathon",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "tutoring",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "dance",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "chess",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "soccer",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "workshop",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "research",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "volunteer",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "art",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "games",
+   "weight": 2,
+   "ai_share": 0.45
+  },
+  {
+   "query": "hackaton",
+   "weight": 1,
+   "ai_share": 0.6
+  },
+  {
+   "query": "yogaa",
+   "weight": 1,
+   "ai_share": 0.6
+  },
+  {
+   "query": "conert",
+   "weight": 1,
+   "ai_share": 0.6
+  },
+  {
+   "query": "free fod",
+   "weight": 1,
+   "ai_share": 0.6
+  },
+  {
+   "query": "carrer fair",
+   "weight": 1,
+   "ai_share": 0.6
+  },
+  {
+   "query": "swimming lessons",
+   "weight": 1,
+   "ai_share": 0.7
+  },
+  {
+   "query": "salsa class",
+   "weight": 1,
+   "ai_share": 0.7
+  },
+  {
+   "query": "knitting circle",
+   "weight": 1,
+   "ai_share": 0.7
+  },
+  {
+   "query": "quidditch practice",
+   "weight": 1,
+   "ai_share": 0.7
+  },
+  {
+   "query": "ice skating",
+   "weight": 1,
+   "ai_share": 0.7
+  }
+ ]
+}
