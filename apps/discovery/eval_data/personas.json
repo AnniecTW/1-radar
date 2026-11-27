@@ -1,0 +1,547 @@
+{
+ "about": "Made-up students for evaluate_recommendations. interests are the categories they picked; history is what they did to test events in apps/search/eval_data/events.json, days_ago days ago: rsvp, save, like, view, or dismiss (\"Not interested\" on a Recommended card). relevant lists events they would want recommended; acceptable lists borderline ones. Acceptable and history events are left out of the scores.",
+ "personas": [
+  {
+   "key": "new-coder",
+   "about": "First-year who wants to learn programming.",
+   "interests": [
+    "tech"
+   ],
+   "history": [
+    {
+     "event": "hackathon",
+     "action": "rsvp",
+     "days_ago": 5
+    },
+    {
+     "event": "lab-open-house",
+     "action": "like",
+     "days_ago": 3
+    },
+    {
+     "event": "football-watch",
+     "action": "dismiss",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "python-workshop",
+    "robotics-night",
+    "ai-talk"
+   ],
+   "acceptable": [
+    "mock-interview"
+   ]
+  },
+  {
+   "key": "job-hunter",
+   "about": "Junior looking for an internship.",
+   "interests": [
+    "career"
+   ],
+   "history": [
+    {
+     "event": "career-fair",
+     "action": "rsvp",
+     "days_ago": 3
+    },
+    {
+     "event": "resume-review",
+     "action": "save",
+     "days_ago": 2
+    },
+    {
+     "event": "python-workshop",
+     "action": "view",
+     "days_ago": 1
+    },
+    {
+     "event": "silent-disco",
+     "action": "dismiss",
+     "days_ago": 2
+    }
+   ],
+   "relevant": [
+    "mock-interview",
+    "alumni-mixer"
+   ],
+   "acceptable": [
+    "startup-pitch",
+    "lab-open-house"
+   ]
+  },
+  {
+   "key": "finals-stress",
+   "about": "Stressed about exams; wants help and a break.",
+   "interests": [
+    "study",
+    "wellness"
+   ],
+   "history": [
+    {
+     "event": "calc-review",
+     "action": "rsvp",
+     "days_ago": 2
+    },
+    {
+     "event": "quiet-study",
+     "action": "like",
+     "days_ago": 4
+    },
+    {
+     "event": "python-workshop",
+     "action": "view",
+     "days_ago": 1
+    },
+    {
+     "event": "fighting-games",
+     "action": "dismiss",
+     "days_ago": 3
+    }
+   ],
+   "relevant": [
+    "tutoring-chem",
+    "therapy-dogs",
+    "meditation"
+   ],
+   "acceptable": [
+    "sunrise-yoga",
+    "cooking-class"
+   ]
+  },
+  {
+   "key": "foodie",
+   "about": "Goes wherever there is food.",
+   "interests": [
+    "food"
+   ],
+   "history": [
+    {
+     "event": "food-festival",
+     "action": "rsvp",
+     "days_ago": 6
+    },
+    {
+     "event": "food-bank",
+     "action": "save",
+     "days_ago": 3
+    },
+    {
+     "event": "esports-watch",
+     "action": "dismiss",
+     "days_ago": 2
+    }
+   ],
+   "relevant": [
+    "pizza-social",
+    "cooking-class",
+    "bake-sale",
+    "diwali"
+   ],
+   "acceptable": [
+    "interfaith-dinner",
+    "lunar-new-year"
+   ]
+  },
+  {
+   "key": "music-lover",
+   "about": "Plays guitar, goes to every concert.",
+   "interests": [
+    "music"
+   ],
+   "history": [
+    {
+     "event": "jazz-concert",
+     "action": "rsvp",
+     "days_ago": 2
+    },
+    {
+     "event": "art-exhibit",
+     "action": "save",
+     "days_ago": 4
+    },
+    {
+     "event": "poetry-reading",
+     "action": "view",
+     "days_ago": 3
+    },
+    {
+     "event": "career-fair",
+     "action": "dismiss",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "open-mic",
+    "silent-disco"
+   ],
+   "acceptable": [
+    "lunar-new-year",
+    "diwali"
+   ]
+  },
+  {
+   "key": "outdoorsy",
+   "about": "Hikes most weekends and likes staying active.",
+   "interests": [
+    "outdoors",
+    "fitness"
+   ],
+   "history": [
+    {
+     "event": "state-park-hike",
+     "action": "rsvp",
+     "days_ago": 7
+    },
+    {
+     "event": "sunrise-yoga",
+     "action": "like",
+     "days_ago": 3
+    },
+    {
+     "event": "meditation",
+     "action": "view",
+     "days_ago": 2
+    },
+    {
+     "event": "quiet-study",
+     "action": "dismiss",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "river-cleanup",
+    "fun-run",
+    "astronomy",
+    "pickup-basketball"
+   ],
+   "acceptable": [
+    "outdoor-movie"
+   ]
+  },
+  {
+   "key": "gamer",
+   "about": "Competitive gamer.",
+   "interests": [
+    "gaming"
+   ],
+   "history": [
+    {
+     "event": "fighting-games",
+     "action": "rsvp",
+     "days_ago": 4
+    },
+    {
+     "event": "robotics-night",
+     "action": "save",
+     "days_ago": 3
+    },
+    {
+     "event": "meditation",
+     "action": "dismiss",
+     "days_ago": 2
+    }
+   ],
+   "relevant": [
+    "esports-watch",
+    "board-games"
+   ],
+   "acceptable": [
+    "hackathon"
+   ]
+  },
+  {
+   "key": "artist",
+   "about": "Art major.",
+   "interests": [
+    "arts"
+   ],
+   "history": [
+    {
+     "event": "pottery",
+     "action": "save",
+     "days_ago": 5
+    },
+    {
+     "event": "outdoor-movie",
+     "action": "like",
+     "days_ago": 3
+    },
+    {
+     "event": "book-club",
+     "action": "view",
+     "days_ago": 2
+    },
+    {
+     "event": "football-watch",
+     "action": "dismiss",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "art-exhibit",
+    "poetry-reading"
+   ],
+   "acceptable": [
+    "jazz-concert",
+    "open-mic"
+   ]
+  },
+  {
+   "key": "volunteer",
+   "about": "Logs volunteer hours for a scholarship.",
+   "interests": [
+    "volunteering"
+   ],
+   "history": [
+    {
+     "event": "food-bank",
+     "action": "rsvp",
+     "days_ago": 8
+    },
+    {
+     "event": "therapy-dogs",
+     "action": "save",
+     "days_ago": 4
+    },
+    {
+     "event": "esports-watch",
+     "action": "dismiss",
+     "days_ago": 2
+    }
+   ],
+   "relevant": [
+    "river-cleanup",
+    "bake-sale"
+   ],
+   "acceptable": [
+    "voter-registration",
+    "interfaith-dinner"
+   ]
+  },
+  {
+   "key": "sports-fan",
+   "about": "Never misses a game.",
+   "interests": [
+    "sports"
+   ],
+   "history": [
+    {
+     "event": "football-watch",
+     "action": "rsvp",
+     "days_ago": 2
+    },
+    {
+     "event": "sunrise-yoga",
+     "action": "save",
+     "days_ago": 3
+    },
+    {
+     "event": "state-park-hike",
+     "action": "like",
+     "days_ago": 5
+    },
+    {
+     "event": "poetry-reading",
+     "action": "dismiss",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "pickup-basketball",
+    "fun-run",
+    "esports-watch"
+   ],
+   "acceptable": []
+  },
+  {
+   "key": "writer",
+   "about": "Writes poetry and short fiction.",
+   "interests": [
+    "writing"
+   ],
+   "history": [
+    {
+     "event": "book-club",
+     "action": "rsvp",
+     "days_ago": 6
+    },
+    {
+     "event": "outdoor-movie",
+     "action": "view",
+     "days_ago": 2
+    },
+    {
+     "event": "hackathon",
+     "action": "dismiss",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "poetry-reading",
+    "open-mic"
+   ],
+   "acceptable": [
+    "art-exhibit"
+   ]
+  },
+  {
+   "key": "founder",
+   "about": "Building a startup on the side.",
+   "interests": [
+    "entrepreneurship",
+    "tech"
+   ],
+   "history": [
+    {
+     "event": "startup-pitch",
+     "action": "rsvp",
+     "days_ago": 3
+    },
+    {
+     "event": "mock-interview",
+     "action": "save",
+     "days_ago": 2
+    },
+    {
+     "event": "resume-review",
+     "action": "view",
+     "days_ago": 1
+    },
+    {
+     "event": "therapy-dogs",
+     "action": "dismiss",
+     "days_ago": 2
+    }
+   ],
+   "relevant": [
+    "hackathon",
+    "alumni-mixer"
+   ],
+   "acceptable": [
+    "ai-talk",
+    "career-fair",
+    "python-workshop",
+    "robotics-night"
+   ]
+  },
+  {
+   "key": "science-curious",
+   "about": "Biology major curious about research.",
+   "interests": [
+    "science"
+   ],
+   "history": [
+    {
+     "event": "astronomy",
+     "action": "save",
+     "days_ago": 2
+    },
+    {
+     "event": "robotics-night",
+     "action": "like",
+     "days_ago": 4
+    },
+    {
+     "event": "bake-sale",
+     "action": "dismiss",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "lab-open-house",
+    "ai-talk"
+   ],
+   "acceptable": [
+    "tutoring-chem"
+   ]
+  },
+  {
+   "key": "culture",
+   "about": "Member of several cultural groups.",
+   "interests": [
+    "cultural"
+   ],
+   "history": [
+    {
+     "event": "lunar-new-year",
+     "action": "rsvp",
+     "days_ago": 4
+    },
+    {
+     "event": "jazz-concert",
+     "action": "like",
+     "days_ago": 3
+    },
+    {
+     "event": "mock-interview",
+     "action": "dismiss",
+     "days_ago": 2
+    }
+   ],
+   "relevant": [
+    "diwali",
+    "food-festival",
+    "interfaith-dinner"
+   ],
+   "acceptable": [
+    "pizza-social"
+   ]
+  },
+  {
+   "key": "no-interests-builder",
+   "about": "Picked no interests, but RSVPs to hands-on tech events.",
+   "interests": [],
+   "history": [
+    {
+     "event": "robotics-night",
+     "action": "rsvp",
+     "days_ago": 4
+    },
+    {
+     "event": "hackathon",
+     "action": "like",
+     "days_ago": 2
+    },
+    {
+     "event": "lab-open-house",
+     "action": "save",
+     "days_ago": 3
+    },
+    {
+     "event": "calc-review",
+     "action": "view",
+     "days_ago": 1
+    }
+   ],
+   "relevant": [
+    "python-workshop",
+    "ai-talk"
+   ],
+   "acceptable": [
+    "mock-interview",
+    "startup-pitch"
+   ]
+  },
+  {
+   "key": "cold-start-creative",
+   "about": "Just signed up: picked arts and music, has done nothing yet.",
+   "interests": [
+    "arts",
+    "music"
+   ],
+   "history": [],
+   "relevant": [
+    "art-exhibit",
+    "pottery",
+    "jazz-concert",
+    "open-mic",
+    "silent-disco"
+   ],
+   "acceptable": [
+    "poetry-reading",
+    "lunar-new-year"
+   ]
+  }
+ ]
+}
