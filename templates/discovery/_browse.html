@@ -11,7 +11,7 @@
   {% if keyword_fallback %}<p class="notice" role="status">AI search is temporarily unavailable. Showing keyword matches.</p>{% endif %}
   {% if browse_events %}
     <div class="event-grid">
-      {% for event in browse_events %}{% include 'discovery/_event_card.html' %}{% endfor %}
+      {% for event in browse_events %}{% include 'discovery/_event_card.html' with link_query=search_link_query %}{% endfor %}
     </div>
   {% elif not search_error %}
     <p class="empty">No upcoming events match{% if search_text or selected_category %} your filters{% endif %}.</p>

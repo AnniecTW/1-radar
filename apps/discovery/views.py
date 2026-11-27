@@ -1,4 +1,6 @@
 import math
+import time
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -202,6 +204,16 @@ def events_in_map_bounds(request):
     return JsonResponse({'events':[_map_point(event) for event in events], 'cards_html': cards_html})
 
 
+def _log_search(search_text, ai, semantic, category_slug, events, started, now) -> str:
+    """Log the search anonymously (apps/search/services.py) and return the query string for its result links,
+    so opening a result can be counted as a click on this search."""
+    from apps.search.services import click_token, log_search
+
+    log = log_search(query=search_text, ai=ai, semantic=semantic, category=category_slug, events=events,
+                     latency_ms=round((time.perf_counter() - started) * 1000), now=now)
+    return '?' + urlencode({'ref': 'search', 's': click_token(log)}) if log else ''
+
+
 def _read_search_request(request: HttpRequest) -> tuple[str, str]:
     """Return (search_text, search_error) from the hero search bar."""
     raw_search_text = request.GET.get('q', '').strip()
@@ -382,12 +394,19 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
     search_text, search_error = _read_search_request(request)
     semantic_search = request.GET.get('semantic') == '1'
     home_lists = get_home_event_lists(now, campus_timezone, category_slug, include_browse=not search_text)
+    started = time.perf_counter()
+    semantic = None
     if search_text and semantic_search:
         from .selectors import search_browse_events
-        browse_events, keyword_fallback = search_browse_events(now, category_slug, search_text)
+        semantic = search_browse_events(now, category_slug, search_text)
+        browse_events = semantic.events
     else:
         browse_events = home_lists['browse'] if 'browse' in home_lists else list_browse_events(now, category_slug, search_text)
-        keyword_fallback = False
+    keyword_fallback = bool(semantic and semantic.fallback)
+    search_link_query = ''
+    if search_text:
+        search_link_query = _log_search(search_text, semantic_search, semantic, category_slug,
+                                        browse_events, started, now)
 
     trending = home_lists['trending']
     chip_categories, more_categories = split_category_chips(categories, now)
@@ -407,6 +426,7 @@ def show_landing_page(request: HttpRequest) -> HttpResponse:
         'browse_events': browse_events,
         'search_error': search_error,
         'keyword_fallback': keyword_fallback,
+        'search_link_query': search_link_query,
         'featured_organizations': list_featured_organizations(now),
         'map_points': get_map_points(now),
         'map_center': get_campus_center(),

@@ -41,7 +41,7 @@
             <span class="search-ai-tip" id="search-ai-tip" role="tooltip">Search by meaning, such as “a relaxed event this weekend.”</span>
           </label>
           {% if topbar_search.category %}<input type="hidden" name="category" value="{{ topbar_search.category }}">{% endif %}
-          <span class="search-hint" id="search-privacy-hint">Please don’t include personal or sensitive information in your search.</span>
+          <span class="search-hint" id="search-privacy-hint">Searches are saved for 180 days without your name to improve Radar. Please don’t include personal or sensitive information.</span>
         </form>
         {% endblock %}
         {% if user.is_authenticated %}

@@ -17,13 +17,13 @@
 
 ## P2-A3 Submission Guide
 
-| Requirement | Where to find it |
-|---|---|
-| 1. Updated Product Scope | [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md) |
-| 2. Functional Django Foundation | Django project in [radar/](radar/), apps and models in [apps/](apps/), templates in [templates/](templates/). Try the workflow below |
-| 3. Initial AI Implementation | [README_AI.md](README_AI.md) for the plan and test results, and [Use the AI functionality](#use-the-ai-functionality) to try it |
-| 4. Development Progress and Roadmap | [ROADMAP.md](ROADMAP.md) |
-| 5. GitHub Submission | This README: [Install](#installation), [Database](#set-up-the-database), [Run](#run-the-application) |
+| Requirement                         | Where to find it                                                                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Updated Product Scope            | [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md)                                                                                                 |
+| 2. Functional Django Foundation     | Django project in [radar/](radar/), apps and models in [apps/](apps/), templates in [templates/](templates/). Try the workflow below |
+| 3. Initial AI Implementation        | [README_AI.md](README_AI.md) for the plan and test results, and [Use the AI functionality](#use-the-ai-functionality) to try it      |
+| 4. Development Progress and Roadmap | [ROADMAP.md](ROADMAP.md)                                                                                                             |
+| 5. GitHub Submission                | This README: [Install](#installation), [Database](#set-up-the-database), [Run](#run-the-application)                                 |
 
 **Database-backed workflow to try:** sign in as `alex.chen@demo.example.edu` → **Create Event** → fill in the form and select **Publish** → the event appears on the home page. Then sign in as `profile-demo-host@demo.example.edu`, open the event and **RSVP**. The RSVP shows up on that user's Profile and in Alex's **My Dashboard → Analytics**.
 
@@ -67,12 +67,12 @@
 
 Students can already find events on Instagram, in group chats, on campus calendars and on ticketing sites. Radar doesn't replace all of them. It's for people who want campus events in one place, from finding one to showing up.
 
-| Alternative | Where it falls short | Why someone might prefer Radar |
-|---|---|---|
-| Instagram and group chats | You mostly see accounts and chats you already follow, and posts get buried | Browse all campus events by date, category and location |
-| Campus and department calendars | Good for listings, but spread across sites and usually not built around your interests | One searchable place, with plain-language AI search |
-| Eventbrite and general ticketing sites | Built for selling tickets to any event, not for campus life | Free RSVPs and waitlists, campus-only events, verified student organizations |
-| Google Forms and spreadsheets | Hosts build sign-ups by hand and track results themselves | Capacity, waitlists and analytics are built in, with attendee export |
+| Alternative                            | Where it falls short                                                                   | Why someone might prefer Radar                                               |
+| -------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Instagram and group chats              | You mostly see accounts and chats you already follow, and posts get buried             | Browse all campus events by date, category and location                      |
+| Campus and department calendars        | Good for listings, but spread across sites and usually not built around your interests | One searchable place, with plain-language AI search                          |
+| Eventbrite and general ticketing sites | Built for selling tickets to any event, not for campus life                            | Free RSVPs and waitlists, campus-only events, verified student organizations |
+| Google Forms and spreadsheets          | Hosts build sign-ups by hand and track results themselves                              | Capacity, waitlists and analytics are built in, with attendee export         |
 
 **What sets Radar apart:**
 
@@ -130,17 +130,17 @@ Generate a Django secret key and paste it after `DJANGO_SECRET_KEY=`:
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-| Variable | Needed for | Required? |
-|---|---|---|
-| `DJANGO_SECRET_KEY` | Django security | Yes |
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | AI search | For AI search; otherwise search falls back to keywords |
-| `MAPTILER_API_KEY` | Explore Map tiles ([free key](https://www.maptiler.com/)) | For the map; otherwise it shows "Map unavailable" |
-| `SUPABASE_S3_ENDPOINT`, `SUPABASE_S3_REGION`, `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY`, `SUPABASE_S3_BUCKET` | Shared image uploads | Optional; without all five, uploads stay in `media/` on your computer and other people can't see them |
-| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Sending real emails | Optional; otherwise emails print in the terminal running the server |
-| `EMAIL_HOST`, `EMAIL_PORT`, `DEFAULT_FROM_EMAIL` | Other email providers | Optional; default to Gmail's server and `EMAIL_HOST_USER` |
-| `GDAL_LIBRARY_PATH`, `GEOS_LIBRARY_PATH` | Map libraries in a non-Homebrew location | Optional |
-| `CLOUDFLARE_EMBEDDING_MODEL`, `CLOUDFLARE_TIMEOUT`, `CLOUDFLARE_SEMANTIC_MIN_SIMILARITY` | Tuning AI search | Optional |
+| Variable                                                                                                                         | Needed for                                                | Required?                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `DJANGO_SECRET_KEY`                                                                                                              | Django security                                           | Yes                                                                                                   |
+| `DATABASE_URL`                                                                                                                   | PostgreSQL connection string                              | Yes                                                                                                   |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`                                                                                  | AI search                                                 | For AI search; otherwise search falls back to keywords                                                |
+| `MAPTILER_API_KEY`                                                                                                               | Explore Map tiles ([free key](https://www.maptiler.com/)) | For the map; otherwise it shows "Map unavailable"                                                     |
+| `SUPABASE_S3_ENDPOINT`, `SUPABASE_S3_REGION`, `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY`, `SUPABASE_S3_BUCKET` | Shared image uploads                                      | Optional; without all five, uploads stay in `media/` on your computer and other people can't see them |
+| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`                                                                                         | Sending real emails                                       | Optional; otherwise emails print in the terminal running the server                                   |
+| `EMAIL_HOST`, `EMAIL_PORT`, `DEFAULT_FROM_EMAIL`                                                                                 | Other email providers                                     | Optional; default to Gmail's server and `EMAIL_HOST_USER`                                             |
+| `GDAL_LIBRARY_PATH`, `GEOS_LIBRARY_PATH`                                                                                         | Map libraries in a non-Homebrew location                  | Optional                                                                                              |
+| `CLOUDFLARE_EMBEDDING_MODEL`, `CLOUDFLARE_TIMEOUT`, `CLOUDFLARE_SEMANTIC_MIN_SIMILARITY`                                         | Tuning AI search                                          | Optional                                                                                              |
 
 The server reads `.env` only when it starts, so restart it after any change.
 
@@ -182,13 +182,13 @@ Open http://127.0.0.1:8000/. If port 8000 is taken, run `python manage.py runser
 
 **Demo accounts** (development only; password `RadarDemo-Only-2026!`). The shared database already has them. On your own database, run the seed commands above first.
 
-| Email | Use it to see |
-|---|---|
-| `alex.chen@demo.example.edu` | A filled-in Profile, plus My Dashboard and analytics as the owner of a demo club |
-| `profile-demo-host@demo.example.edu` | Another host, useful for testing as a visitor to Alex's events |
+| Email                                                                      | Use it to see                                                                             |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `alex.chen@demo.example.edu`                                               | A filled-in Profile, plus My Dashboard and analytics as the owner of a demo club          |
+| `profile-demo-host@demo.example.edu`                                       | Another host, useful for testing as a visitor to Alex's events                            |
 | `owner@`, `admin@`, `checkin@`, `attendee1@`, `attendee2@demo.example.edu` | Club roles: owner, admin, check-in staff and attendees. They start at interest onboarding |
 
-Open **My Dashboard → Analytics** on *Halloween Hack Night* to see an event with full data.
+Open **My Dashboard → Analytics** on _Halloween Hack Night_ to see an event with full data.
 
 To open the admin site at `/admin/`, create an account with `python manage.py createsuperuser`.
 
@@ -198,7 +198,7 @@ Radar's AI feature is **AI search**, which finds events by meaning instead of ex
 
 **How it works:** Radar turns each event's title, description, categories, location and price into a 384-dimension embedding with Cloudflare Workers AI (`@cf/baai/bge-small-en-v1.5`), and stores it in PostgreSQL with pgvector. A search embeds your query the same way, then ranks events by cosine similarity and leaves out weak matches (below `0.58` by default).
 
-**Setup:** nothing to do on the shared database, where every interest already has an embedding. Each is built from the interest's internal description, which users never see. Adding or rewording an interest in the Django admin (where a description is required) re-embeds it on save, and a fresh database gets descriptions and embeddings from `migrate` and `seed_mock_data`. Tests never call Cloudflare for this. If an interest ends up without an embedding, for example because Cloudflare was down when it was saved, fill in the missing ones (add `--force` to rebuild all):
+**To set it up:**
 
 1. Add `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` to `.env` and restart the server. The token needs permission to use Workers AI.
 2. Check the connection. This makes one Cloudflare call:
@@ -221,11 +221,18 @@ Radar's AI feature is **AI search**, which finds events by meaning instead of ex
 
 New and edited events get embeddings automatically when their searchable text changes. If Cloudflare is unavailable or the keys are missing, the page says "AI search is temporarily unavailable" and shows keyword matches instead, and saving events still works. Each AI search makes one call to Cloudflare, which has usage limits.
 
+**Search log:** every homepage search, AI or keyword, is saved to `SearchQueryLog` (Django admin → Search query logs) to find searches that come up empty and to tune AI search. Rows never record who searched, email addresses and long numbers are blanked out, and rows older than 180 days are deleted (searching prunes at most once an hour; `python manage.py prune_search_logs` does it on demand). Each row stores the mode, whether AI search fell back to keywords, the shown event IDs with their similarity, and the first result opened.
+
+**Search analytics (staff only):** `/analytics/search/` (Search Analytics in the sidebar) charts the search log: searches per day by outcome, Cloudflare calls, response time, fallbacks, top and empty searches, and clicks. Filter by period and by real or simulated searches.
+
+- `python manage.py evaluate_search` scores AI search against keyword search (precision, recall and more) on labelled test searches and events in `apps/search/eval_data/`. Nothing stays in the database except the scores. Embeddings are cached in `embedding_cache.json`, so only the first run calls Cloudflare.
+- `python manage.py replay_search_traffic --confirm` logs about 150 mock searches, flagged as simulated, so the dashboard has data before there are real users. `--url https://<site>` sends them to a running site instead; `--clear` removes earlier simulated searches.
+
 ### Recommendations
 
 "Recommended for you" on the home page ranks upcoming events for each signed-in user. It averages the embeddings of the events they checked into, RSVP'd to, saved, liked or viewed, together with the interests they chose, and scores events by similarity to that average, followed organizations, popularity, distance and how soon they start. Ranking uses only stored embeddings, so it makes no Cloudflare calls.
 
-**To set it up:** interests need embeddings too. Each is built from the interest's internal description, which users never see. `migrate` writes the descriptions and creates the embeddings, `seed_mock_data` fills in any blank descriptions, and adding or rewording an interest in the Django admin (where a description is required) re-embeds it. Tests never call Cloudflare for this. If Cloudflare was unavailable at the time, fill in the missing ones (add `--force` to rebuild all):
+**Setup:** nothing to do on the shared database, where every interest already has an embedding. Each is built from the interest's internal description, which users never see. Adding or rewording an interest in the Django admin (where a description is required) re-embeds it on save, and a fresh database gets descriptions and embeddings from `migrate` and `seed_mock_data`. Tests never call Cloudflare for this. If an interest ends up without an embedding, for example because Cloudflare was down when it was saved, fill in the missing ones (add `--force` to rebuild all):
 
 ```sh
 python manage.py embed_interests
@@ -296,7 +303,7 @@ The rule tests in `apps.discovery.tests.test_recommendation_rules` (weights, dec
 
 ## Deployment
 
-The demo runs on Azure App Service from the Docker image in [Dockerfile](Dockerfile), with production settings in [radar/settings/production.py](radar/settings/production.py). Things to know when you work on `main`:
+The demo runs on Azure App Service from the Docker image in [Dockerfile](Dockerfile), with production settings in [radar/settings/production.py](radar/settings/production.py). Things to know when work on `main`:
 
 - **Every push to `main` redeploys the demo**, about 5–10 minutes later ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). If the build fails, nothing is deployed. If the new version builds but crashes on start, the demo is down until it's fixed, so check the **Actions** tab after you merge.
 - **The demo uses the shared Supabase database.** What you create while developing shows up on the demo, and the other way round. Delete test events and accounts you don't want graders to see.

@@ -1,0 +1,536 @@
+{
+ "about": "Made-up events for evaluate_search. They are added inside a transaction that is rolled back, so they never reach the database. days_ahead sets the start date.",
+ "events": [
+  {
+   "key": "robotics-night",
+   "title": "Robotics Club Build Night",
+   "description": "Bring a laptop and help wire up our line-following robots. Beginners welcome; we supply Arduino kits.",
+   "interests": [
+    "tech"
+   ],
+   "location_text": "Siebel Center 2405",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 3
+  },
+  {
+   "key": "hackathon",
+   "title": "24-Hour Campus Hackathon",
+   "description": "Team up to build an app in 24 hours. Meals, mentors and prizes provided.",
+   "interests": [
+    "tech"
+   ],
+   "location_text": "Engineering Hall atrium",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 9
+  },
+  {
+   "key": "python-workshop",
+   "title": "Intro to Python Workshop",
+   "description": "A hands-on first coding session: variables, loops and a tiny game. No experience needed.",
+   "interests": [
+    "tech",
+    "study"
+   ],
+   "location_text": "Grainger Library 335",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 4
+  },
+  {
+   "key": "ai-talk",
+   "title": "Talk: How Large Language Models Work",
+   "description": "A computer science professor explains the ideas behind chatbots, with time for questions.",
+   "interests": [
+    "tech",
+    "science"
+   ],
+   "location_text": "Lincoln Hall Theater",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 6
+  },
+  {
+   "key": "career-fair",
+   "title": "Engineering Career Fair",
+   "description": "Meet recruiters from 80 companies hiring for internships and full-time roles. Bring copies of your resume.",
+   "interests": [
+    "career",
+    "networking"
+   ],
+   "location_text": "State Farm Center",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 12
+  },
+  {
+   "key": "resume-review",
+   "title": "Resume Review Drop-in",
+   "description": "Career advisors give quick one-on-one feedback on your resume and cover letter.",
+   "interests": [
+    "career"
+   ],
+   "location_text": "Career Center, room 100",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 2
+  },
+  {
+   "key": "mock-interview",
+   "title": "Mock Technical Interviews",
+   "description": "Practice coding interview questions with alumni engineers and get feedback on your answers.",
+   "interests": [
+    "career",
+    "tech"
+   ],
+   "location_text": "Siebel Center 1404",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 5
+  },
+  {
+   "key": "alumni-mixer",
+   "title": "Alumni Networking Mixer",
+   "description": "A casual evening with alumni working in finance, consulting and tech. Business casual dress.",
+   "interests": [
+    "networking",
+    "career"
+   ],
+   "location_text": "Illini Union Ballroom",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 8
+  },
+  {
+   "key": "calc-review",
+   "title": "Calculus II Final Exam Review",
+   "description": "Teaching assistants work through practice problems on series and integrals before the final.",
+   "interests": [
+    "study"
+   ],
+   "location_text": "Altgeld Hall 314",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 10
+  },
+  {
+   "key": "quiet-study",
+   "title": "Late-Night Quiet Study Hall",
+   "description": "The library keeps the third floor open until 2 AM, with free coffee during finals week.",
+   "interests": [
+    "study"
+   ],
+   "location_text": "Main Library, 3rd floor",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 11
+  },
+  {
+   "key": "tutoring-chem",
+   "title": "Free Chemistry Tutoring",
+   "description": "Peer tutors help with general chemistry homework and lab reports. Walk in any time.",
+   "interests": [
+    "study",
+    "science"
+   ],
+   "location_text": "Noyes Lab 165",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 1
+  },
+  {
+   "key": "astronomy",
+   "title": "Astronomy Night at the Observatory",
+   "description": "Look at Saturn and the Moon through the campus telescope. Cancelled if the sky is cloudy.",
+   "interests": [
+    "science",
+    "outdoors"
+   ],
+   "location_text": "Campus Observatory",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 7
+  },
+  {
+   "key": "lab-open-house",
+   "title": "Neuroscience Lab Open House",
+   "description": "Tour three research labs and learn how to join an undergraduate research project.",
+   "interests": [
+    "science"
+   ],
+   "location_text": "Beckman Institute",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 6
+  },
+  {
+   "key": "pizza-social",
+   "title": "Free Pizza Social",
+   "description": "Meet new people over free pizza and soda.",
+   "interests": [
+    "food"
+   ],
+   "location_text": "Illini Union, room 210",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 2
+  },
+  {
+   "key": "cooking-class",
+   "title": "Cooking on a Student Budget",
+   "description": "Learn three cheap, healthy dinners you can make in a dorm kitchen. Ingredients provided.",
+   "interests": [
+    "food",
+    "wellness"
+   ],
+   "location_text": "ISR teaching kitchen",
+   "is_free": false,
+   "price_text": "$5",
+   "days_ahead": 5
+  },
+  {
+   "key": "food-festival",
+   "title": "International Food Festival",
+   "description": "Student cultural groups serve dishes from over 20 countries.",
+   "interests": [
+    "food",
+    "cultural"
+   ],
+   "location_text": "Main Quad",
+   "is_free": false,
+   "price_text": "$8 for unlimited tastings",
+   "days_ahead": 13
+  },
+  {
+   "key": "bake-sale",
+   "title": "Charity Bake Sale",
+   "description": "Cookies, brownies and cupcakes, with all money going to the local food bank.",
+   "interests": [
+    "food",
+    "volunteering"
+   ],
+   "location_text": "Union south lobby",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 3
+  },
+  {
+   "key": "lunar-new-year",
+   "title": "Lunar New Year Celebration",
+   "description": "Lion dance, dumplings and lantern making, hosted by the Chinese Students Association.",
+   "interests": [
+    "cultural",
+    "music"
+   ],
+   "location_text": "Foellinger Auditorium",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 14
+  },
+  {
+   "key": "diwali",
+   "title": "Diwali Night",
+   "description": "Celebrate the festival of lights with dance performances, rangoli and a free dinner.",
+   "interests": [
+    "cultural",
+    "food"
+   ],
+   "location_text": "Illini Union Ballroom",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 9
+  },
+  {
+   "key": "board-games",
+   "title": "Board Game Night",
+   "description": "Catan, Codenames and dozens more. Drop in, learn a new game and meet people.",
+   "interests": [
+    "gaming"
+   ],
+   "location_text": "Grainger Library lounge",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 1
+  },
+  {
+   "key": "fighting-games",
+   "title": "Fighting Game Tournament",
+   "description": "Double-elimination bracket on Switch. Sign up at the door; prizes for the top three.",
+   "interests": [
+    "gaming"
+   ],
+   "location_text": "Esports Arena",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 4
+  },
+  {
+   "key": "esports-watch",
+   "title": "Esports Finals Watch Party",
+   "description": "Watch the championship match on the big screen, with snacks.",
+   "interests": [
+    "gaming",
+    "sports"
+   ],
+   "location_text": "Esports Arena",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 8
+  },
+  {
+   "key": "open-mic",
+   "title": "Open Mic Night",
+   "description": "Sing, play an instrument or read your poetry. The sign-up sheet opens at 7 PM.",
+   "interests": [
+    "music",
+    "writing"
+   ],
+   "location_text": "Cafe Paradiso",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 3
+  },
+  {
+   "key": "jazz-concert",
+   "title": "Jazz Ensemble Concert",
+   "description": "The university jazz band performs swing and bebop standards. Free admission.",
+   "interests": [
+    "music",
+    "arts"
+   ],
+   "location_text": "Krannert Center",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 10
+  },
+  {
+   "key": "silent-disco",
+   "title": "Silent Disco DJ Night",
+   "description": "Grab wireless headphones and dance to three DJs on separate channels.",
+   "interests": [
+    "music"
+   ],
+   "location_text": "Ikenberry Commons",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 6
+  },
+  {
+   "key": "art-exhibit",
+   "title": "Student Art Exhibit Opening",
+   "description": "Paintings, sculpture and photography by senior art majors, with refreshments.",
+   "interests": [
+    "arts"
+   ],
+   "location_text": "Art Building gallery",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 7
+  },
+  {
+   "key": "pottery",
+   "title": "Pottery Wheel Workshop",
+   "description": "Try throwing a bowl on the wheel. All clay and glazing included.",
+   "interests": [
+    "arts",
+    "wellness"
+   ],
+   "location_text": "Craft studio, Union basement",
+   "is_free": false,
+   "price_text": "$10",
+   "days_ahead": 5
+  },
+  {
+   "key": "outdoor-movie",
+   "title": "Outdoor Movie Screening",
+   "description": "Bring a blanket for a classic movie on the quad. Popcorn provided.",
+   "interests": [
+    "film",
+    "outdoors"
+   ],
+   "location_text": "Main Quad",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 4
+  },
+  {
+   "key": "poetry-reading",
+   "title": "Poetry Reading with a Visiting Author",
+   "description": "A prize-winning poet reads from a new collection and signs books afterwards.",
+   "interests": [
+    "writing",
+    "arts"
+   ],
+   "location_text": "English Building 160",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 11
+  },
+  {
+   "key": "book-club",
+   "title": "Sci-Fi Book Club",
+   "description": "This month we discuss a classic space opera novel. Newcomers welcome.",
+   "interests": [
+    "writing"
+   ],
+   "location_text": "Urbana Free Library",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 9
+  },
+  {
+   "key": "pickup-basketball",
+   "title": "Pickup Basketball",
+   "description": "Casual full-court games. All skill levels.",
+   "interests": [
+    "sports",
+    "fitness"
+   ],
+   "location_text": "Campus Rec Center",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 2
+  },
+  {
+   "key": "football-watch",
+   "title": "Football Watch Party",
+   "description": "Cheer on the team at the away game with wings and big screens.",
+   "interests": [
+    "sports"
+   ],
+   "location_text": "Union Courtyard Cafe",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 6
+  },
+  {
+   "key": "sunrise-yoga",
+   "title": "Sunrise Yoga on the Quad",
+   "description": "A gentle 45-minute flow to start the day. Mats available.",
+   "interests": [
+    "fitness",
+    "wellness",
+    "outdoors"
+   ],
+   "location_text": "Main Quad",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 3
+  },
+  {
+   "key": "meditation",
+   "title": "Guided Meditation for Stress Relief",
+   "description": "Counseling center staff lead a calm session on breathing and mindfulness before exams.",
+   "interests": [
+    "wellness"
+   ],
+   "location_text": "Counseling Center",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 8
+  },
+  {
+   "key": "therapy-dogs",
+   "title": "Therapy Dogs Study Break",
+   "description": "Take a break from finals and pet trained therapy dogs.",
+   "interests": [
+    "wellness",
+    "study"
+   ],
+   "location_text": "Main Library lobby",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 12
+  },
+  {
+   "key": "state-park-hike",
+   "title": "Weekend Hike at the State Park",
+   "description": "Carpool to a 6-mile trail with the outdoors club. Bring water and good shoes.",
+   "interests": [
+    "outdoors",
+    "fitness"
+   ],
+   "location_text": "Meet at the Union bus stop",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 5
+  },
+  {
+   "key": "river-cleanup",
+   "title": "River Park Cleanup",
+   "description": "Help pick up litter along the river. Gloves and bags provided; volunteer hours count.",
+   "interests": [
+    "volunteering",
+    "outdoors"
+   ],
+   "location_text": "Riverside Park",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 7
+  },
+  {
+   "key": "food-bank",
+   "title": "Food Bank Volunteer Shift",
+   "description": "Sort and pack donations for families in need.",
+   "interests": [
+    "volunteering"
+   ],
+   "location_text": "Community food bank",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 4
+  },
+  {
+   "key": "voter-registration",
+   "title": "Voter Registration Drive",
+   "description": "Register to vote or update your address in five minutes. Nonpartisan.",
+   "interests": [
+    "activism"
+   ],
+   "location_text": "Union south lobby",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 2
+  },
+  {
+   "key": "startup-pitch",
+   "title": "Startup Pitch Night",
+   "description": "Student founders pitch to local investors, and the audience votes for a $1,000 prize.",
+   "interests": [
+    "entrepreneurship",
+    "networking"
+   ],
+   "location_text": "Research Park",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 10
+  },
+  {
+   "key": "interfaith-dinner",
+   "title": "Interfaith Dinner and Dialogue",
+   "description": "Students of different faiths share a meal and talk about their traditions.",
+   "interests": [
+    "faith",
+    "food"
+   ],
+   "location_text": "Wesley Foundation",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 6
+  },
+  {
+   "key": "fun-run",
+   "title": "5K Fun Run",
+   "description": "A relaxed 5K loop around campus. Free T-shirt for finishers.",
+   "interests": [
+    "fitness",
+    "sports"
+   ],
+   "location_text": "Memorial Stadium gate 1",
+   "is_free": true,
+   "price_text": "",
+   "days_ahead": 13
+  }
+ ]
+}
