@@ -15,7 +15,26 @@ DEFAULT_MODEL = '@cf/baai/bge-small-en-v1.5'
 
 
 class EmbeddingError(Exception):
-    pass
+    """`code` says why, for the search log: not_configured, timeout, network, rate_limited, rejected,
+    server_error or malformed. Other callers raise it without a code."""
+
+    def __init__(self, message='Embedding unavailable', code='unavailable'):
+        super().__init__(message)
+        self.code = code
+
+
+def _error_code(exc) -> str:
+    if isinstance(exc, urllib.error.HTTPError):
+        if exc.code == 429:
+            return 'rate_limited'
+        return 'server_error' if exc.code >= 500 else 'rejected'
+    if isinstance(exc, TimeoutError) or isinstance(getattr(exc, 'reason', None), TimeoutError):
+        return 'timeout'
+    if isinstance(exc, urllib.error.URLError):
+        return 'network'
+    if isinstance(exc, EmbeddingError):
+        return exc.code
+    return 'malformed'
 
 def model_id():
     return getattr(settings, 'CLOUDFLARE_EMBEDDING_MODEL', DEFAULT_MODEL)
@@ -41,9 +60,9 @@ def _vector(payload):
             values = values[0]
         vector = [float(v) for v in values]
     except (KeyError, TypeError, ValueError):
-        raise EmbeddingError('Malformed embedding response') from None
+        raise EmbeddingError('Malformed embedding response', code='malformed') from None
     if len(vector) != DIMENSIONS or not all(math.isfinite(v) for v in vector):
-        raise EmbeddingError('Invalid embedding vector')
+        raise EmbeddingError('Invalid embedding vector', code='malformed')
     return vector
 
 
@@ -51,7 +70,7 @@ def embed_text(text):
     account = getattr(settings, 'CLOUDFLARE_ACCOUNT_ID', '')
     token = getattr(settings, 'CLOUDFLARE_API_TOKEN', '')
     if not account or not token:
-        raise EmbeddingError('Cloudflare embedding is not configured')
+        raise EmbeddingError('Cloudflare embedding is not configured', code='not_configured')
     url = f'https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{model_id()}'
     body = json.dumps({'text': text, 'pooling': POOLING}).encode()
     timeout = getattr(settings, 'CLOUDFLARE_TIMEOUT', 5)
@@ -61,14 +80,14 @@ def embed_text(text):
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 data = json.loads(response.read())
             if not data.get('success'):
-                raise EmbeddingError('Cloudflare rejected embedding request')
+                raise EmbeddingError('Cloudflare rejected embedding request', code='rejected')
             return _vector(data)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, EmbeddingError) as exc:
             if attempt == 0:
                 time.sleep(.15)
                 continue
             logger.warning('Cloudflare embedding unavailable (%s)', type(exc).__name__)
-            raise EmbeddingError('Embedding unavailable') from None
+            raise EmbeddingError('Embedding unavailable', code=_error_code(exc)) from None
 
 
 def save_event_embedding(event, force=False):

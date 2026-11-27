@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -145,49 +146,84 @@ def list_category_interests() -> list[Interest]:
     return list(Interest.objects.filter(is_active=True).order_by('name'))
 
 
-def list_browse_events(now: datetime, category_slug: str, search_text: str) -> list[Event]:
-    """Grid below the category chips. Keyword matching until AI search is built (FR-47)."""
-    events = list_upcoming_events(now)
+def filter_by_keywords(events: QuerySet[Event], search_text: str) -> QuerySet[Event]:
+    """Keyword search: the whole search text must appear in one of these fields."""
+    return events.filter(
+        Q(title__icontains=search_text)
+        | Q(description__icontains=search_text)
+        | Q(location_text__icontains=search_text)
+        | Q(venue__name__icontains=search_text)
+        | Q(organization__name__icontains=search_text)
+        | Q(interests__name__icontains=search_text)
+    )
+
+
+def list_browse_events(now: datetime, category_slug: str, search_text: str,
+                       events: QuerySet[Event] | None = None) -> list[Event]:
+    """Grid below the category chips: keyword matches, soonest first. `events` narrows the events searched
+    (the search evaluation passes its own); by default it is every upcoming event."""
+    events = list_upcoming_events(now) if events is None else events
     if category_slug:
         events = events.filter(interests__slug=category_slug)
     if search_text:
-        events = events.filter(
-            Q(title__icontains=search_text)
-            | Q(description__icontains=search_text)
-            | Q(location_text__icontains=search_text)
-            | Q(venue__name__icontains=search_text)
-            | Q(organization__name__icontains=search_text)
-            | Q(interests__name__icontains=search_text)
-        )
+        events = filter_by_keywords(events, search_text)
     return list(events.distinct().order_by('start_at')[:BROWSE_GRID_SIZE])
 
 
-def search_browse_events(now: datetime, category_slug: str, search_text: str) -> tuple[list[Event], bool]:
-    """Rank eligible events in PostgreSQL using the pgvector cosine operator."""
-    from django.conf import settings
+# AI search scores this many of the closest events, then shows those above the similarity cutoff.
+SEMANTIC_CANDIDATES = 20
+
+
+@dataclass
+class SemanticSearch:
+    events: list[Event]
+    fallback: bool  # Cloudflare failed, so `events` are keyword matches.
+    embedding_ms: int | None = None  # How long the Cloudflare call took, including a failed one.
+    error_code: str = ''  # Why it failed (EmbeddingError.code).
+    candidate_count: int = 0  # Events scored before the cutoff.
+    top_similarity: float | None = None  # The closest event's similarity, even when it is below the cutoff.
+
+
+def semantic_min_similarity() -> float:
+    value = getattr(settings, 'CLOUDFLARE_SEMANTIC_MIN_SIMILARITY', 0.58)
+    return value if 0 <= value <= 1 else 0.58
+
+
+def rank_by_meaning(events: QuerySet[Event], query_vector, limit: int = SEMANTIC_CANDIDATES) -> list[Event]:
+    """The `limit` events closest in meaning, each with `cosine_distance` set, ranked in PostgreSQL with
+    the pgvector cosine operator."""
     from pgvector.django import CosineDistance
+
+    return list(events.filter(embedding__isnull=False).distinct()
+                .annotate(cosine_distance=CosineDistance('embedding', query_vector))
+                .order_by('cosine_distance', '-popularity_score', 'start_at')[:limit])
+
+
+def search_browse_events(now: datetime, category_slug: str, search_text: str,
+                         events: QuerySet[Event] | None = None) -> SemanticSearch:
+    """AI search: embed the search text, rank events by meaning and keep those above the cutoff. Falls
+    back to keyword search when Cloudflare fails."""
+    import logging
+    import time
+
     from apps.events.semantic_search import EmbeddingError, embed_text
 
+    logger = logging.getLogger(__name__)
+    events = list_upcoming_events(now) if events is None else events
+    started = time.perf_counter()
     try:
         query_vector = embed_text(search_text)
-    except EmbeddingError:
-        import logging
-        logging.getLogger(__name__).info("Semantic search unavailable; using keyword search")
-        return list_browse_events(now, category_slug, search_text), True
+    except EmbeddingError as exc:
+        logger.info('Semantic search unavailable; using keyword search')
+        return SemanticSearch(list_browse_events(now, category_slug, search_text, events=events), True,
+                              _elapsed_ms(started), exc.code)
+    embedding_ms = _elapsed_ms(started)
 
-    events = list_upcoming_events(now)
     if category_slug:
         events = events.filter(interests__slug=category_slug)
-    min_similarity = getattr(settings, "CLOUDFLARE_SEMANTIC_MIN_SIMILARITY", 0.58)
-    if not 0 <= min_similarity <= 1:
-        min_similarity = 0.58
-    import logging
-    logger = logging.getLogger(__name__)
-    ranked = (events.filter(embedding__isnull=False).distinct()
-              .annotate(cosine_distance=CosineDistance("embedding", query_vector))
-              .order_by("cosine_distance", "-popularity_score", "start_at"))
+    min_similarity = semantic_min_similarity()
     # Record a bounded, privacy-safe sample for relevance calibration. Do not log query text.
-    scored_candidates = list(ranked[:20])
+    scored_candidates = rank_by_meaning(events, query_vector)
     shown = [event for event in scored_candidates
              if 1 - event.cosine_distance >= min_similarity][:BROWSE_GRID_SIZE]
     shown_ids = {str(event.pk) for event in shown}
@@ -197,7 +233,14 @@ def search_browse_events(now: datetime, category_slug: str, search_text: str) ->
         [(str(event.pk), round(1 - event.cosine_distance, 4), str(event.pk) in shown_ids)
          for event in scored_candidates],
     )
-    return shown, False
+    top = round(1 - scored_candidates[0].cosine_distance, 4) if scored_candidates else None
+    return SemanticSearch(shown, False, embedding_ms, '', len(scored_candidates), top)
+
+
+def _elapsed_ms(started: float) -> int:
+    import time
+
+    return round((time.perf_counter() - started) * 1000)
 
 
 def list_featured_organizations(now: datetime) -> list[Organization]:
