@@ -1,0 +1,206 @@
+{% extends 'accounts/app_base.html' %}{% load static %}
+{% block title %}Search analytics{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'radar/host.css' %}?v=2"><link rel="stylesheet" href="{% static 'radar/search-dashboard.css' %}?v=1">{% endblock %}
+{% block content %}
+<header class="host-header">
+  <div>
+    <p class="eyebrow">Staff only</p>
+    <h1>Search analytics</h1>
+    <p class="host-lede">How the home page search is used and how well it works. Searches are saved without who searched, for 180 days.</p>
+    <p class="hint">As of {{ now|date:"M j, g:i A" }}, campus time.</p>
+  </div>
+  <form class="host-header-actions" method="get">
+    <label class="host-filter">Period
+      <select name="range">{% for key, value in ranges.items %}<option value="{{ key }}"{% if key == range_key %} selected{% endif %}>{{ value.0 }}</option>{% endfor %}</select>
+    </label>
+    <label class="host-filter">Data
+      <select name="source">{% for key, label in sources.items %}<option value="{{ key }}"{% if key == source %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    </label>
+    <button class="host-button" type="submit">Apply</button>
+  </form>
+</header>
+
+{% if source != 'real' %}<p class="form-alert warn">Includes simulated searches from <code>replay_search_traffic</code>. Their clicks are simulated too.</p>
+{% elif not rows_count and simulated_count %}<p class="form-alert">No real searches in this period yet. {{ simulated_count }} simulated searches are available: choose <b>Simulated</b> under Data.</p>{% endif %}
+
+<dl class="kpis" aria-label="Key numbers">
+  {% for kpi in kpis %}
+    <div><dd class="{% if kpi.tone %}tone-{{ kpi.tone }}{% endif %}">{{ kpi.value }}</dd><dt>{{ kpi.label }}{% if kpi.note %}<small>{{ kpi.note }}</small>{% endif %}</dt></div>
+  {% endfor %}
+</dl>
+
+<div class="chart-pair">
+  <section class="host-section" aria-labelledby="daily-heading">
+    <h2 id="daily-heading">Searches per day</h2>
+    <p class="section-note">By what happened. “No close match” means AI search worked but nothing reached the similarity cutoff.</p>
+    <div class="stack-bars" role="img" aria-label="Searches per day, stacked by outcome">
+      {% for column in daily.columns %}<div class="col" data-tip="{{ column.tip }}" tabindex="0" aria-label="{{ column.tip }}">{% for segment in column.segments %}<span class="seg-{{ segment.css }}" style="height: {{ segment.height }}px"></span>{% endfor %}</div>{% endfor %}
+    </div>
+    <div class="bar-axis">{% for label in daily.axis %}<span>{{ label }}</span>{% endfor %}</div>
+    <ul class="legend">{% for item in daily.legend %}<li><i class="seg-{{ item.css }}" aria-hidden="true"></i>{{ item.label }}</li>{% endfor %}</ul>
+  </section>
+
+  <section class="host-section" aria-labelledby="calls-heading">
+    <h2 id="calls-heading">Cloudflare calls per day</h2>
+    <p class="section-note">{{ calls.total }} embedding call{{ calls.total|pluralize }} from searches, {{ calls.per_day }} a day on average, {{ calls.busiest }} on the busiest day. Each AI search makes one; retries and event saves aren't counted.</p>
+    <div class="bars" role="img" aria-label="Cloudflare embedding calls per day">
+      {% for bar in calls.bars %}<span data-tip="{{ bar.tip }}" tabindex="0" aria-label="{{ bar.tip }}" style="height: {{ bar.height }}px"></span>{% endfor %}
+    </div>
+    <div class="bar-axis">{% for label in calls.axis %}<span>{{ label }}</span>{% endfor %}</div>
+  </section>
+</div>
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="latency-heading">
+    <h2 id="latency-heading">Response time</h2>
+    <p class="section-note">AI searches by total time, from receiving the search to having the results (page rendering not included).</p>
+    {% for bucket in latency.histogram %}
+      <div class="source-row" data-tip="{{ bucket.label }} · {{ bucket.count }} search{{ bucket.count|pluralize:'es' }} ({{ bucket.share }}%)" tabindex="0">
+        <span>{{ bucket.label }}{% for mark in bucket.marks %} <b class="mark">{{ mark }}</b>{% endfor %}</span>
+        <div class="source-track" aria-hidden="true"><span style="width: {{ bucket.width }}%"></span></div>
+        <span>{{ bucket.count }}</span>
+      </div>
+    {% endfor %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th scope="col">Time taken by</th><th scope="col" class="num">Searches</th><th scope="col" class="num">Median</th><th scope="col" class="num">p95</th></tr></thead>
+        <tbody>{% for row in latency.table %}<tr{% if row.part %} class="part"{% endif %}><th scope="row">{{ row.label }}</th><td class="num">{{ row.count }}</td><td class="num">{% if row.p50 is not None %}{{ row.p50 }} ms{% else %}—{% endif %}</td><td class="num">{% if row.p95 is not None %}{{ row.p95 }} ms{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <p class="section-note">The indented rows are the two parts of an AI search that found matches. Medians don't add up, so the parts won't sum exactly to the whole.</p>
+  </section>
+
+  <section class="host-section" aria-labelledby="errors-heading">
+    <h2 id="errors-heading">Why AI search fell back</h2>
+    <p class="section-note">Cloudflare errors. Each one sent that search to keyword matching instead.</p>
+    {% if errors %}
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Error</th><th scope="col" class="num">Searches</th><th scope="col" class="num">Of AI searches</th><th scope="col" class="num">Last seen</th></tr></thead>
+          <tbody>{% for error in errors %}<tr><th scope="row"><code>{{ error.code }}</code></th><td class="num">{{ error.count }}</td><td class="num">{{ error.share }}%</td><td class="num">{{ error.last|date:"M j, g:i A" }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}<p class="section-note">No Cloudflare errors in this period.</p>{% endif %}
+  </section>
+</div>
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="top-heading">
+    <h2 id="top-heading">Top searches</h2>
+    {% if queries.top %}
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Search</th><th scope="col" class="num">Times</th><th scope="col" class="num">AI</th><th scope="col" class="num">Avg results</th><th scope="col" class="num">Clicks</th></tr></thead>
+          <tbody>{% for row in queries.top %}<tr><th scope="row">{{ row.query }}</th><td class="num">{{ row.count }}</td><td class="num">{{ row.ai_share }}%</td><td class="num">{{ row.mean_results }}</td><td class="num">{{ row.clicks }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}<p class="section-note">No searches in this period.</p>{% endif %}
+    <h3 class="sub-heading">Category filter</h3>
+    <p class="section-note">{{ queries.category_share }}% of searches picked a category.</p>
+    {% for row in queries.categories %}
+      <div class="source-row"><span>{{ row.slug }}</span><div class="source-track" aria-hidden="true"><span style="width: {{ row.percent }}%"></span></div><span>{{ row.count }}</span></div>
+    {% endfor %}
+  </section>
+
+  <section class="host-section" aria-labelledby="empty-heading">
+    <h2 id="empty-heading">Searches that found nothing</h2>
+    <p class="section-note">Topics people want that no upcoming event covers, or searches the search doesn't understand.</p>
+    {% if queries.empty %}
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Search</th><th scope="col" class="num">Times</th><th scope="col">Mode</th></tr></thead>
+          <tbody>{% for row in queries.empty %}<tr><th scope="row">{{ row.query }}</th><td class="num">{{ row.count }}</td><td>{{ row.modes }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}<p class="section-note">Every search in this period found something.</p>{% endif %}
+  </section>
+</div>
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="length-heading">
+    <h2 id="length-heading">Search length</h2>
+    <p class="section-note">Keyword search needs the whole text to appear in an event, so longer searches find less. AI search matches by meaning.</p>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th scope="col">Length</th><th scope="col" class="num">Searches</th><th scope="col" class="num">AI avg results</th><th scope="col" class="num">Keyword avg results</th><th scope="col" class="num">No results</th></tr></thead>
+        <tbody>{% for row in query_length %}<tr><th scope="row">{{ row.label }}</th><td class="num">{{ row.count }}</td><td class="num">{{ row.ai_results|default_if_none:"—" }}</td><td class="num">{{ row.keyword_results|default_if_none:"—" }}</td><td class="num">{% if row.empty is not None %}{{ row.empty }}%{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="host-section" aria-labelledby="clicks-heading">
+    <h2 id="clicks-heading">Clicks</h2>
+    <p class="section-note">Searches with results where someone opened one. Only the first result opened counts.</p>
+    {% for row in clicks.by_outcome %}
+      <div class="source-row" data-tip="{{ row.label }} · {{ row.clicked }} of {{ row.count }} searches" tabindex="0"><span>{{ row.label }}</span><div class="source-track" aria-hidden="true"><span class="seg-{{ row.css }}" style="width: {{ row.percent }}%"></span></div><span>{{ row.percent }}%</span></div>
+    {% empty %}<p class="section-note">No searches with results yet.</p>{% endfor %}
+    <h3 class="sub-heading">Which result was opened</h3>
+    <p class="section-note">{% if clicks.total %}{{ clicks.first_share }}% of {{ clicks.total }} clicks went to the first result.{% else %}No clicks yet.{% endif %}</p>
+    <div class="bars short" role="img" aria-label="Clicks by result position">
+      {% for bar in clicks.positions %}<span data-tip="{{ bar.tip }}" tabindex="0" aria-label="{{ bar.tip }}" style="height: {{ bar.height }}px"></span>{% endfor %}
+    </div>
+    <div class="bar-axis"><span>1st</span><span>6th</span><span>12th</span></div>
+  </section>
+</div>
+
+<h2 class="part-heading">Search quality</h2>
+{% if evaluation %}
+  <div class="chart-pair">
+    <section class="host-section" aria-labelledby="eval-heading">
+      <h2 id="eval-heading">AI vs keyword search</h2>
+      <p class="section-note">Latest <code>evaluate_search</code> run, {{ evaluation.run.created_at|date:"M j, g:i A" }}: {{ evaluation.run.query_count }} labelled searches over {{ evaluation.run.event_count }} test events, cutoff {{ evaluation.run.min_similarity|floatformat:2 }}.{% if evaluation.run.note %} Note: {{ evaluation.run.note }}{% endif %}</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th scope="col">Score</th><th scope="col" class="num">AI</th><th scope="col" class="num">Keyword</th></tr></thead>
+          <tbody>{% for row in evaluation.rows %}<tr><th scope="row">{{ row.label }}</th><td class="num{% if row.better == 'ai' %} better{% endif %}">{{ row.ai|floatformat:2|default:"—" }}</td><td class="num{% if row.better == 'keyword' %} better{% endif %}">{{ row.keyword|floatformat:2|default:"—" }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <p class="section-note"><b>Precision</b>: share of shown events that are relevant. <b>Recall</b>: share of relevant events that are shown. <b>MRR</b>: 1 ÷ the position of the first relevant event. <b>Correctly empty</b>: searches with no right answer that showed nothing. Borderline events labelled “acceptable” are left out of every score.</p>
+    </section>
+
+    <section class="host-section" aria-labelledby="sweep-heading">
+      <h2 id="sweep-heading">AI search at other cutoffs</h2>
+      <p class="section-note">The similarity an event needs to be shown. Higher shows fewer, closer matches. Best F1 at {{ evaluation.best.cutoff|floatformat:2 }}; now {{ evaluation.run.min_similarity|floatformat:2 }}.</p>
+      <svg class="line-chart sweep" viewBox="0 0 600 220" role="img" aria-label="Precision, recall and F1 of AI search at cutoffs {{ evaluation.axis.0 }} to {{ evaluation.axis.2 }}">
+        <g class="grid"><line x1="44" y1="16" x2="590" y2="16"></line><line x1="44" y1="101" x2="590" y2="101"></line><line x1="44" y1="186" x2="590" y2="186"></line></g>
+        <g class="axis"><text x="34" y="20" text-anchor="end">1.0</text><text x="34" y="105" text-anchor="end">0.5</text><text x="34" y="190" text-anchor="end">0</text>
+          <text x="44" y="210">{{ evaluation.axis.0 }}</text><text x="317" y="210" text-anchor="middle">{{ evaluation.axis.1 }}</text><text x="590" y="210" text-anchor="end">{{ evaluation.axis.2 }}</text></g>
+        <line class="cutoff-line" x1="{{ evaluation.current_x }}" y1="16" x2="{{ evaluation.current_x }}" y2="186"></line>
+        {% for points in evaluation.lines.precision %}<polyline class="p-line" points="{{ points }}"></polyline>{% endfor %}
+        {% for points in evaluation.lines.recall %}<polyline class="r-line" points="{{ points }}"></polyline>{% endfor %}
+        {% for points in evaluation.lines.f1 %}<polyline class="f-line" points="{{ points }}"></polyline>{% endfor %}
+        {% for point in evaluation.points %}<g class="pt" data-tip="{{ point.tip }}" tabindex="0" aria-label="{{ point.tip }}"><rect x="{{ point.band_x }}" y="16" width="26" height="170"></rect><line x1="{{ point.x }}" y1="16" x2="{{ point.x }}" y2="186"></line></g>{% endfor %}
+      </svg>
+      <ul class="legend lines"><li><i class="seg-ai" aria-hidden="true"></i>Precision</li><li><i class="seg-fallback" aria-hidden="true"></i>Recall</li><li><i class="dash-f1" aria-hidden="true"></i>F1</li><li><i class="dash-cutoff" aria-hidden="true"></i>Current cutoff</li></ul>
+      <p class="section-note">Where precision and recall cross, F1 equals both. Precision stops where a cutoff shows nothing at all, since there is nothing to judge.</p>
+    </section>
+  </div>
+{% else %}
+  <p class="section-note">No evaluation yet. Run <code>python manage.py evaluate_search</code> to score AI and keyword search on the labelled searches in <code>apps/search/eval_data</code>.</p>
+{% endif %}
+
+<div class="chart-pair later">
+  <section class="host-section" aria-labelledby="similarity-heading">
+    <h2 id="similarity-heading">How close the best match was</h2>
+    <p class="section-note">For {{ similarity.count }} AI search{{ similarity.count|pluralize:'es' }} in this period: the closest event's similarity. {% if similarity.below is not None %}{{ similarity.below }}% were below the cutoff of {{ similarity.cutoff|floatformat:2 }} (the dashed line), so they showed nothing.{% endif %}</p>
+    <div class="cutoff-wrap">
+      <div class="bars" role="img" aria-label="AI searches by the closest event's similarity">
+        {% for bar in similarity.bars %}<span{% if bar.below %} class="below"{% endif %} data-tip="{{ bar.tip }}" tabindex="0" aria-label="{{ bar.tip }}" style="height: {{ bar.height }}px"></span>{% endfor %}
+      </div>
+      <i class="cutoff-mark" style="left: {{ similarity.cutoff_left }}%" aria-hidden="true"></i>
+    </div>
+    <div class="bar-axis">{% for label in similarity.axis %}<span>{{ label }}</span>{% endfor %}</div>
+  </section>
+
+  {% if evaluation %}
+    <section class="host-section" aria-labelledby="misses-heading">
+      <h2 id="misses-heading">Where AI search missed</h2>
+      <p class="section-note">Labelled searches where AI search left out a relevant test event.</p>
+      {% for row in evaluation.misses %}
+        <p class="miss"><b>“{{ row.query }}”</b> <span>recall {{ row.recall|floatformat:2 }} · missed {{ row.missing|join:", " }}</span></p>
+      {% empty %}<p class="section-note">AI search found every relevant event.</p>{% endfor %}
+    </section>
+  {% endif %}
+</div>
+<script src="{% static 'radar/chart-tips.js' %}" defer></script>
+{% endblock %}
