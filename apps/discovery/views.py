@@ -245,10 +245,12 @@ def _render_recommendations_row(request: HttpRequest, now, location, location_al
                                 replace: bool = False) -> str:
     """Rank, log the impressions and render "Recommended for you" with its location banner. `replace` drops
     the impressions of the row this one replaces (a quiet refresh right after the row loaded)."""
+    started = time.perf_counter()
     recommended = recommend_events(request.user, now, location)
+    load_ms = round((time.perf_counter() - started) * 1000)
     if replace:
         discard_replaced_impressions(request.user, now)
-    log_impressions(request.user, recommended, now)
+    log_impressions(request.user, recommended, now, load_ms=load_ms)
     interest_ids = set(request.user.interests.values_list('interest_id', flat=True))
     label_card_highlights([recommended], now, interest_ids, {event.pk for event in get_trending_events(now)})
     context = {

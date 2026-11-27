@@ -351,6 +351,8 @@ def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, locat
     events = list(ranked[:RANKED_POOL])
     for event in events:
         event.rec_distance = getattr(event, 'rec_distance', None)
+        if location is None:
+            event.rec_proximity = None  # Not 0: there was nothing to measure. Logged as empty.
     return events
 
 
@@ -372,33 +374,41 @@ def apply_category_cap(events: list, categories_of, size: int = CAROUSEL_SIZE, c
 
 # Reasons (FR-42) ---------------------------------------------------------------------------------------
 
-def recommendation_reason(event, chosen_interest_ids: set, anchors, event_vector=None) -> str:
-    """One short, true sentence about why this event was picked. Empty when none applies."""
+def explain_recommendation(event, chosen_interest_ids: set, anchors, event_vector=None) -> tuple[str, str]:
+    """(kind, sentence): one short, true sentence about why this event was picked, and which kind of reason
+    it is (a RecommendationImpression.Reason value, logged for the staff dashboard). ('', '') when none applies."""
+    Reason = RecommendationImpression.Reason
     if event_vector is not None and anchors:
         best_title, best = max(((title, cosine(event_vector, vector)) for title, vector in anchors),
                                key=lambda pair: pair[1])
         if best >= SIMILAR_REASON_MIN:
-            return f'Similar to {best_title}'
+            return Reason.SIMILAR, f'Similar to {best_title}'
     matching = [interest.name for interest in event.interests.all() if interest.pk in chosen_interest_ids]
     if matching:
-        return f'Because you like {matching[0]}'
+        return Reason.INTEREST, f'Because you like {matching[0]}'
     if getattr(event, 'rec_follows', 0) and event.organization:
-        return f'From {event.organization.name}, which you follow'
+        return Reason.FOLLOWS, f'From {event.organization.name}, which you follow'
     distance = getattr(event, 'rec_distance', None)
     if distance is not None and distance <= WALK_METERS:
-        return 'A short walk from you'
-    return ''
+        return Reason.NEARBY, 'A short walk from you'
+    return Reason.NONE, ''
+
+
+def recommendation_reason(event, chosen_interest_ids: set, anchors, event_vector=None) -> str:
+    """One short, true sentence about why this event was picked. Empty when none applies."""
+    return explain_recommendation(event, chosen_interest_ids, anchors, event_vector)[1]
 
 
 # Entry point -------------------------------------------------------------------------------------------
 
-def recommend_events(user, now: datetime, location=None) -> list[Event]:
+def recommend_events(user, now: datetime, location=None, events: QuerySet | None = None) -> list[Event]:
     """Up to 10 events for the "Recommended for you" row. Ranks by the profile vector, then fills any gap
-    with upcoming events in the user's chosen interests. Empty when the user has neither."""
+    with upcoming events in the user's chosen interests. Empty when the user has neither. `events` limits
+    the candidates (the offline evaluation passes only its test events); by default, every upcoming event."""
     from .selectors import list_upcoming_events
 
     since = history_start(user, now)
-    candidates = exclude_for_user(list_upcoming_events(now), user, since)
+    candidates = exclude_for_user(list_upcoming_events(now) if events is None else events, user, since)
     profile = build_profile(user, now, since)
     events = []
     if profile.vector is not None:
@@ -417,21 +427,33 @@ def recommend_events(user, now: datetime, location=None) -> list[Event]:
             events.append(event)
 
     for event in events:
-        event.recommendation_reason = recommendation_reason(
+        event.recommendation_reason_kind, event.recommendation_reason = explain_recommendation(
             event, profile.chosen_interest_ids, profile.anchors, event.embedding)
     return events
 
 
 # Impressions and clicks ---------------------------------------------------------------------------------
 
-def log_impressions(user, events: list[Event], now: datetime) -> None:
-    """One row per card shown, so click-through rate can be measured and the weights tuned (PRD §3.8).
+def _part(event, name):
+    value = getattr(event, f'rec_{name}', None)
+    return None if value is None else round(float(value), 4)
+
+
+def log_impressions(user, events: list[Event], now: datetime, load_ms: int | None = None,
+                    simulated: bool = False) -> list[RecommendationImpression]:
+    """One row per card shown, so click-through rate can be measured and the weights tuned (PRD §3.8). Each
+    row keeps the score's parts and the reason shown; the rank-1 row also keeps how long ranking took.
     Also prunes this user's old rows, so the table stays bounded without a scheduled job."""
     prune_impressions(now, user=user)
-    RecommendationImpression.objects.bulk_create([
+    return RecommendationImpression.objects.bulk_create([
         RecommendationImpression(
             user=user, event=event, rank=rank, score=float(getattr(event, 'rec_score', 0.0) or 0.0),
             algorithm_version=getattr(event, 'recommendation_algorithm', ALGORITHM_VERSION),
+            part_similarity=_part(event, 'similarity'), part_follows=_part(event, 'follows'),
+            part_popularity=_part(event, 'popularity'), part_proximity=_part(event, 'proximity'),
+            part_urgency=_part(event, 'urgency'), penalty=_part(event, 'penalty'),
+            reason=getattr(event, 'recommendation_reason_kind', ''),
+            load_ms=load_ms if rank == 1 else None, is_simulated=simulated,
         )
         for rank, event in enumerate(events, start=1)
     ])
