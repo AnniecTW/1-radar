@@ -14,8 +14,10 @@ from django.core import signing
 from django.contrib.gis.geos import Point
 from django.db.models import (
     Case, CharField, Exists, ExpressionWrapper, F, FloatField, Func, Max, Min, OuterRef, Q, QuerySet, Value, When,
+    Window,
 )
-from django.db.models.functions import Cast, Coalesce, Greatest, Least
+from django.db.models.functions import Cast, Coalesce, Greatest, Least, NullIf
+from django.db.models.lookups import GreaterThan
 from pgvector.django import CosineDistance
 
 from apps.attendance.models import CheckIn
@@ -263,6 +265,15 @@ def score_weights(has_location: bool) -> dict:
     return {**{part: weight / total for part, weight in rest.items()}, 'proximity': 0.0}
 
 
+class _Windowed(ExpressionWrapper):
+    """An expression that uses window functions, kept out of GROUP BY. Candidates carry RSVP counts, so their
+    query is grouped (by event id), and Django would add every annotation to GROUP BY, where Postgres doesn't
+    allow window functions. The columns underneath all belong to the event, which the id already covers."""
+
+    def get_group_by_cols(self):
+        return []
+
+
 def _clamp01(expression):
     return Greatest(Least(expression, Value(1.0)), Value(0.0))
 
@@ -300,36 +311,44 @@ def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, locat
     """Score every candidate in SQL and return the best RANKED_POOL, highest first. Each event gets
     rec_score, rec_similarity, rec_follows, rec_penalty and rec_distance (metres, or None) for the reasons."""
     weights = score_weights(location is not None)
-    max_popularity = candidates.aggregate(top=Max('popularity_score'))['top'] or 0
 
+    # Similarity and popularity are each scaled against the whole candidate list (the closest and the most
+    # popular event). `Window(Min(x))` is SQL's MIN(x) OVER (): the minimum over every candidate, attached to
+    # each row. Postgres works these out before ORDER BY and LIMIT, so one query scores, sorts and cuts to
+    # RANKED_POOL, instead of a query for the minimum and maximum first (one database round trip saved each).
+    #
     # Raw cosine similarity sits in a narrow band (about 0.4-0.85 with BGE: unrelated events still score ~0.6),
     # so on its own it barely moves the score and "starts soon" decides the order. Rescale it per user: their
-    # closest candidate gets 1, their furthest 0, like popularity is divided by the most popular event.
-    # Events without a vector yet get 0, so they can still rank on the other parts.
+    # closest candidate gets 1, their furthest 0. Events without a vector have a NULL similarity, which MIN and
+    # MAX skip; they get 0, so they can still rank on the other parts.
     raw_similarity = Value(1.0) - CosineDistance('embedding', profile_vector)
-    band = candidates.filter(embedding__isnull=False).aggregate(low=Min(raw_similarity), high=Max(raw_similarity))
-    low, high = band['low'], band['high']
-    if low is not None and high - low > SIMILARITY_MIN_SPREAD:
-        # Coalesce inside the clamp: LEAST/GREATEST skip NULLs, so a vectorless event would otherwise get 1.
-        similarity = _clamp01(Coalesce((raw_similarity - Value(low)) / Value(high - low), Value(0.0)))
-    else:  # One candidate, or all equally close: nothing to stretch.
-        similarity = Coalesce(Greatest(raw_similarity, Value(0.0)), Value(0.0))
+    low = Window(Min(raw_similarity))
+    spread = Window(Max(raw_similarity)) - low
+    # Coalesce inside the clamp: LEAST/GREATEST skip NULLs, so a vectorless event would otherwise get 1.
+    similarity = Case(
+        When(GreaterThan(spread, SIMILARITY_MIN_SPREAD),
+             then=_clamp01(Coalesce((raw_similarity - low) / spread, Value(0.0)))),
+        # One candidate, or all equally close: nothing to stretch.
+        default=Coalesce(Greatest(raw_similarity, Value(0.0)), Value(0.0)),
+        output_field=FloatField(),
+    )
+    # Popularity: share of the most popular candidate's score, or 0 for everyone when none has any.
+    popularity_score = Cast('popularity_score', FloatField())
+    popularity = _clamp01(Coalesce(popularity_score / NullIf(Window(Max(popularity_score)), Value(0.0)),
+                                   Value(0.0)))
     follows = Case(
         When(Exists(OrganizationFollow.objects.filter(user=user, organization_id=OuterRef('organization_id'))),
              then=Value(1.0)),
         default=Value(0.0), output_field=FloatField(),
     )
-    if max_popularity > 0:
-        popularity = _clamp01(F('popularity_score') / Value(float(max_popularity)))
-    else:
-        popularity = Value(0.0)
     # 1 for events starting now (or already running), falling in a straight line to 0 at 14 days away.
     start_epoch = Func(F('start_at'), template='EXTRACT(EPOCH FROM %(expressions)s)::double precision',
                        output_field=FloatField())
     deadline = (now + URGENCY_WINDOW).timestamp()
     urgency = _clamp01((Value(deadline) - start_epoch) / Value(URGENCY_WINDOW.total_seconds()))
 
-    annotations = {'rec_similarity': similarity, 'rec_follows': follows, 'rec_popularity': popularity,
+    annotations = {'rec_similarity': _Windowed(similarity, output_field=FloatField()), 'rec_follows': follows,
+                   'rec_popularity': _Windowed(popularity, output_field=FloatField()),
                    'rec_urgency': urgency, 'rec_penalty': dismissal_penalty(dismissals)}
     if location is not None:
         distance = Cast(Distance('location', Point(location[1], location[0], srid=4326)), FloatField())
@@ -343,7 +362,7 @@ def rank_events(candidates: QuerySet, user, now: datetime, profile_vector, locat
     else:
         annotations['rec_proximity'] = Value(0.0)
 
-    score = ExpressionWrapper(
+    score = _Windowed(
         sum((Value(weights[part]) * F(f'rec_{part}') for part in SCORE_WEIGHTS), Value(0.0)) - F('rec_penalty'),
         output_field=FloatField(),
     )
