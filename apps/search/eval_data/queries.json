@@ -1,0 +1,325 @@
+{
+ "about": "Labelled queries for evaluate_search. relevant lists the event keys (events.json) a good search should show; an empty list means nothing should come back. acceptable lists borderline events: showing one is not counted as wrong, and missing one is not counted as a miss.",
+ "queries": [
+  {
+   "query": "learn to code as a beginner",
+   "relevant": [
+    "python-workshop",
+    "robotics-night"
+   ],
+   "acceptable": [
+    "hackathon"
+   ]
+  },
+  {
+   "query": "robots",
+   "relevant": [
+    "robotics-night"
+   ],
+   "acceptable": [
+    "ai-talk"
+   ]
+  },
+  {
+   "query": "free food",
+   "relevant": [
+    "pizza-social",
+    "diwali"
+   ],
+   "acceptable": [
+    "interfaith-dinner",
+    "hackathon",
+    "cooking-class",
+    "food-festival",
+    "esports-watch",
+    "outdoor-movie",
+    "art-exhibit",
+    "quiet-study"
+   ]
+  },
+  {
+   "query": "how do I get an internship",
+   "relevant": [
+    "career-fair",
+    "resume-review",
+    "mock-interview",
+    "alumni-mixer"
+   ],
+   "acceptable": [
+    "lab-open-house",
+    "startup-pitch"
+   ]
+  },
+  {
+   "query": "practice for job interviews",
+   "relevant": [
+    "mock-interview"
+   ],
+   "acceptable": [
+    "resume-review",
+    "career-fair"
+   ]
+  },
+  {
+   "query": "help me study for finals",
+   "relevant": [
+    "calc-review",
+    "quiet-study",
+    "tutoring-chem"
+   ],
+   "acceptable": [
+    "therapy-dogs",
+    "meditation"
+   ]
+  },
+  {
+   "query": "relax and destress",
+   "relevant": [
+    "meditation",
+    "therapy-dogs",
+    "sunrise-yoga"
+   ],
+   "acceptable": [
+    "pottery",
+    "board-games",
+    "outdoor-movie"
+   ]
+  },
+  {
+   "query": "stargazing",
+   "relevant": [
+    "astronomy"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "something to do outside",
+   "relevant": [
+    "astronomy",
+    "outdoor-movie",
+    "sunrise-yoga",
+    "state-park-hike",
+    "river-cleanup"
+   ],
+   "acceptable": [
+    "fun-run",
+    "pickup-basketball"
+   ]
+  },
+  {
+   "query": "live music",
+   "relevant": [
+    "jazz-concert",
+    "open-mic",
+    "silent-disco"
+   ],
+   "acceptable": [
+    "lunar-new-year",
+    "diwali"
+   ]
+  },
+  {
+   "query": "dance party",
+   "relevant": [
+    "silent-disco"
+   ],
+   "acceptable": [
+    "diwali"
+   ]
+  },
+  {
+   "query": "cultural celebrations",
+   "relevant": [
+    "lunar-new-year",
+    "diwali",
+    "food-festival"
+   ],
+   "acceptable": [
+    "interfaith-dinner"
+   ]
+  },
+  {
+   "query": "video games",
+   "relevant": [
+    "fighting-games",
+    "esports-watch"
+   ],
+   "acceptable": [
+    "board-games"
+   ]
+  },
+  {
+   "query": "meet new people",
+   "relevant": [
+    "pizza-social",
+    "board-games",
+    "alumni-mixer",
+    "interfaith-dinner",
+    "book-club",
+    "pickup-basketball"
+   ],
+   "acceptable": [
+    "hackathon",
+    "state-park-hike",
+    "open-mic"
+   ]
+  },
+  {
+   "query": "volunteer opportunities",
+   "relevant": [
+    "river-cleanup",
+    "food-bank",
+    "bake-sale"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "get some exercise",
+   "relevant": [
+    "pickup-basketball",
+    "sunrise-yoga",
+    "state-park-hike",
+    "fun-run"
+   ],
+   "acceptable": [
+    "silent-disco"
+   ]
+  },
+  {
+   "query": "watch a game with friends",
+   "relevant": [
+    "football-watch",
+    "esports-watch"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "art",
+   "relevant": [
+    "art-exhibit",
+    "pottery"
+   ],
+   "acceptable": [
+    "poetry-reading",
+    "jazz-concert",
+    "lunar-new-year"
+   ]
+  },
+  {
+   "query": "make something with my hands",
+   "relevant": [
+    "pottery",
+    "cooking-class"
+   ],
+   "acceptable": [
+    "robotics-night",
+    "lunar-new-year"
+   ]
+  },
+  {
+   "query": "poetry",
+   "relevant": [
+    "poetry-reading",
+    "open-mic"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "books",
+   "relevant": [
+    "book-club",
+    "poetry-reading"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "start my own company",
+   "relevant": [
+    "startup-pitch"
+   ],
+   "acceptable": [
+    "hackathon"
+   ]
+  },
+  {
+   "query": "research opportunities for undergrads",
+   "relevant": [
+    "lab-open-house"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "artificial intelligence",
+   "relevant": [
+    "ai-talk"
+   ],
+   "acceptable": [
+    "python-workshop",
+    "robotics-night"
+   ]
+  },
+  {
+   "query": "chemistry homework help",
+   "relevant": [
+    "tutoring-chem"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "movie night",
+   "relevant": [
+    "outdoor-movie"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "register to vote",
+   "relevant": [
+    "voter-registration"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "cheap healthy meals",
+   "relevant": [
+    "cooking-class"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "religion",
+   "relevant": [
+    "interfaith-dinner"
+   ],
+   "acceptable": [
+    "diwali"
+   ]
+  },
+  {
+   "query": "running",
+   "relevant": [
+    "fun-run"
+   ],
+   "acceptable": []
+  },
+  {
+   "query": "swimming lessons",
+   "relevant": [],
+   "acceptable": []
+  },
+  {
+   "query": "salsa dancing class",
+   "relevant": [],
+   "acceptable": [
+    "silent-disco"
+   ]
+  },
+  {
+   "query": "knitting circle",
+   "relevant": [],
+   "acceptable": [
+    "pottery"
+   ]
+  }
+ ]
+}
